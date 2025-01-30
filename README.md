@@ -1,6 +1,6 @@
-# budget_calculator
+# Budget_It!
 
-A new Flutter project.
+an app that may help you budget it up !!!
 
 ## Getting Started
 
