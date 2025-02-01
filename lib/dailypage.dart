@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:budget_calculator/styles.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:budget_calculator/styles and constants.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:hive/hive.dart';
@@ -20,21 +19,14 @@ class Dailypage extends StatefulWidget {
 
 void initState() {}
 
-class ValueDataSource extends CalendarDataSource {
-  ValueDataSource(List<Appointment> source) {
-    appointments = source;
-  }
-}
-
 class _DailypageState extends State<Dailypage> {
   //final box = GetStorage();
-
+  DateTime today =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   final prefsdata = Hive.box('data');
-  DateTime today = DateTime.now();
-  late DateTime targetDate;
-
   @override
   Widget build(BuildContext context) {
+    late DateTime targetDate;
     if (today.day == 30) {
       int nextMonth = today.month == 12 ? 1 : today.month + 1;
       int nextYear = today.month == 12 ? today.year + 1 : today.year;
@@ -42,10 +34,19 @@ class _DailypageState extends State<Dailypage> {
     } else {
       targetDate = DateTime(today.year, today.month, 30);
     }
+    int daysleftInCurrentMonth() {
+      DateTime firstDayNextMonth = (today.month < 12)
+          ? DateTime(today.year, today.month + 1, 1)
+          : DateTime(today.year + 1, 1, 1);
+
+      return firstDayNextMonth.subtract(Duration(days: today.day)).day;
+    }
+
     int daysDifference = targetDate.difference(today).inDays;
     final size = MediaQuery.of(context).size;
     num totsaving = prefsdata.get("totsaving", defaultValue: 50000);
     num nownetcredit = prefsdata.get("nownetcredit", defaultValue: 2000);
+    num nowcredit = prefsdata.get("nowcredit", defaultValue: 2000);
     num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
     num freemnt = prefsdata.get("freemnt", defaultValue: 2);
     num mntexp = prefsdata.get("mntexp", defaultValue: 2000);
@@ -58,19 +59,14 @@ class _DailypageState extends State<Dailypage> {
         prefsdata.get("startDate", defaultValue: DateTime(2024, 9, 1));
     DateTime selectedDate =
         prefsdata.get("selectedDate", defaultValue: DateTime(2024, 9, 1));
-    DateTime currentWeekStart =
-        DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+    double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
+    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
     double calculateSavingsSoFar() {
-      if (startDate == null) return 0.0;
-      int daysSinceStart = DateTime.now().difference(startDate).inDays;
-      return nownetcredit +
-          ((0.5 *
-                      ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
-                              (1 - freemnt / 12) -
-                          (mntexp + annexp / 12)) /
-                      30.5)
-                  .roundToDouble() *
-              daysSinceStart.toDouble());
+      int daysSinceStart = DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .difference(DateTime(startDate.year, startDate.month, startDate.day))
+          .inDays;
+      return nowcredit + mntsaving * daysSinceStart.toDouble();
     }
 
     DateTime ramadane =
@@ -85,13 +81,13 @@ class _DailypageState extends State<Dailypage> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.black,
       body: ListView(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(2),
         children: <Widget>[
           Card(
-            elevation: 5,
-            margin: const EdgeInsets.all(15),
-            color: const Color.fromARGB(253, 223, 135, 2),
+            elevation: 2,
+            color: cardcolor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -102,29 +98,30 @@ class _DailypageState extends State<Dailypage> {
                 Text("Daily Limit",
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(
-                    "${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12)) / 30.5).roundToDouble().toStringAsFixed(2)}"),
+                    "${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12)) / daysInCurrentMonth()).round().toStringAsFixed(2)}"),
                 Text("Remaining to Goal",
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("\$${calculateRemainingToGoal().toStringAsFixed(2)}"),
                 */
                 const SizedBox(height: 20),
+
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      " المبلغ المسموح إنفاقه في اليوم هو  ${(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble()} من أصل ${(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble() * (daysDifference.toInt() + 1)} درهم",
+                      " المبلغ المسموح إنفاقه في اليوم هو  ${(((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round()))} من أصل ${(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round() * (daysleftInCurrentMonth()).round()} درهم",
                       style: darktextstyle.copyWith(fontSize: 25),
                       textAlign: TextAlign.center,
                     ),
                     Text("", style: darktextstyle.copyWith(fontSize: 15)),
                     Text(
-                        " عدد الأيام المتبقية هو ${daysDifference.toInt() + 1} أيام ",
+                        " عدد الأيام المتبقية هو ${daysleftInCurrentMonth()} أيام ",
                         style: darktextstyle.copyWith(fontSize: 25)),
                     TableCalendar(
                       focusedDay: today,
                       firstDay: DateTime(2024, 1, 1),
-                      lastDay: DateTime(2027, 12, 31),
+                      lastDay: DateTime(2050, 12, 31),
                       selectedDayPredicate: (day) => isSameDay(day, today),
                       calendarFormat: CalendarFormat.month,
                       //calendarBuilders: CalendarBuilders(),
@@ -139,10 +136,36 @@ class _DailypageState extends State<Dailypage> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      " المبلغ الذي يجب أن يكون بحسابك هو ${nownetcredit + (today.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble() + (today.month - DateTime(startDate.year, startDate.month, 29).month + 12 * (today.year - selectedDate.year)) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)} درهما ",
+                      " المبلغ الذي يجب أن يكون بحسابك في أخر اليوم هو ${(nowcredit + (daysdiff(startDate, today) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round()) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round()} درهما ",
                       style: darkteststyle2,
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 20),
+                    Text(
+                      " المبلغ الذي وفرته هو ${(nownetcredit + count30thsPassed(startDate, today) * (mntsaving))}   درهما ",
+                      style: darkteststyle2.copyWith(
+                          color: Color.fromRGBO(106, 253, 95, 1.0)),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      totsaving -
+                                  nownetcredit -
+                                  count30thsPassed(startDate, today) *
+                                      (mntsaving) >
+                              0
+                          ? " المبلغ الذي بقي عليك  أن توفره هو ${totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
+                          : " مبروك , لقد حققت هدفك ",
+                      style: darkteststyle2.copyWith(
+                          color: totsaving -
+                                      nownetcredit -
+                                      count30thsPassed(startDate, today) *
+                                          (mntsaving) >
+                                  0
+                              ? Color.fromRGBO(253, 95, 95, 1.0)
+                              : Color.fromRGBO(106, 253, 95, 1.0)),
+                      textAlign: TextAlign.center,
+                    )
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -150,14 +173,80 @@ class _DailypageState extends State<Dailypage> {
                 const SizedBox(height: 20),
                 moneyinput(size, totsaving, "totsaving",
                     "المبلغ الإجمالي المراد جمعه"),
-
-                moneyinput(size, nownetcredit, "nownetcredit",
-                    " المبلغ المتوفر حاليا"),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 15, right: 15, bottom: 7, top: 7),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        //height: size.height * 0.07,
+                        width: size.width * 0.3,
+                        child: TextFormField(
+                          initialValue: nowcredit.toString(),
+                          decoration: const InputDecoration(
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                              border: OutlineInputBorder(gapPadding: 1)),
+                          onChanged: (newval) {
+                            //box.write('quote', 2);
+                            final v = int.tryParse(newval);
+                            if (v == null) {
+                              setState(() {
+                                pickStartDate(context);
+                                prefsdata.put("nownetcredit", 0);
+                                nownetcredit =
+                                    prefsdata.get("nownetcredit".toString());
+                                print(nownetcredit.toString() +
+                                    "nownetcredit".toString());
+                                //nownetcredit = 0;
+                              });
+                            } else {
+                              setState(() {
+                                pickStartDate(context);
+                                prefsdata.put("nowcredit".toString(), v);
+                                prefsdata.put(
+                                    "nownetcredit".toString(),
+                                    v -
+                                        (((mntinc +
+                                                                mntnstblinc *
+                                                                    (1 -
+                                                                        0.01 *
+                                                                            mntperinc)) *
+                                                            (1 - freemnt / 12) -
+                                                        (mntexp + annexp / 12) -
+                                                        (mntsaving)) /
+                                                    daysInCurrentMonth())
+                                                .round() *
+                                            (daysDifference.toInt() + 1)
+                                                .round());
+                                nownetcredit =
+                                    prefsdata.get("nownetcredit".toString());
+                                print(nownetcredit.toString() +
+                                    "nownetcredit".toString());
+                                print(nowcredit.toString() +
+                                    "nowcredit".toString());
+                              });
+                            }
+                          },
+                          keyboardType: TextInputType.number,
+                          //maxLength: 10,
+                        ),
+                      ),
+                      Text(
+                        "المبلغ الموفر",
+                        style: darktextstyle,
+                        textAlign: TextAlign.right,
+                      )
+                    ],
+                  ),
+                ),
                 SizedBox(
                   height: 60,
                   child: Center(
                     child: Text(
-                      " تم إحتساب الإدخار إبتداء من تاريخ  ${startDate.year}-${startDate.month}-${startDate.day}",
+                      " تم إحتساب الإدخار إبتداء من تاريخ  ${startDate.year}-${startDate.month}-${startDate.day} " +
+                          "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} يوم )",
                       style: darkteststyle2,
                       textAlign: TextAlign.center,
                     ),
@@ -166,7 +255,7 @@ class _DailypageState extends State<Dailypage> {
                 moneyinput(size, mntsaving, "mntsaving",
                     "المبلغ الشهري المرتقب إقطاعه"),
 
-                moneyinput(size, freemnt, "freemnt", "تردد أشهر الراحة"),
+                moneyinput(size, freemnt, "freemnt", "عدد أشهر الراحة السنوية"),
                 const SizedBox(height: 20),
                 // ValueListenableBuilder(
                 //   valueListenable: prefsdata.listenable(),
@@ -231,8 +320,8 @@ class _DailypageState extends State<Dailypage> {
                                                   (1 - 0.01 * mntperinc)) *
                                           (1 - freemnt / 12) -
                                       (mntexp + annexp / 12)) /
-                                  30.5)
-                              .roundToDouble()
+                                  daysInCurrentMonth())
+                              .round()
                               .toString(),
                           style: darktextstyle.copyWith(
                             color: ((0.5 *
@@ -243,7 +332,7 @@ class _DailypageState extends State<Dailypage> {
                                                                         mntperinc)) *
                                                         (1 - freemnt / 12) -
                                                     (mntexp + annexp / 12))) /
-                                            30.5) /
+                                            daysInCurrentMonth()) /
                                         ((0.5 *
                                                     ((mntinc +
                                                                 mntnstblinc *
@@ -262,10 +351,10 @@ class _DailypageState extends State<Dailypage> {
                                                             (mntexp +
                                                                 annexp /
                                                                     12)))) /
-                                            30.5) >
+                                            daysInCurrentMonth()) >
                                     0.8
                                 ? const Color.fromARGB(255, 127, 255, 131)
-                                : const Color.fromARGB(255, 216, 19, 1),
+                                : Color.fromARGB(255, 216, 19, 1),
                           )),
                       Text("المبلغ الامثل إنفاقه في اليوم",
                           style: darktextstyle),
@@ -289,7 +378,7 @@ class _DailypageState extends State<Dailypage> {
                                                                           mntperinc)) *
                                                           (1 - freemnt / 12) -
                                                       (mntexp + annexp / 12))) /
-                                              30.5) /
+                                              daysInCurrentMonth()) /
                                           ((0.5 *
                                                       ((mntinc +
                                                                   mntnstblinc *
@@ -310,8 +399,8 @@ class _DailypageState extends State<Dailypage> {
                                                               (mntexp +
                                                                   annexp /
                                                                       12)))) /
-                                              30.5))))
-                              .roundToDouble()
+                                              daysInCurrentMonth()))))
+                              .round()
                               .toString(),
                           style: darktextstyle),
                       Text("عدد الأيام الإستثنائية لإنفاق المبلغ الأقصى شهريا",
@@ -343,15 +432,55 @@ class _DailypageState extends State<Dailypage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(
-                              height: 40,
-                              child: Center(
-                                child: Text(
-                                  "${(nownetcredit + (ramadane.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble() + (ramadane.month - DateTime(startDate.year, startDate.month, 29).month + 12 * (ramadane.year - selectedDate.year)) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round()}",
-                                  style: darkteststyle2.copyWith(
-                                      color: nownetcredit +
-                                                  (ramadane.difference(startDate).inDays +
+                                height: 40,
+                                child: Center(
+                                  child: Text(
+                                    "${((nowcredit + (daysdiff(startDate, ramadane) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round()) + count30thsPassed(startDate, ramadane) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round())}",
+                                    style: darkteststyle2.copyWith(
+                                      color: ((nowcredit +
+                                                      (daysdiff(startDate,
+                                                                  ramadane) +
+                                                              1) *
+                                                          (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                                                                          (1 -
+                                                                              freemnt /
+                                                                                  12) -
+                                                                      (mntexp +
+                                                                          annexp /
+                                                                              12) -
+                                                                      (mntsaving)) /
+                                                                  daysInCurrentMonth())
+                                                              .round()) +
+                                                      count30thsPassed(
+                                                              startDate,
+                                                              ramadane) *
+                                                          ((mntinc +
+                                                                      mntnstblinc *
+                                                                          (1 -
+                                                                              0.01 *
+                                                                                  mntperinc)) *
+                                                                  (1 -
+                                                                      freemnt /
+                                                                          12) -
+                                                              mntexp))
+                                                  .round() >
+                                              5000
+                                          ? Color(0xF4C3FFBE)
+                                          : Color(0xFAFDBFBF)),
+                                    ),
+                                  ),
+                                )),
+                            SizedBox(
+                                height: 40,
+                                child: Center(
+                                  child: Text(
+                                    "${((nowcredit + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round()) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round())}",
+                                    style: darkteststyle2.copyWith(
+                                      color: nowcredit +
+                                                  (daysdiff(startDate,
+                                                              aidfitr) +
                                                           1) *
-                                                      -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                                                      (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
                                                                       (1 -
                                                                           freemnt /
                                                                               12) -
@@ -359,101 +488,96 @@ class _DailypageState extends State<Dailypage> {
                                                                       annexp /
                                                                           12) -
                                                                   (mntsaving)) /
-                                                              30.5)
-                                                          .roundToDouble() +
-                                                  (ramadane.month -
-                                                          DateTime(startDate.year, startDate.month, 29)
-                                                              .month +
-                                                          12 *
-                                                              (ramadane.year -
-                                                                  selectedDate
-                                                                      .year)) *
+                                                              daysInCurrentMonth())
+                                                          .round()) +
+                                                  count30thsPassed(
+                                                          startDate, aidfitr) *
                                                       ((mntinc +
-                                                                  mntnstblinc *
-                                                                      (1 - 0.01 * mntperinc)) *
-                                                              (1 - freemnt / 12) -
-                                                          mntexp) >
+                                                                      mntnstblinc *
+                                                                          (1 -
+                                                                              0.01 *
+                                                                                  mntperinc)) *
+                                                                  (1 -
+                                                                      freemnt /
+                                                                          12) -
+                                                              mntexp)
+                                                          .round() >
                                               5000
                                           ? Color(0xF4C3FFBE)
-                                          : Color(0xFAFDBFBF)),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                                height: 40,
-                                child: Center(
-                                  child: Text(
-                                    "${(nownetcredit + (aidfitr.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble() + (aidfitr.month - DateTime(startDate.year, startDate.month, 29).month + 12 * (aidfitr.year - selectedDate.year)) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round()}",
-                                    style: darkteststyle2.copyWith(
-                                        color: nownetcredit +
-                                                    (aidfitr.difference(startDate).inDays + 1) *
-                                                        -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) -
-                                                                    (mntexp +
-                                                                        annexp /
-                                                                            12) -
-                                                                    (mntsaving)) /
-                                                                30.5)
-                                                            .roundToDouble() +
-                                                    (aidfitr.month -
-                                                            DateTime(
-                                                                    startDate
-                                                                        .year,
-                                                                    startDate
-                                                                        .month,
-                                                                    29)
-                                                                .month +
-                                                            12 *
-                                                                (aidfitr.year -
-                                                                    selectedDate
-                                                                        .year)) *
-                                                        ((mntinc +
-                                                                    mntnstblinc *
-                                                                        (1 - 0.01 * mntperinc)) *
-                                                                (1 - freemnt / 12) -
-                                                            mntexp) >
-                                                5000
-                                            ? Color(0xF4C3FFBE)
-                                            : Color(0xFAFDBFBF)),
+                                          : Color(0xFAFDBFBF),
+                                    ),
                                   ),
                                 )),
                             SizedBox(
                               height: 40,
                               child: Center(
                                 child: Text(
-                                  "${(nownetcredit + (aidfadha.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / 30.5).roundToDouble() + (aidfadha.month - DateTime(startDate.year, startDate.month, 29).month + 12 * (aidfadha.year - selectedDate.year)) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round()}",
+                                  "${((nowcredit + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth()).round()) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)).round())}",
                                   style: darkteststyle2.copyWith(
-                                      color: nownetcredit +
-                                                  (aidfadha.difference(startDate).inDays +
-                                                          1) *
-                                                      -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
-                                                                      (1 -
-                                                                          freemnt /
-                                                                              12) -
-                                                                  (mntexp +
-                                                                      annexp /
-                                                                          12) -
-                                                                  (mntsaving)) /
-                                                              30.5)
-                                                          .roundToDouble() +
-                                                  (aidfadha.month -
-                                                          DateTime(startDate.year, startDate.month, 29)
-                                                              .month +
-                                                          12 *
-                                                              (aidfadha.year -
-                                                                  selectedDate
-                                                                      .year)) *
-                                                      ((mntinc +
-                                                                  mntnstblinc *
-                                                                      (1 - 0.01 * mntperinc)) *
-                                                              (1 - freemnt / 12) -
-                                                          mntexp) >
-                                              5000
-                                          ? Color(0xF4C3FFBE)
-                                          : Color(0xFAFDBFBF)),
+                                    color: nowcredit +
+                                                (daysdiff(startDate, aidfadha) +
+                                                        1) *
+                                                    (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                                                                    (1 -
+                                                                        freemnt /
+                                                                            12) -
+                                                                (mntexp +
+                                                                    annexp /
+                                                                        12) -
+                                                                (mntsaving)) /
+                                                            daysInCurrentMonth())
+                                                        .round()) +
+                                                count30thsPassed(
+                                                        startDate, aidfadha) *
+                                                    ((mntinc +
+                                                                    mntnstblinc *
+                                                                        (1 -
+                                                                            0.01 *
+                                                                                mntperinc)) *
+                                                                (1 -
+                                                                    freemnt /
+                                                                        12) -
+                                                            mntexp)
+                                                        .round() >
+                                            6000
+                                        ? Color(0xF4C3FFBE)
+                                        : Color(0xFAFDBFBF),
+                                  ),
                                 ),
                               ),
                             ),
                           ]),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            height: 40,
+                            child: Center(
+                              child: Text(
+                                "(${(nownetcredit + count30thsPassed(startDate, ramadane) * (mntsaving))})",
+                                style: darktextstyle,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "(${(nownetcredit + count30thsPassed(startDate, aidfitr) * (mntsaving))})",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "(${(nownetcredit + count30thsPassed(startDate, aidfadha) * (mntsaving))})",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                        ],
+                      ),
                       /*Column(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -494,7 +618,7 @@ class _DailypageState extends State<Dailypage> {
                               height: 40,
                               child: Center(
                                 child: Text(
-                                  "${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}",
+                                  "${ramadane.year}-${aidfitr.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}",
                                   style: darkteststyle2,
                                 ),
                               ),
@@ -554,6 +678,66 @@ class _DailypageState extends State<Dailypage> {
                               height: 40,
                               child: Center(
                                 child: Text(
+                                  "(يوما",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "(يوما",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "(يوما",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "${daysdiff(DateTime.now(), ramadane).toString()})",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "${daysdiff(DateTime.now(), aidfitr).toString()})",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
+                                  "${daysdiff(DateTime.now(), aidfadha).toString()})",
+                                  style: darktextstyle,
+                                ),
+                              )),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                              height: 40,
+                              child: Center(
+                                child: Text(
                                   'فاتح رمضان',
                                   style: darktextstyle,
                                 ),
@@ -597,8 +781,8 @@ class _DailypageState extends State<Dailypage> {
                 const SizedBox(height: 4),
                 OutlinedButton(
                   onPressed: () => Get.isDarkMode
-                      ? Get.changeTheme(ThemeData.light())
-                      : Get.changeTheme(ThemeData.dark()),
+                      ? Get.changeTheme(ThemeData.dark())
+                      : Get.changeTheme(ThemeData.light()),
                   child: SizedBox(
                     width: size.width * 0.25,
                     child: Row(
@@ -617,8 +801,7 @@ class _DailypageState extends State<Dailypage> {
           ),
           Card(
             elevation: 5,
-            margin: const EdgeInsets.all(15),
-            color: const Color.fromARGB(251, 250, 101, 72),
+            color: cardcolor,
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -637,7 +820,7 @@ class _DailypageState extends State<Dailypage> {
                               ((mntinc + mntnstblinc) * (1 - freemnt / 12) -
                                   (mntexp + annexp / 12))),
                       "فائض / عجز التدبير"),
-                  infocalculated((totsaving - nownetcredit) / mntsaving,
+                  infocalculated((totsaving - nowcredit) / mntsaving,
                       "عدد أشهر الإدخار المثالي"),
                   const SizedBox(height: 20),
                   Padding(
@@ -659,7 +842,7 @@ class _DailypageState extends State<Dailypage> {
                           ],
                           markerPointers: [
                             LinearShapePointer(
-                              value: (totsaving - nownetcredit) /
+                              value: (totsaving - nowcredit) /
                                   (0.5 *
                                       ((mntinc +
                                                   mntnstblinc *
@@ -670,7 +853,7 @@ class _DailypageState extends State<Dailypage> {
                           ],
                           barPointers: [
                             LinearBarPointer(
-                              value: (totsaving - nownetcredit) / mntsaving,
+                              value: (totsaving - nowcredit) / mntsaving,
                               thickness: 10,
                               edgeStyle: LinearEdgeStyle.endCurve,
                             )
@@ -692,8 +875,7 @@ class _DailypageState extends State<Dailypage> {
           ),
           Card(
             elevation: 5,
-            margin: const EdgeInsets.all(15),
-            color: const Color.fromARGB(249, 67, 154, 43),
+            color: cardcolor,
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -747,34 +929,6 @@ class _DailypageState extends State<Dailypage> {
     );
   }
 
-  // Method to get a list of daily events
-  List<Appointment> _getDailyEvents() {
-    List<Appointment> appointments = <Appointment>[];
-    DateTime startDate =
-        prefsdata.get("startDate", defaultValue: DateTime(2024, 9, 1));
-    //DateTime startDate =DateTime(2024, 9, 1);
-    // Starting from September 1st, 2024
-    int startingValue = 5;
-    int increment = 3;
-
-    for (int i = 0; i < 61; i++) {
-      // for September and October (61 days total)
-      DateTime date = startDate.add(Duration(days: i));
-      int dailyValue = startingValue + (i * increment);
-
-      appointments.add(Appointment(
-        startTime: date,
-        endTime:
-            date.add(Duration(hours: 1)), // Just for a placeholder end time
-        subject: 'Value: $dailyValue',
-        color: Colors.blue,
-        isAllDay: true, // Makes the event appear for the whole day
-      ));
-    }
-
-    return appointments;
-  }
-
   Widget moneyinput(size, boxvariable, boxvariablename, String textlabel) {
     return Padding(
       padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
@@ -798,13 +952,15 @@ class _DailypageState extends State<Dailypage> {
                     pickStartDate(context);
                     prefsdata.put(boxvariablename, 0);
                     boxvariable = prefsdata.get(boxvariablename.toString());
-                    //nownetcredit = 0;
+                    print(boxvariable.toString() + boxvariablename.toString());
+                    //nowcredit = 0;
                   });
                 } else {
                   setState(() {
                     pickStartDate(context);
                     prefsdata.put(boxvariablename.toString(), v);
                     boxvariable = prefsdata.get(boxvariablename.toString());
+                    print(boxvariable.toString() + boxvariablename.toString());
                   });
                 }
               },
@@ -820,6 +976,12 @@ class _DailypageState extends State<Dailypage> {
         ],
       ),
     );
+  }
+
+  int daysdiff(DateTime start, DateTime goal) {
+    return -DateTime(start.year, start.month, start.day)
+        .difference(DateTime(goal.year, goal.month, goal.day))
+        .inDays;
   }
 
   Widget moneyinputslider(
@@ -848,6 +1010,7 @@ class _DailypageState extends State<Dailypage> {
                 setState(() {
                   prefsdata.put(boxvariablename.toString(), newValue);
                   boxvariable = prefsdata.get(boxvariablename.toString());
+                  print(boxvariable.toString() + boxvariablename.toString());
                 });
               },
             ),
@@ -869,11 +1032,53 @@ class _DailypageState extends State<Dailypage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(value.roundToDouble().toString(), style: darktextstyle),
+          Text(value.isNaN ? 0.toString() : value.round().toString(),
+              style: darktextstyle),
           Text(labeltext, style: darktextstyle),
         ],
       ),
     );
+  }
+
+  int daysInCurrentMonth() {
+    DateTime firstDayNextMonth = (today.month < 12)
+        ? DateTime(today.year, today.month + 1, 1)
+        : DateTime(today.year + 1, 1, 1);
+
+    return firstDayNextMonth.subtract(Duration(days: 1)).day - 1;
+  }
+
+  int count30thsPassed(DateTime startDate, DateTime endDate) {
+    if (startDate.isAfter(endDate)) {
+      return 0; // Return 0 if the date range is invalid
+    }
+
+    int count = 0;
+    DateTime current = DateTime(startDate.year, startDate.month, 28);
+    if (current.month == 2) {
+      current = DateTime(startDate.year, startDate.month, 28);
+    } else {
+      current = DateTime(startDate.year, startDate.month, 30);
+    }
+    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+      if (current.month == 2) {
+        current = DateTime(current.year, 2, 28);
+        if (current.isAfter(startDate) &&
+            (current.isBefore(endDate) || current.isAtSameMomentAs(endDate))) {
+          count++;
+        }
+      } else {
+        count++;
+      }
+      // Move to the next month's 30th (or closest valid date)
+      if (current.month == 1) {
+        current = DateTime(current.year, current.month + 1, 28);
+      } else {
+        current = DateTime(current.year, current.month + 1, 30);
+      }
+    }
+
+    return count;
   }
 
   Widget coloredinfocalculated(num value, labeltext) {
@@ -883,7 +1088,7 @@ class _DailypageState extends State<Dailypage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(value.roundToDouble().toString(),
+          Text(value.round().toString(),
               style: darktextstyle.copyWith(
                 color: 0.6 > 0.5
                     ? const Color.fromARGB(255, 216, 19, 1)
@@ -902,6 +1107,7 @@ class _DailypageState extends State<Dailypage> {
     setState(() {
       prefsdata.put("startDate", pickedDate);
       startDate = pickedDate;
+      debugPrint(startDate.toString());
     });
   }
 
@@ -911,7 +1117,7 @@ class _DailypageState extends State<Dailypage> {
     });
   }
 
-  /*String getFirstDayOfRamadan(nownetcredit,startDate,mntinc,mntnstblinc,mntperinc) {
+  /*String getFirstDayOfRamadan(nowcredit,startDate,mntinc,mntnstblinc,mntperinc) {
     DateTime ramadane =
         HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 9, 1);
     DateTime aidfitr =
@@ -919,6 +1125,6 @@ class _DailypageState extends State<Dailypage> {
     DateTime aidfadha =
         HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10);
 
-    return 'First day of Ramadan : ${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}     =>  ${nownetcredit + (ramadane.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc) * (1 - prefsdata.get("freemnt") / 12) - (prefsdata.get("mntexp") + prefsdata.get("annexp") / 12) - (prefsdata.get("mntsaving"))) / 30.5).roundToDouble() + (ramadane.month - DateTime(prefsdata.get("startDate").year, prefsdata.get("startDate").month, 29).month + 12 * (ramadane.year - prefsdata.get("selectedDate").year)) * (prefsdata.get("mntinc") - prefsdata.get("mntinc"))).toString()} \n day of aid al fitr : ${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')}\n day of aid al adha : ${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')}';
+    return 'First day of Ramadan : ${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}     =>  ${nowcredit + (ramadane.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc) * (1 - prefsdata.get("freemnt") / 12) - (prefsdata.get("mntexp") + prefsdata.get("annexp") / 12) - (prefsdata.get("mntsaving"))) / daysInCurrentMonth()).round() + (ramadane.month - DateTime(prefsdata.get("startDate").year, prefsdata.get("startDate").month, 29).month + 12 * (ramadane.year - prefsdata.get("selectedDate").year)) * (prefsdata.get("mntinc") - prefsdata.get("mntinc"))).toString()} \n day of aid al fitr : ${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')}\n day of aid al adha : ${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')}';
   }*/
 }

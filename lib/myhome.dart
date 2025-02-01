@@ -37,7 +37,7 @@ void initState() async {
   //await Hive.openBox("boxname");
 }
 
-int pageindex = 0;
+int pageindex = 2;
 
 class _MyhomeState extends State<Myhome> {
   final prefsdata = Hive.box('data');
@@ -56,6 +56,10 @@ class _MyhomeState extends State<Myhome> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor:
+            prefsdata.get("selectedColor", defaultValue: Colors.black),
+
+        //backgroundColor: ProfilpageState().selectedColor,
         body: getbody(),
         bottomNavigationBar: getfooter(),
         floatingActionButton: FloatingActionButton(
@@ -63,9 +67,9 @@ class _MyhomeState extends State<Myhome> {
             /* await FirebaseFirestore.instance
                 .collection('data')
                 .add({'timestamp': Timestamp.fromDate(DateTime.now())}); */
-            setTabs(4);
+            setTabs(2);
           },
-          child: const Icon(Icons.add, size: 25),
+          child: const Icon(Icons.query_stats, size: 25),
           backgroundColor: Color(Colors.pink.value),
         ),
         floatingActionButtonLocation:
@@ -78,13 +82,9 @@ class _MyhomeState extends State<Myhome> {
     return IndexedStack(
       index: pageindex,
       children: [
-        Dailypage(),
         Statspage(),
-        //Budgetpage(),
-
-        Center(child: Text("profil page")),
         Profilpage(),
-        Center(child: Text("create budget page")),
+        Dailypage(),
       ],
     );
   }
@@ -97,9 +97,7 @@ class _MyhomeState extends State<Myhome> {
   Widget getfooter() {
     List<IconData> listactions = [
       Icons.calendar_month,
-      Icons.query_stats,
-      Icons.account_balance_wallet,
-      Icons.person,
+      Icons.settings,
     ];
     return AnimatedBottomNavigationBar(
       icons: listactions,
@@ -109,7 +107,7 @@ class _MyhomeState extends State<Myhome> {
         setTabs(index);
       },
       gapLocation: GapLocation.center,
-      backgroundColor: Colors.black45,
+      backgroundColor: Colors.black,
       notchSmoothness: NotchSmoothness.defaultEdge,
     );
   }

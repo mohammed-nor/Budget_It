@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 //import 'package:google_fonts/google_fonts.dart';
-import 'package:budget_calculator/styles.dart';
+import 'package:budget_calculator/styles and constants.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
@@ -49,13 +49,14 @@ class _StatspageState extends State<Statspage> {
     num mntperinc = prefsdata.get("mntperinc", defaultValue: 5);
 
     return Scaffold(
+      backgroundColor: Colors.black,
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: <Widget>[
           Card(
             elevation: 5,
             margin: const EdgeInsets.all(20),
-            color: const Color.fromARGB(253, 223, 135, 2),
+            color: cardcolor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -79,13 +80,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb1", 0);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
+                              mntincnstb1 =
+                                  prefsdata.get(mntincnstb1.toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb1".toString(), v);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
+                              mntincnstb1 =
+                                  prefsdata.get(mntincnstb1.toString());
                             });
                           }
                         },
@@ -108,13 +111,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincstb1", 0);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
+                              mntincstb1 =
+                                  prefsdata.get("mntincstb1".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb1", v);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
+                              mntincstb1 =
+                                  prefsdata.get("mntincstb1".toString());
                             });
                           }
                         },
@@ -144,13 +149,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb2", 0);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
+                              mntincnstb2 =
+                                  prefsdata.get("mntincnstb2".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb2".toString(), v);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
+                              mntincnstb2 =
+                                  prefsdata.get("mntincnstb2".toString());
                             });
                           }
                         },
@@ -173,13 +180,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincstb2", 0);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
+                              mntincstb2 =
+                                  prefsdata.get("mntincstb2".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb2".toString(), v);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
+                              mntincstb2 =
+                                  prefsdata.get("mntincstb2".toString());
                             });
                           }
                         },
@@ -209,13 +218,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb3", 0);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
+                              mntincnstb3 =
+                                  prefsdata.get("mntincnstb3".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb3".toString(), v);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
+                              mntincnstb3 =
+                                  prefsdata.get("mntincnstb3".toString());
                             });
                           }
                         },
@@ -238,13 +249,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincstb3", 0);
-                              mntincstb3 = prefsdata.get("mntincstb3".toString());
+                              mntincstb3 =
+                                  prefsdata.get("mntincstb3".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb3".toString(), v);
-                              mntincstb3 = prefsdata.get("mntincstb3".toString());
+                              mntincstb3 =
+                                  prefsdata.get("mntincstb3".toString());
                             });
                           }
                         },
@@ -274,13 +287,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb4", 0);
-                              mntincnstb4 = prefsdata.get("mntincnstb4".toString());
+                              mntincnstb4 =
+                                  prefsdata.get("mntincnstb4".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb4".toString(), v);
-                              mntincnstb4 = prefsdata.get("mntincnstb4".toString());
+                              mntincnstb4 =
+                                  prefsdata.get("mntincnstb4".toString());
                             });
                           }
                         },
@@ -303,13 +318,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincstb4", 0);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
+                              mntincstb4 =
+                                  prefsdata.get("mntincstb4".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb4".toString(), v);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
+                              mntincstb4 =
+                                  prefsdata.get("mntincstb4".toString());
                             });
                           }
                         },
@@ -339,13 +356,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb5", 0);
-                              mntincnstb5 = prefsdata.get("mntincnstb5".toString());
+                              mntincnstb5 =
+                                  prefsdata.get("mntincnstb5".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb5".toString(), v);
-                              mntincnstb5 = prefsdata.get("mntincnstb5".toString());
+                              mntincnstb5 =
+                                  prefsdata.get("mntincnstb5".toString());
                             });
                           }
                         },
@@ -368,13 +387,15 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincstb5", 0);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
+                              mntincstb5 =
+                                  prefsdata.get("mntincstb5".toString());
                               //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb5".toString(), v);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
+                              mntincstb5 =
+                                  prefsdata.get("mntincstb5".toString());
                             });
                           }
                         },
@@ -394,7 +415,7 @@ class _StatspageState extends State<Statspage> {
           Card(
             elevation: 5,
             margin: const EdgeInsets.all(20),
-            color: const Color.fromARGB(251, 0, 192, 42),
+            color: cardcolor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -404,13 +425,23 @@ class _StatspageState extends State<Statspage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                        ((mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5)
+                        ((mntincnstb1 +
+                                    mntincnstb2 +
+                                    mntincnstb3 +
+                                    mntincnstb4 +
+                                    mntincnstb5) /
+                                5)
                             .roundToDouble()
                             .toString(),
                         style: darktextstyle),
                     Text(" + ", style: darktextstyle),
                     Text(
-                        ((mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5) / 5)
+                        ((mntincstb1 +
+                                    mntincstb2 +
+                                    mntincstb3 +
+                                    mntincstb4 +
+                                    mntincstb5) /
+                                5)
                             .roundToDouble()
                             .toString(),
                         style: darktextstyle),
@@ -568,7 +599,10 @@ class _StatspageState extends State<Statspage> {
                       thickness: 20,
                       edgeStyle: LinearEdgeStyle.bothCurve,
                       gradient: LinearGradient(
-                          colors: [Color.fromARGB(255, 157, 0, 185), Color.fromARGB(255, 0, 136, 247)],
+                          colors: [
+                            Color.fromARGB(255, 157, 0, 185),
+                            Color.fromARGB(255, 0, 136, 247)
+                          ],
                           begin: Alignment.centerRight,
                           end: Alignment.centerLeft,
                           stops: [0.01, 0.05],
@@ -638,7 +672,9 @@ class _StatspageState extends State<Statspage> {
                           height: 15,
                           width: 15)
                     ],
-                    ranges: const [LinearGaugeRange(startValue: 0, endValue: 100)],
+                    ranges: const [
+                      LinearGaugeRange(startValue: 0, endValue: 100)
+                    ],
                     labelFormatterCallback: (label) {
                       if (label == '0') {
                         return 'ممتاز';
