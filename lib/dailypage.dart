@@ -177,7 +177,7 @@ class _DailypageState extends State<Dailypage> {
                     Text(" عدد الأيام المتبقية هو ${daysleftInCurrentMonth()} أيام ", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     TableCalendar(
                       focusedDay: today,
-                      firstDay: DateTime(2024, 1, 1),
+                      firstDay: DateTime(startDate.year, startDate.month, 1),
                       lastDay: DateTime(2050, 12, 31),
                       selectedDayPredicate: (day) => isSameDay(day, today),
                       calendarFormat: CalendarFormat.month,
