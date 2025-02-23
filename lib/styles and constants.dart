@@ -16,11 +16,11 @@ TextStyle darktextstyle = GoogleFonts.elMessiri(
     color: Colors.white);
 
 final Map<String, Color> colorMap = {
-  'Red': Color.fromRGBO(255, 0, 0, 0.1843137254901961),
-  'Green': Color.fromRGBO(0, 143, 3, 1.0),
-  'Blue': Color.fromRGBO(97, 134, 255, 0.1843137254901961),
-  'Dark': Color.fromRGBO(14, 14, 14, 0.1843137254901961),
-  'Light': Color.fromRGBO(20, 20, 20, 1.0),
+  'Red': const Color.fromRGBO(255, 0, 0, 0.1843137254901961),
+  'Green': const Color.fromRGBO(0, 143, 3, 1.0),
+  'Blue': const Color.fromRGBO(97, 134, 255, 0.1843137254901961),
+  'Dark': const Color.fromRGBO(14, 14, 14, 0.1843137254901961),
+  'Light': const Color.fromRGBO(20, 20, 20, 1.0),
 };
 
 Color selectedColor =
@@ -30,10 +30,10 @@ String selectedColorName =
     prefsdata.get("selectedColorName", defaultValue: 'Dark');
 
 Color cardcolor =
-    prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0));
+    prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0));
 
-final String name = "Mohammed NOR";
-final String email = "nour1608@gmail.com";
-final String githubUrl = "https://github.com/mohammed-nor/";
-final String profileImageUrl =
+const String name = "Mohammed NOR";
+const String email = "nour1608@gmail.com";
+const String githubUrl = "https://github.com/mohammed-nor/";
+const String profileImageUrl =
     "https://avatars.githubusercontent.com/u/44341598?v=4"; // Replace with actual image URL

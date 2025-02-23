@@ -4,9 +4,9 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 //import 'package:budget_calculator/budgetpage.dart';
-import 'package:budget_calculator/dailypage.dart';
-import 'package:budget_calculator/profilpage.dart';
-import 'package:budget_calculator/statspage.dart';
+import 'package:budget_it/dailypage.dart';
+import 'package:budget_it/profilpage.dart';
+import 'package:budget_it/statspage.dart';
 import 'package:hive/hive.dart';
 
 final box = GetStorage();
@@ -26,7 +26,7 @@ final prefsdata = Hive.box('data');
 // var val2 = "000";
 
 class Myhome extends StatefulWidget {
-  const Myhome({Key? key}) : super(key: key);
+  const Myhome({super.key});
 
   @override
   State<Myhome> createState() => _MyhomeState();
@@ -42,7 +42,6 @@ int pageindex = 2;
 class _MyhomeState extends State<Myhome> {
   final prefsdata = Hive.box('data');
   @override
-
   /// The function returns a Scaffold widget with a SafeArea widget as its child. The Scaffold widget
   /// has a body, a bottomNavigationBar, and a floatingActionButton. The floatingActionButton has an
   /// onPressed function that calls the setTabs function. The floatingActionButtonLocation is set to
@@ -56,8 +55,7 @@ class _MyhomeState extends State<Myhome> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor:
-            prefsdata.get("selectedColor", defaultValue: Colors.black),
+        backgroundColor: prefsdata.get("selectedColor", defaultValue: Colors.black),
 
         //backgroundColor: ProfilpageState().selectedColor,
         body: getbody(),
@@ -69,24 +67,16 @@ class _MyhomeState extends State<Myhome> {
                 .add({'timestamp': Timestamp.fromDate(DateTime.now())}); */
             setTabs(2);
           },
-          child: const Icon(Icons.query_stats, size: 25),
           backgroundColor: Color(Colors.pink.value),
+          child: const Icon(Icons.query_stats, size: 25),
         ),
-        floatingActionButtonLocation:
-            FloatingActionButtonLocation.miniCenterDocked,
+        floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterDocked,
       ),
     );
   }
 
   Widget getbody() {
-    return IndexedStack(
-      index: pageindex,
-      children: [
-        Statspage(),
-        Profilpage(),
-        Dailypage(),
-      ],
-    );
+    return IndexedStack(index: pageindex, children: const [Statspage(), Profilpage(), Dailypage()]);
   }
 
   /// It returns an AnimatedBottomNavigationBar widget with a list of icons, an active color, an active
@@ -95,10 +85,7 @@ class _MyhomeState extends State<Myhome> {
   /// Returns:
   ///   A widget.
   Widget getfooter() {
-    List<IconData> listactions = [
-      Icons.calendar_month,
-      Icons.settings,
-    ];
+    List<IconData> listactions = [Icons.calendar_month, Icons.settings];
     return AnimatedBottomNavigationBar(
       icons: listactions,
       activeColor: Colors.pink,

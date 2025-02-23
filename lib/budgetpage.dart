@@ -3,14 +3,14 @@ import 'package:intl/intl.dart';
 //import 'package:calendar_builder/calendar_builder.dart';
 
 class Budgetpage extends StatelessWidget {
-  const Budgetpage({Key? key}) : super(key: key);
+  const Budgetpage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text('Savings & Expenses Calculator')),
-        body: Padding(
+        appBar: AppBar(title: const Text('Savings & Expenses Calculator')),
+        body: const Padding(
           padding: EdgeInsets.all(16.0),
           child: SavingsForm(),
         ),
@@ -20,19 +20,21 @@ class Budgetpage extends StatelessWidget {
 }
 
 class SavingsForm extends StatefulWidget {
+  const SavingsForm({super.key});
+
   @override
   _SavingsFormState createState() => _SavingsFormState();
 }
 
 class _SavingsFormState extends State<SavingsForm> {
   // Fixed expenses and savings
-  double _expensesDay1 = 1800;
-  double _expensesDay2 = 50;
-  double _savingsDay1 = 1000;
-  double _incomeDay30 = 6000;
+  final double _expensesDay1 = 1800;
+  final double _expensesDay2 = 50;
+  final double _savingsDay1 = 1000;
+  final double _incomeDay30 = 6000;
 
   // Daily expenses
-  double _dailyExpense = 30;
+  final double _dailyExpense = 30;
 
   double _requiredAmount = 0.0;
   DateTime _selectedDate = DateTime.now();
@@ -87,28 +89,28 @@ class _SavingsFormState extends State<SavingsForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Select a date to calculate:',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Row(
           children: [
             Text(
               'Selected Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             ElevatedButton(
               onPressed: () => _pickDate(context),
-              child: Text('Pick Date'),
+              child: const Text('Pick Date'),
             ),
           ],
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Text(
           'Required Amount in Account by Selected Date: \$${_requiredAmount.toStringAsFixed(2)}',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ],
     );
