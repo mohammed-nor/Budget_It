@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 //import 'package:google_fonts/google_fonts.dart';
-import 'package:budget_it/styles and constants.dart';
+import 'package:budget_it/services/styles%20and%20constants.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
@@ -63,7 +63,7 @@ class _StatspageState extends State<Statspage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                Text("مداخيل الأشهر الخمسة الماظية", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                Text("مداخيل الأشهر الخمسة الماضية", style: darktextstyle.copyWith(fontSize: fontSize1)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.center,

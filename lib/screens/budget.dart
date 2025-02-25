@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:budget_it/styles and constants.dart';
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hijri/hijri_calendar.dart';
 
-class Dailypage extends StatefulWidget {
-  const Dailypage({super.key});
+class Budgetpage extends StatefulWidget {
+  const Budgetpage({super.key});
 
   @override
-  State<Dailypage> createState() => _DailypageState();
+  State<Budgetpage> createState() => _BudgetpageState();
 }
 
-void initState() {}
+void initState() {
+  // TODO: implement initState
+  cardcolor = prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0));
+}
 
-class _DailypageState extends State<Dailypage> {
-  //final box = GetStorage();
+class _BudgetpageState extends State<Budgetpage> {
   DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  final prefsdata = Hive.box('data');
   @override
   Widget build(BuildContext context) {
+    double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
+    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
     late DateTime NextMonthPaymentDate;
     late DateTime ThisMonthPaymentDate;
     if (today.day >= 30 && today.month != 1) {
@@ -60,7 +61,6 @@ class _DailypageState extends State<Dailypage> {
     }
 
     int daysInCurrentMonth = NextMonthPaymentDate.difference(ThisMonthPaymentDate).inDays;
-    int daysDifference = NextMonthPaymentDate.difference(today).inDays;
     final size = MediaQuery.of(context).size;
     num totsaving = prefsdata.get("totsaving", defaultValue: 50000);
     num nownetcredit = prefsdata.get("nownetcredit", defaultValue: 2000);
@@ -74,9 +74,7 @@ class _DailypageState extends State<Dailypage> {
     num mntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 2000);
     num mntperinc = prefsdata.get("mntperinc", defaultValue: 40);
     DateTime startDate = prefsdata.get("startDate", defaultValue: DateTime(2024, 9, 1));
-    DateTime selectedDate = prefsdata.get("selectedDate", defaultValue: DateTime(2024, 9, 1));
-    double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
-    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
+
     double calculateSavingsSoFar() {
       int daysSinceStart = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays;
       return nowcredit + mntsaving * daysSinceStart.toDouble();
@@ -86,10 +84,6 @@ class _DailypageState extends State<Dailypage> {
     DateTime aidfitr = HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 10, 1);
     DateTime aidfadha = HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10);
 
-    double calculateiningToGoal() {
-      return totsaving - calculateSavingsSoFar();
-    }
-
     Widget moneyinput(size, boxvariable, boxvariablename, String textlabel) {
       return Padding(
         padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
@@ -98,7 +92,7 @@ class _DailypageState extends State<Dailypage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
-              //height: size.height * 0.07,
+              height: 50 * fontSize2 / 16,
               width: size.width * 0.17 * fontSize2 / 16,
               child: TextFormField(
                 textAlign: TextAlign.center,
@@ -133,7 +127,7 @@ class _DailypageState extends State<Dailypage> {
                 //maxLength: 10,
               ),
             ),
-            Text(textlabel, style: darktextstyle, textAlign: TextAlign.right),
+            Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2), textAlign: TextAlign.right),
           ],
         ),
       );
@@ -163,45 +157,56 @@ class _DailypageState extends State<Dailypage> {
                 Text("\$${calculateiningToGoal().toStringAsFixed(2)}"),
                 */
                 const SizedBox(height: 20),
-
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      " المبلغ المسموح إنفاقه في اليوم هو  ${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} من أصل ${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} درهم",
+                      " المبلغ المسموح في اليوم هو  ${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} من ${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} درهم",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                       textAlign: TextAlign.center,
                     ),
-                    Text("", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(" عدد الأيام المتبقية هو ${daysleftInCurrentMonth()} أيام ", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                    //Text("", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                    Text(" عدد الأيام المتبقية للأجرة هو ${daysleftInCurrentMonth()} أيام ", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     TableCalendar(
                       focusedDay: today,
+                      rowHeight: 45,
                       firstDay: DateTime(startDate.year, startDate.month, 1),
                       lastDay: DateTime(2050, 12, 31),
                       selectedDayPredicate: (day) => isSameDay(day, today),
                       calendarFormat: CalendarFormat.month,
-                      //calendarBuilders: CalendarBuilders(),
+
                       headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
                       onDaySelected: _ondayselected,
-                      calendarStyle: const CalendarStyle(weekNumberTextStyle: TextStyle(color: Color(0xFFFFFFFF)), weekendTextStyle: TextStyle(color: Color(0xFFFFFFFF))),
+                      calendarStyle: CalendarStyle(
+                        weekNumberTextStyle: const TextStyle(color: Color(0xFFFFFFFF)),
+                        //rangeStartTextStyle: const TextStyle(color: Color(0xFF373737), fontSize: 16.0),
+                        weekendTextStyle: TextStyle(fontSize: fontSize1, fontWeight: FontWeight.w900, color: Color(0xFFE82064)),
+                        outsideTextStyle: TextStyle(color: const Color(0xFFBEBEBE)),
+                        todayDecoration: const BoxDecoration(color: Color(0xFFE696B2), shape: BoxShape.circle),
+                        todayTextStyle: TextStyle(color: Color(0xFFFAFAFA), fontSize: fontSize1, fontWeight: FontWeight.w900),
+                        selectedDecoration: const BoxDecoration(color: Color(0xFFE82064), shape: BoxShape.circle),
+                        selectedTextStyle: TextStyle(color: Color(0xFFFAFAFA), fontSize: fontSize1, fontWeight: FontWeight.w900),
+                        defaultTextStyle: TextStyle(fontSize: fontSize1, fontWeight: FontWeight.w900, color: Color(0xFFFFFFFF)),
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
+
                     Text(
-                      " المبلغ الذي يجب أن يكون بحسابك في أول اليوم هو ${((nowcredit + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} درهما ",
+                      " المبلغ عندك في أول اليوم هو ${((nowcredit + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} درهما ",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
+                    //const SizedBox(height: 20),
                     Text(
                       " المبلغ الذي وفرته هو ${(nownetcredit + count30thsPassed(startDate, today) * (mntsaving))} درهما ",
                       style: darktextstyle.copyWith(fontSize: fontSize1, color: const Color.fromRGBO(106, 253, 95, 1.0)),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20),
+                    //const SizedBox(height: 20),
                     Text(
                       totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving) > 0
-                          ? " المبلغ الذي بقي عليك  أن توفره هو ${totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
+                          ? " المبلغ الذي ينقصك هو ${totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
                           : " مبروك , لقد حققت هدفك ",
                       style: darktextstyle.copyWith(
                         fontSize: fontSize1,
@@ -212,7 +217,7 @@ class _DailypageState extends State<Dailypage> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                //const SizedBox(height: 20),
                 // ValueListenableBuilder(
                 //   valueListenable: prefsdata.listenable(),
                 //   builder: (context, box, _) {
@@ -310,6 +315,7 @@ class _DailypageState extends State<Dailypage> {
                     ],
                   ),
                 ),*/
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: Row(
@@ -336,6 +342,8 @@ class _DailypageState extends State<Dailypage> {
                 ),
                 infocalculated((totsaving - nownetcredit) / (0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "عدد أشهر الإدخار"),
                 infocalculated(0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12)), "أقصى ما يمكن ادخاره"),
+                //const SizedBox(height: 20),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Row(
@@ -347,7 +355,7 @@ class _DailypageState extends State<Dailypage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text(
                                 "${(((nowcredit + (daysdiff(startDate, ramadane) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, ramadane) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
@@ -366,7 +374,7 @@ class _DailypageState extends State<Dailypage> {
                             ),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text(
                                 "${(((nowcredit + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
@@ -385,7 +393,7 @@ class _DailypageState extends State<Dailypage> {
                             ),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text(
                                 "${(((nowcredit + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
@@ -405,20 +413,21 @@ class _DailypageState extends State<Dailypage> {
                           ),
                         ],
                       ),
+
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, ramadane) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, aidfitr) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, aidfadha) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
                           ),
                         ],
@@ -428,7 +437,7 @@ class _DailypageState extends State<Dailypage> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             SizedBox(
-                              height: 40,
+                              height: 25,
                               child: Center(
                                 child: Text(
                                   "<=",
@@ -437,7 +446,7 @@ class _DailypageState extends State<Dailypage> {
                               ),
                             ),
                             SizedBox(
-                              height: 40,
+                              height: 25,
                               child: Center(
                                 child: Text(
                                   "<=",
@@ -446,7 +455,7 @@ class _DailypageState extends State<Dailypage> {
                               ),
                             ),
                             SizedBox(
-                              height: 40,
+                              height: 25,
                               child: Center(
                                 child: Text(
                                   "<=",
@@ -460,7 +469,7 @@ class _DailypageState extends State<Dailypage> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text(
                                 "${ramadane.year}-${aidfitr.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}",
@@ -469,13 +478,13 @@ class _DailypageState extends State<Dailypage> {
                             ),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text("${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')}", style: darktextstyle.copyWith(fontSize: fontSize1)),
                             ),
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 25,
                             child: Center(
                               child: Text(
                                 "${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')}",
@@ -489,42 +498,42 @@ class _DailypageState extends State<Dailypage> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          SizedBox(height: 40, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text(":", style: darktextstyle.copyWith(fontSize: fontSize1)))),
                         ],
                       ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          SizedBox(height: 40, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("(يوما", style: darktextstyle.copyWith(fontSize: fontSize1)))),
                         ],
                       ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          SizedBox(height: 40, child: Center(child: Text("${daysdiff(DateTime.now(), ramadane).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text("${daysdiff(DateTime.now(), aidfitr).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text("${daysdiff(DateTime.now(), aidfadha).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("${daysdiff(DateTime.now(), ramadane).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("${daysdiff(DateTime.now(), aidfitr).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text("${daysdiff(DateTime.now(), aidfadha).toString()})", style: darktextstyle.copyWith(fontSize: fontSize1)))),
                         ],
                       ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          SizedBox(height: 40, child: Center(child: Text('فاتح رمضان', style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text('عيد الفطر', style: darktextstyle.copyWith(fontSize: fontSize1)))),
-                          SizedBox(height: 40, child: Center(child: Text('عيد الأضحى', style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text('فاتح رمضان', style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text('عيد الفطر', style: darktextstyle.copyWith(fontSize: fontSize1)))),
+                          SizedBox(height: 25, child: Center(child: Text('عيد الأضحى', style: darktextstyle.copyWith(fontSize: fontSize1)))),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                //const SizedBox(height: 20),
                 /*OutlinedButton(
                   onPressed: () => prefsdata.deleteFromDisk(),
                   child: SizedBox(
@@ -552,7 +561,7 @@ class _DailypageState extends State<Dailypage> {
                     ),
                   ),
                 ),*/
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -585,7 +594,7 @@ class _DailypageState extends State<Dailypage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
-                        //height: size.height * 0.07,
+                        height: 50 * fontSize2 / 16,
                         width: size.width * 0.17 * fontSize2 / 16,
                         child: TextFormField(
                           textAlign: TextAlign.center,
@@ -633,7 +642,7 @@ class _DailypageState extends State<Dailypage> {
                         "المبلغ المتوفر بتاريخ اليوم"
                         " ${startDate.year}-${startDate.month}-${startDate.day} "
                         "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} يوم )",
-                        style: darktextstyle,
+                        style: darktextstyle.copyWith(fontSize: fontSize2),
                         textAlign: TextAlign.right,
                       ),
                     ],
@@ -742,7 +751,7 @@ class _DailypageState extends State<Dailypage> {
                     ],
                   ),
                 ),*/
-                const SizedBox(height: 20),
+                //const SizedBox(height: 20),
               ],
             ),
           ),
@@ -759,10 +768,10 @@ class _DailypageState extends State<Dailypage> {
                 moneyinput(size, mntexp, "mntexp", "مصاريف شهرية "),
                 moneyinput(size, annexp, "annexp", "مصاريف سنوية"),
                 moneyinputslider(size, mntperexp, "mntperexp", "نسبة التغير في الإنفاق        "),
-                const SizedBox(height: 20),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 infocalculated(-(mntsaving - 0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "فائض / عجز التدبير"),
                 infocalculated((totsaving - nownetcredit) / mntsaving, "عدد أشهر الإدخار المثالي"),
-                const SizedBox(height: 20),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
@@ -777,7 +786,7 @@ class _DailypageState extends State<Dailypage> {
                         ],
                         barPointers: [LinearBarPointer(value: (totsaving - nownetcredit) / mntsaving, thickness: 10, edgeStyle: LinearEdgeStyle.endCurve)],
                       ),
-                      Padding(padding: const EdgeInsets.all(8.0), child: Text("مبيان أشهر الإدخار", style: darktextstyle, textAlign: TextAlign.right)),
+                      Padding(padding: const EdgeInsets.all(8.0), child: Text("مبيان أشهر الإدخار", style: darktextstyle.copyWith(fontSize: fontSize1), textAlign: TextAlign.right)),
                     ],
                   ),
                 ),
@@ -793,12 +802,12 @@ class _DailypageState extends State<Dailypage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                Text("هيكلة المداخيل الشخصية", style: darktextstyle),
+                Text("هيكلة المداخيل الشخصية", style: darktextstyle.copyWith(fontSize: fontSize1)),
                 const SizedBox(height: 20),
                 moneyinput(size, mntinc, "mntinc", "المداخيل الشهرية القارة"),
                 moneyinput(size, mntnstblinc, "mntnstblinc", "مداخيل شهرية غير قارة"),
                 moneyinputslider(size, mntperinc, "mntperinc", "نسبة تقلبات المداخيل         "),
-                const SizedBox(height: 20),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 infocalculated(0.5 * ((mntinc + mntnstblinc * (1 + mntperinc * 0.01)) * (12 - freemnt)) - (mntexp * (1 - mntperexp * 0.01) + annexp), "أقصى ما يمكن إدخاره سنويا"),
                 infocalculated(0.5 * ((mntinc + mntnstblinc * (1 - mntperinc * 0.01)) * (12 - freemnt)) - (mntexp * (1 + mntperexp * 0.01) + annexp), "أقل ما يمكن إدخاره سنويا"),
                 const SizedBox(height: 20),
@@ -873,7 +882,7 @@ class _DailypageState extends State<Dailypage> {
               //maxLength: 10,
             ),
           ),
-          Text(textlabel, style: darktextstyle, textAlign: TextAlign.right),
+          Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2), textAlign: TextAlign.right),
         ],
       ),
     );

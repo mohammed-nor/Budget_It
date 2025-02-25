@@ -1,29 +1,11 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
-//import 'package:budget_calculator/budgetpage.dart';
-import 'package:budget_it/dailypage.dart';
-import 'package:budget_it/profilpage.dart';
-import 'package:budget_it/statspage.dart';
+import 'package:budget_it/screens/budget.dart';
+import 'package:budget_it/screens/profil.dart';
+import 'package:budget_it/screens/stats.dart';
 import 'package:hive/hive.dart';
 
-final box = GetStorage();
 final prefsdata = Hive.box('data');
-
-// double totsaving = 50000;
-// double mntsaving = 1000;
-// double freemnt = 5;
-// double mntexp = 2000;
-// double annexp = 10000;
-// double mntperexp = 10;
-// double mntinc = 5300;
-// double mntnstblinc = 3000;
-// double mntperinc = 2;
-// double nownetcredit = 10000;
-// int? vall = 000;
-// var val2 = "000";
 
 class Myhome extends StatefulWidget {
   const Myhome({super.key});
@@ -76,7 +58,7 @@ class _MyhomeState extends State<Myhome> {
   }
 
   Widget getbody() {
-    return IndexedStack(index: pageindex, children: const [Statspage(), Profilpage(), Dailypage()]);
+    return IndexedStack(index: pageindex, children: [Statspage(), Profilpage(), Budgetpage()]);
   }
 
   /// It returns an AnimatedBottomNavigationBar widget with a list of icons, an active color, an active
@@ -88,8 +70,10 @@ class _MyhomeState extends State<Myhome> {
     List<IconData> listactions = [Icons.calendar_month, Icons.settings];
     return AnimatedBottomNavigationBar(
       icons: listactions,
-      activeColor: Colors.pink,
+      activeColor: Colors.white,
+      // backgroundGradient: LinearGradient(colors: [prefsdata.get("cardcolor", defaultValue: Colors.black), Colors.black], begin: Alignment.topCenter, end: Alignment.bottomCenter),
       activeIndex: pageindex,
+      //backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black),
       onTap: (index) {
         setTabs(index);
       },

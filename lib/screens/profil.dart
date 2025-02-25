@@ -1,8 +1,9 @@
-import 'package:budget_it/styles and constants.dart';
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:hive/hive.dart';
 
 class Profilpage extends StatefulWidget {
   const Profilpage({super.key});
@@ -13,15 +14,14 @@ class Profilpage extends StatefulWidget {
 
 class _ProfilpageState extends State<Profilpage> {
   //Color selectedColor = Colors.white; // Default color
-
   TextStyle darkteststyle2 = TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize1, color: Colors.white);
 
   TextStyle darktextstyle = GoogleFonts.elMessiri(fontWeight: FontWeight.w700, fontSize: fontSize2.toDouble(), color: Colors.white);
   //String selectedColorName = 'Light';
   @override
   Widget build(BuildContext context) {
-    double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
-    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
+    final prefsdata = Hive.box('data');
+
     TextStyle darkteststyle2 = TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize1, color: Colors.white);
 
     TextStyle darktextstyle = GoogleFonts.elMessiri(fontWeight: FontWeight.w700, fontSize: fontSize2.toDouble(), color: Colors.white);
@@ -55,9 +55,12 @@ class _ProfilpageState extends State<Profilpage> {
                     onPressed: () async {
                       final Uri url = Uri.parse(githubUrl);
                       if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                        await launchUrl(url, mode: LaunchMode.inAppWebView);
+                        //ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$url')));
                       } else {
                         print("Could not launch $url");
+                        //throw Exception('Could not launch $url');
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred: "Could not launch $url')));
                       }
                     },
                     icon: const Icon(Icons.link),
@@ -115,6 +118,7 @@ class _ProfilpageState extends State<Profilpage> {
                             setState(() {
                               fontSize1 = newValue;
                               prefsdata.put("fontsize1", newValue);
+                              ChangeNotifier();
                             });
                           },
                         ),
@@ -143,6 +147,7 @@ class _ProfilpageState extends State<Profilpage> {
                             setState(() {
                               fontSize2 = newValue;
                               prefsdata.put("fontsize2", newValue);
+                              ChangeNotifier();
                             });
                           },
                         ),
@@ -174,7 +179,9 @@ class _ProfilpageState extends State<Profilpage> {
                             setState(() {
                               selectedColorName = newValue!;
                               cardcolor = colorMap[newValue]!;
-                              prefsdata.put("cardcolor", colorMap[newValue]!);
+                              prefsdata.put("cardcolor", colorMap[newValue] as Color);
+                              prefsdata.put("selectedColorName", newValue);
+                              ChangeNotifier();
                             });
                           },
                         ),
