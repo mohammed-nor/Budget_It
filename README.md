@@ -1,6 +1,6 @@
 # budget_it
 
-A new Flutter project.
+an app that "budget it" up for you !
 
 ## Getting Started
 
