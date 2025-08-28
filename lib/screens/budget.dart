@@ -398,6 +398,7 @@ class _BudgetpageState extends State<Budgetpage> {
       body: ListView(
         padding: const EdgeInsets.all(7),
         children: <Widget>[
+          _buildBudgetHistoryCard(context),
           Card(
             elevation: 2,
             color: cardcolor,
@@ -1178,6 +1179,8 @@ class _BudgetpageState extends State<Budgetpage> {
                   prefsdata.put(boxvariablename.toString(), newValue);
                   boxvariable = prefsdata.get(boxvariablename.toString());
                   print(boxvariable.toString() + boxvariablename.toString());
+                  // Add this line to save state when values change
+                  _saveCurrentState();
                 });
               },
             ),
