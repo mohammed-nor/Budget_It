@@ -26,5 +26,7 @@ class PrefsDataStoreAdapter extends TypeAdapter<PrefsDataStore> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrefsDataStoreAdapter && runtimeType == other.runtimeType && typeId == other.typeId;
+      other is PrefsDataStoreAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }

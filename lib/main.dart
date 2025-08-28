@@ -5,14 +5,18 @@ import 'package:budget_it/screens/home.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'services/ColorAdapter.dart';
+import 'models/budget_history.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await Hive.initFlutter();
+
   Hive.registerAdapter(ColorAdapter());
+  Hive.registerAdapter(BudgetHistoryAdapter());
 
   await Hive.openBox('data');
+  await Hive.openBox<BudgetHistory>('budget_history');
 
   runApp(GetMaterialApp(debugShowCheckedModeBanner: false, home: const Myhome(), darkTheme: ThemeData.dark(), theme: ThemeData.light(), themeMode: ThemeMode.dark));
 }

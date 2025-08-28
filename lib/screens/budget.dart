@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:hive/hive.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hijri/hijri_calendar.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:budget_it/models/budget_history.dart';
+import 'package:intl/intl.dart';
 
 class Budgetpage extends StatefulWidget {
   const Budgetpage({super.key});
@@ -19,6 +23,241 @@ void initState() {
 
 class _BudgetpageState extends State<Budgetpage> {
   DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  Box<BudgetHistory>? historyBox;
+  List<BudgetHistory> budgetHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    cardcolor = prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0));
+    _initHistoryBox();
+    _loadBudgetHistory();
+  }
+
+  Future<void> _initHistoryBox() async {
+    historyBox = await Hive.openBox<BudgetHistory>('budget_history');
+  }
+
+  void _loadBudgetHistory() {
+    if (historyBox != null && historyBox!.isNotEmpty) {
+      budgetHistory = historyBox!.values.toList();
+      budgetHistory.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    }
+  }
+
+  void _saveCurrentState() {
+    if (historyBox != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      // Check if we already have an entry for today
+      final todayEntry = historyBox!.values.where((entry) => entry.timestamp.year == today.year && entry.timestamp.month == today.month && entry.timestamp.day == today.day).toList();
+
+      if (todayEntry.isEmpty) {
+        final newEntry = BudgetHistory(
+          timestamp: today,
+          mntsaving: prefsdata.get("mntsaving", defaultValue: 1000),
+          freemnt: prefsdata.get("freemnt", defaultValue: 2),
+          nownetcredit: prefsdata.get("nownetcredit", defaultValue: 2000),
+        );
+
+        historyBox!.add(newEntry);
+        budgetHistory = historyBox!.values.toList();
+        budgetHistory.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      }
+    }
+  }
+
+  // Update the moneyinput method to save state when values change
+  Widget moneyinput(size, boxvariable, boxvariablename, String textlabel) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 50 * fontSize2 / 16,
+            width: size.width * 0.17 * fontSize2 / 16,
+            child: TextFormField(
+              textAlign: TextAlign.center,
+              style: darktextstyle.copyWith(fontSize: fontSize2),
+              initialValue: boxvariable.toString(),
+              decoration: InputDecoration(hintStyle: darktextstyle.copyWith(fontSize: fontSize2), border: OutlineInputBorder(gapPadding: 1)),
+              onChanged: (newval) {
+                final v = int.tryParse(newval);
+                if (v == null) {
+                  setState(() {
+                    pickStartDate(context);
+                    prefsdata.put(boxvariablename, 0);
+                    boxvariable = prefsdata.get(boxvariablename.toString());
+                    print(boxvariable.toString() + boxvariablename.toString());
+                    // After any value changes, save current state
+                    _saveCurrentState();
+                  });
+                } else {
+                  setState(() {
+                    pickStartDate(context);
+                    prefsdata.put(boxvariablename.toString(), v);
+                    boxvariable = prefsdata.get(boxvariablename.toString());
+                    print(boxvariable.toString() + boxvariablename.toString());
+                    // After any value changes, save current state
+                    _saveCurrentState();
+                  });
+                }
+              },
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2), textAlign: TextAlign.right),
+        ],
+      ),
+    );
+  }
+
+  // Now, add a new card with budget history visualization
+  Widget _buildBudgetHistoryCard(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    // Get only the last 6 months of data
+    final sixMonthsAgo = DateTime.now().subtract(const Duration(days: 180));
+    final recentHistory = budgetHistory.where((entry) => entry.timestamp.isAfter(sixMonthsAgo)).toList();
+
+    if (recentHistory.isEmpty) {
+      return Card(
+        elevation: 5,
+        color: cardcolor,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text("لا توجد بيانات تاريخية كافية بعد. استمر في تحديث ميزانيتك لرؤية الرسوم البيانية هنا.", style: darktextstyle.copyWith(fontSize: fontSize1), textAlign: TextAlign.center),
+        ),
+      );
+    }
+
+    // Calculate statistics
+    num totalSaved = 0;
+    num startCredit = recentHistory.first.nownetcredit;
+    num endCredit = recentHistory.last.nownetcredit;
+    num savingProgress = endCredit - startCredit;
+
+    // Find months with best/worst performance
+    List<MapEntry<DateTime, num>> monthlyChanges = [];
+    for (int i = 1; i < recentHistory.length; i++) {
+      final change = recentHistory[i].nownetcredit - recentHistory[i - 1].nownetcredit;
+      monthlyChanges.add(MapEntry(recentHistory[i].timestamp, change));
+    }
+
+    monthlyChanges.sort((a, b) => b.value.compareTo(a.value));
+    final bestMonth = monthlyChanges.isNotEmpty ? monthlyChanges.first : null;
+
+    monthlyChanges.sort((a, b) => a.value.compareTo(b.value));
+    final worstMonth = monthlyChanges.isNotEmpty ? monthlyChanges.first : null;
+
+    return Card(
+      elevation: 5,
+      color: cardcolor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("تحليل الأداء - آخر 6 أشهر", style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+
+            // Savings Growth Chart
+            SizedBox(
+              height: 200,
+              child: SfCartesianChart(
+                primaryXAxis: DateTimeAxis(dateFormat: DateFormat('MM/dd'), intervalType: DateTimeIntervalType.months, interval: 1),
+                primaryYAxis: NumericAxis(numberFormat: NumberFormat('#,###')),
+                tooltipBehavior: TooltipBehavior(enable: true),
+                legend: Legend(isVisible: true, position: LegendPosition.bottom),
+                series: <CartesianSeries>[
+                  LineSeries<BudgetHistory, DateTime>(
+                    name: 'المدخرات',
+                    dataSource: recentHistory,
+                    xValueMapper: (BudgetHistory data, _) => data.timestamp,
+                    yValueMapper: (BudgetHistory data, _) => data.nownetcredit,
+                    color: const Color.fromRGBO(106, 253, 95, 1.0),
+                    markerSettings: const MarkerSettings(isVisible: true),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // Monthly Saving Target Chart
+            SizedBox(
+              height: 200,
+              child: SfCartesianChart(
+                primaryXAxis: DateTimeAxis(dateFormat: DateFormat('MM/dd'), intervalType: DateTimeIntervalType.months, interval: 1),
+                primaryYAxis: NumericAxis(),
+                tooltipBehavior: TooltipBehavior(enable: true),
+                legend: Legend(isVisible: true, position: LegendPosition.bottom),
+                series: <CartesianSeries>[
+                  LineSeries<BudgetHistory, DateTime>(
+                    name: 'هدف الإدخار الشهري',
+                    dataSource: recentHistory,
+                    xValueMapper: (BudgetHistory data, _) => data.timestamp,
+                    yValueMapper: (BudgetHistory data, _) => data.mntsaving,
+                    color: Colors.blue,
+                    markerSettings: const MarkerSettings(isVisible: true),
+                  ),
+                  LineSeries<BudgetHistory, DateTime>(
+                    name: 'أشهر الراحة',
+                    dataSource: recentHistory,
+                    xValueMapper: (BudgetHistory data, _) => data.timestamp,
+                    yValueMapper: (BudgetHistory data, _) => data.freemnt,
+                    color: Colors.orange,
+                    markerSettings: const MarkerSettings(isVisible: true),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // Statistics
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: const Color.fromRGBO(40, 40, 40, 1.0)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text("ملخص الأداء", style: darktextstyle.copyWith(fontSize: fontSize1, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
+                  const SizedBox(height: 10),
+                  _buildStatRow("التقدم في الإدخار:", "${savingProgress.round()} درهم", savingProgress > 0 ? const Color.fromRGBO(106, 253, 95, 1.0) : const Color.fromRGBO(253, 95, 95, 1.0)),
+                  _buildStatRow("متوسط هدف الإدخار الشهري:", "${recentHistory.map((e) => e.mntsaving).reduce((a, b) => a + b) ~/ recentHistory.length} درهم", Colors.white),
+
+                  if (bestMonth != null)
+                    _buildStatRow("أفضل شهر أداءً:", "${DateFormat('MMMM yyyy').format(bestMonth.key)} (${bestMonth.value.round()} درهم)", const Color.fromRGBO(106, 253, 95, 1.0)),
+
+                  if (worstMonth != null)
+                    _buildStatRow("أسوأ شهر أداءً:", "${DateFormat('MMMM yyyy').format(worstMonth.key)} (${worstMonth.value.round()} درهم)", const Color.fromRGBO(253, 95, 95, 1.0)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String label, String value, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(value, style: darktextstyle.copyWith(fontSize: fontSize1, color: valueColor), textAlign: TextAlign.left),
+          Text(label, style: darktextstyle.copyWith(fontSize: fontSize1), textAlign: TextAlign.right),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
@@ -80,9 +319,30 @@ class _BudgetpageState extends State<Budgetpage> {
       return nowcredit + mntsaving * daysSinceStart.toDouble();
     }
 
-    DateTime ramadane = HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 9, 1);
-    DateTime aidfitr = HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 10, 1);
-    DateTime aidfadha = HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10);
+    DateTime ramadane =
+        HijriCalendar()
+                    .hijriToGregorian(HijriCalendar.now().hYear, 9, 1)
+                    .difference(HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, HijriCalendar.now().hMonth, HijriCalendar.now().hDay))
+                    .inDays >
+                1
+            ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 9, 1)
+            : HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear + 1, 9, 1);
+    DateTime aidfitr =
+        HijriCalendar()
+                    .hijriToGregorian(HijriCalendar.now().hYear, 10, 1)
+                    .difference(HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, HijriCalendar.now().hMonth, HijriCalendar.now().hDay))
+                    .inDays >
+                1
+            ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 10, 1)
+            : HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear + 1, 10, 1);
+    DateTime aidfadha =
+        HijriCalendar()
+                    .hijriToGregorian(HijriCalendar.now().hYear, 12, 10)
+                    .difference(HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, HijriCalendar.now().hMonth, HijriCalendar.now().hDay))
+                    .inDays >
+                1
+            ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10)
+            : HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear + 1, 12, 10);
 
     Widget moneyinput(size, boxvariable, boxvariablename, String textlabel) {
       return Padding(
@@ -340,7 +600,8 @@ class _BudgetpageState extends State<Budgetpage> {
                     ],
                   ),
                 ),
-                infocalculated((totsaving - nownetcredit) / (0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "عدد أشهر الإدخار"),
+                infocalculated((totsaving - nownetcredit) / mntsaving, "عدد أشهر الإدخار"),
+                infocalculated((totsaving - nownetcredit) / (0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "عدد أشهر الإذخار الأمثل"),
                 infocalculated(0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12)), "أقصى ما يمكن ادخاره"),
                 //const SizedBox(height: 20),
                 Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
@@ -770,7 +1031,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 moneyinputslider(size, mntperexp, "mntperexp", "نسبة التغير في الإنفاق        "),
                 Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 infocalculated(-(mntsaving - 0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "فائض / عجز التدبير"),
-                infocalculated((totsaving - nownetcredit) / mntsaving, "عدد أشهر الإدخار المثالي"),
+
                 Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
