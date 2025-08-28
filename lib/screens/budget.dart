@@ -398,7 +398,6 @@ class _BudgetpageState extends State<Budgetpage> {
       body: ListView(
         padding: const EdgeInsets.all(7),
         children: <Widget>[
-          _buildBudgetHistoryCard(context),
           Card(
             elevation: 2,
             color: cardcolor,
@@ -827,6 +826,7 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
           ),
+          _buildBudgetHistoryCard(context),
           Card(
             elevation: 2,
             color: cardcolor,

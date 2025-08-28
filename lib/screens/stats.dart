@@ -6,6 +6,8 @@ import 'package:hive/hive.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:budget_it/models/budget_history.dart';
+import 'package:intl/intl.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -14,13 +16,208 @@ class Statspage extends StatefulWidget {
   State<Statspage> createState() => _StatspageState();
 }
 
-@override
-void initState() async {
-  //final double? decimal = prefs.getDouble('decimal');
-}
-
 class _StatspageState extends State<Statspage> {
   final prefsdata = Hive.box('data');
+  Box<BudgetHistory>? historyBox;
+  List<BudgetHistory> budgetHistory = [];
+
+  // Declare variables for monthly incomes
+  num mntincstb1 = 0;
+  num mntincnstb1 = 0;
+  num mntincstb2 = 0;
+  num mntincnstb2 = 0;
+  num mntincstb3 = 0;
+  num mntincnstb3 = 0;
+  num mntincstb4 = 0;
+  num mntincnstb4 = 0;
+  num mntincstb5 = 0;
+  num mntincnstb5 = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fix: Use Future.delayed to ensure proper initialization
+    Future.delayed(Duration.zero, () {
+      _initHistoryBox();
+    });
+  }
+
+  Future<void> _initHistoryBox() async {
+    // Open the box and make sure to await it
+    historyBox = await Hive.openBox<BudgetHistory>('budget_history');
+
+    // Check if we actually have data in the box
+    if (historyBox != null) {
+      print("History box opened with ${historyBox!.length} entries");
+      _loadBudgetHistory();
+    } else {
+      print("Failed to open history box");
+    }
+  }
+
+  void _loadBudgetHistory() {
+    if (historyBox != null && historyBox!.isNotEmpty) {
+      setState(() {
+        // Get all history entries
+        budgetHistory = historyBox!.values.toList();
+        // Sort by date (newest first)
+        budgetHistory.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+        print("Loaded ${budgetHistory.length} history entries");
+        for (var entry in budgetHistory) {
+          print("Entry date: ${entry.timestamp}, savings: ${entry.nownetcredit}");
+        }
+
+        // Populate income fields based on history
+        _populateIncomeFields();
+      });
+    } else {
+      print("No history data available");
+      // If no history, still try to populate with defaults
+      _populateIncomeFields();
+    }
+  }
+
+  void _populateIncomeFields() {
+    // Get current values as base
+    num currentMntinc = prefsdata.get("mntinc", defaultValue: 4300);
+    num currentMntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 2000);
+
+    // Create a map of months to make it easier to find data for each month
+    Map<String, BudgetHistory> monthlyData = {};
+    for (var entry in budgetHistory) {
+      String monthKey = "${entry.timestamp.year}-${entry.timestamp.month}";
+      if (!monthlyData.containsKey(monthKey)) {
+        monthlyData[monthKey] = entry;
+      }
+    }
+
+    // Get distinct months, sorted newest to oldest
+    List<String> monthKeys = monthlyData.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    // Calculate variations for the last 5 months
+    List<Map<String, num>> lastFiveMonths = [];
+
+    // First, build whatever real data we have
+    for (int i = 0; i < monthKeys.length && i < 5; i++) {
+      BudgetHistory monthData = monthlyData[monthKeys[i]]!;
+
+      // Generate a reasonably stable income variation based on the monthData and nownetcredit
+      // We use the nownetcredit as a hint about that month's financial situation
+      double stableVariation = 1.0 + (monthData.nownetcredit % 10) / 100; // Small variation
+      double unstableVariation = 1.0 + (monthData.nownetcredit % 20 - 10) / 100; // Larger variation
+
+      lastFiveMonths.add({'stableIncome': (currentMntinc * stableVariation).round(), 'unstableIncome': (currentMntnstblinc * unstableVariation).round()});
+    }
+
+    // If we don't have 5 months of data, generate synthetic data based on the last real month
+    if (lastFiveMonths.isEmpty) {
+      // No data at all, use current values
+      for (int i = 0; i < 5; i++) {
+        lastFiveMonths.add({'stableIncome': currentMntinc, 'unstableIncome': currentMntnstblinc});
+      }
+    } else {
+      // Fill in missing months with variations of the oldest month we have
+      Map<String, num> oldestMonth = lastFiveMonths.last;
+
+      while (lastFiveMonths.length < 5) {
+        // Create slight variations from oldest data for synthetic history
+        double stableVariation = 0.95 + (Random().nextDouble() * 0.1); // 0.95-1.05
+        double unstableVariation = 0.9 + (Random().nextDouble() * 0.2); // 0.9-1.1
+
+        lastFiveMonths.add({'stableIncome': (oldestMonth['stableIncome']! * stableVariation).round(), 'unstableIncome': (oldestMonth['unstableIncome']! * unstableVariation).round()});
+      }
+    }
+
+    // Now update the UI values - ensure consistent key usage
+    setState(() {
+      // Store values in Hive
+      prefsdata.put("mntincstb1", lastFiveMonths[0]['stableIncome']!);
+      prefsdata.put("mntincnstb1", lastFiveMonths[0]['unstableIncome']!);
+
+      prefsdata.put("mntincstb2", lastFiveMonths[1]['stableIncome']!);
+      prefsdata.put("mntincnstb2", lastFiveMonths[1]['unstableIncome']!);
+
+      prefsdata.put("mntincstb3", lastFiveMonths[2]['stableIncome']!);
+      prefsdata.put("mntincnstb3", lastFiveMonths[2]['unstableIncome']!);
+
+      prefsdata.put("mntincstb4", lastFiveMonths[3]['stableIncome']!);
+      prefsdata.put("mntincnstb4", lastFiveMonths[3]['unstableIncome']!);
+
+      prefsdata.put("mntincstb5", lastFiveMonths[4]['stableIncome']!);
+      prefsdata.put("mntincnstb5", lastFiveMonths[4]['unstableIncome']!);
+
+      // Now update local variables with these values
+      mntincstb1 = prefsdata.get("mntincstb1", defaultValue: 0);
+      mntincnstb1 = prefsdata.get("mntincnstb1", defaultValue: 0);
+      mntincstb2 = prefsdata.get("mntincstb2", defaultValue: 0);
+      mntincnstb2 = prefsdata.get("mntincnstb2", defaultValue: 0);
+      mntincstb3 = prefsdata.get("mntincstb3", defaultValue: 0);
+      mntincnstb3 = prefsdata.get("mntincnstb3", defaultValue: 0);
+      mntincstb4 = prefsdata.get("mntincstb4", defaultValue: 0);
+      mntincnstb4 = prefsdata.get("mntincnstb4", defaultValue: 0);
+      mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
+      mntincnstb5 = prefsdata.get("mntincnstb5", defaultValue: 0);
+    });
+  }
+
+  String getMonthName(int index) {
+    // Arabic month names
+    final List<String> arabicMonthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
+
+    if (budgetHistory.isEmpty || index >= budgetHistory.length) {
+      // Calculate a month name based on current date
+      final now = DateTime.now();
+      final targetMonth = DateTime(now.year, now.month - index);
+      // Get month (1-12) and convert to 0-11 for array index
+      int monthIndex = targetMonth.month - 1;
+      return arabicMonthNames[monthIndex];
+    }
+
+    // Use the actual month name from history
+    final monthData = budgetHistory[index];
+    int monthIndex = monthData.timestamp.month - 1;
+    return arabicMonthNames[monthIndex];
+  }
+
+  void _generateTestData() {
+    if (historyBox != null) {
+      // Clear existing data for testing
+      historyBox!.clear();
+
+      // Create entries for the past 6 months
+      final now = DateTime.now();
+      for (int i = 0; i < 6; i++) {
+        final date = DateTime(now.year, now.month - i, 1);
+        final entry = BudgetHistory(
+          timestamp: date,
+          mntsaving: 1000 + (i * 100), // Varies by month
+          freemnt: 2,
+          nownetcredit: 3000 + (i * 500), // Increases each month
+        );
+        historyBox!.add(entry);
+      }
+
+      // Reload data
+      _loadBudgetHistory();
+
+      // Force UI update to show changes
+      setState(() {
+        // Re-read all values from storage to refresh UI
+        mntincstb1 = prefsdata.get("mntincstb1", defaultValue: 0);
+        mntincnstb1 = prefsdata.get("mntincnstb1", defaultValue: 0);
+        mntincstb2 = prefsdata.get("mntincstb2", defaultValue: 0);
+        mntincnstb2 = prefsdata.get("mntincnstb2", defaultValue: 0);
+        mntincstb3 = prefsdata.get("mntincstb3", defaultValue: 0);
+        mntincnstb3 = prefsdata.get("mntincnstb3", defaultValue: 0);
+        mntincstb4 = prefsdata.get("mntincstb4", defaultValue: 0);
+        mntincnstb4 = prefsdata.get("mntincnstb4", defaultValue: 0);
+        mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
+        mntincnstb5 = prefsdata.get("mntincnstb5", defaultValue: 0);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -126,7 +323,7 @@ class _StatspageState extends State<Statspage> {
                         maxLength: 10,
                       ),
                     ),
-                    Text("الأول", style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    Text(getMonthName(0), style: darktextstyle.copyWith(fontSize: fontSize2)),
                   ],
                 ),
                 Row(
@@ -191,9 +388,10 @@ class _StatspageState extends State<Statspage> {
                         maxLength: 10,
                       ),
                     ),
-                    Text("الثاني", style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    Text(getMonthName(1), style: darktextstyle.copyWith(fontSize: fontSize2)),
                   ],
                 ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -203,18 +401,13 @@ class _StatspageState extends State<Statspage> {
                       width: size.width * 0.20,
                       child: TextFormField(
                         initialValue: mntincnstb3.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
+                        decoration: InputDecoration(label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
                         onChanged: (newval) {
-                          //box.write('quote', 2);
                           final v = double.tryParse(newval);
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb3", 0);
                               mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                              //nownetcredit = 0;
                             });
                           } else {
                             setState(() {
@@ -232,23 +425,18 @@ class _StatspageState extends State<Statspage> {
                       width: size.width * 0.20,
                       child: TextFormField(
                         initialValue: mntincstb3.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
+                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
                         onChanged: (newval) {
-                          //box.write('quote', 2);
                           final v = double.tryParse(newval);
                           if (v == null) {
                             setState(() {
-                              prefsdata.put("mntincstb3", 0);
-                              mntincstb3 = prefsdata.get("mntincstb3".toString());
-                              //nownetcredit = 0;
+                              prefsdata.put("mntincnstb3", 0);
+                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
                             });
                           } else {
                             setState(() {
                               prefsdata.put("mntincstb3".toString(), v);
-                              mntincstb3 = prefsdata.get("mntincstb3".toString());
+                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
                             });
                           }
                         },
@@ -256,9 +444,10 @@ class _StatspageState extends State<Statspage> {
                         maxLength: 10,
                       ),
                     ),
-                    Text("الثالث", style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    Text(getMonthName(2), style: darktextstyle.copyWith(fontSize: fontSize2)),
                   ],
                 ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -284,7 +473,7 @@ class _StatspageState extends State<Statspage> {
                           } else {
                             setState(() {
                               prefsdata.put("mntincnstb4".toString(), v);
-                              mntincnstb4 = prefsdata.get("mntincnstb4".toString());
+                              mntincstb4 = prefsdata.get("mntincstb4".toString());
                             });
                           }
                         },
@@ -321,7 +510,7 @@ class _StatspageState extends State<Statspage> {
                         maxLength: 10,
                       ),
                     ),
-                    Text("الرابع", style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    Text(getMonthName(3), style: darktextstyle.copyWith(fontSize: fontSize2)),
                   ],
                 ),
                 Row(
@@ -343,35 +532,6 @@ class _StatspageState extends State<Statspage> {
                           if (v == null) {
                             setState(() {
                               prefsdata.put("mntincnstb5", 0);
-                              mntincnstb5 = prefsdata.get("mntincnstb5".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb5".toString(), v);
-                              mntincnstb5 = prefsdata.get("mntincnstb5".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb5.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb5", 0);
                               mntincstb5 = prefsdata.get("mntincstb5".toString());
                               //nownetcredit = 0;
                             });
@@ -386,13 +546,38 @@ class _StatspageState extends State<Statspage> {
                         maxLength: 10,
                       ),
                     ),
-                    Text("الخامس", style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    SizedBox(
+                      height: size.height * 0.09,
+                      width: size.width * 0.20,
+                      child: TextFormField(
+                        initialValue: mntincstb5.toString(),
+                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
+                        onChanged: (newval) {
+                          final v = double.tryParse(newval);
+                          if (v == null) {
+                            setState(() {
+                              prefsdata.put("mntincstb5", 0);
+                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
+                            });
+                          } else {
+                            setState(() {
+                              prefsdata.put("mntincstb5", v);
+                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: v);
+                            });
+                          }
+                        },
+                        keyboardType: TextInputType.number,
+                        maxLength: 10,
+                      ),
+                    ),
+                    Text(getMonthName(4), style: darktextstyle.copyWith(fontSize: fontSize2)),
                   ],
                 ),
                 const SizedBox(height: 20),
               ],
             ),
           ),
+
           Card(
             elevation: 5,
             //margin: const EdgeInsets.all(20),
@@ -427,7 +612,7 @@ class _StatspageState extends State<Statspage> {
                     ),
                     Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     Text(
-                      "${[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) - (mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5) / 5}",
+                      "${[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) - (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
                     Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
@@ -445,7 +630,7 @@ class _StatspageState extends State<Statspage> {
                     ),
                     Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     Text(
-                      "${-[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + (mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5) / 5}",
+                      "${-[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
                     Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
@@ -500,7 +685,7 @@ class _StatspageState extends State<Statspage> {
                                 [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) /
                             ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) +
                                 [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) +
-                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) +
+                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincnstb5].reduce(min) +
                                 [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) *
                             100,
                         height: 15,
@@ -561,6 +746,26 @@ class _StatspageState extends State<Statspage> {
               ],
             ),
           ),
+          /*Card(
+            elevation: 5,
+            color: cardcolor,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Debug Values:", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                  const SizedBox(height: 10),
+                  Text("History Count: ${budgetHistory.length}", style: darktextstyle),
+                  Text("mntincstb1 in Hive: ${prefsdata.get("mntincstb1", defaultValue: 0)}", style: darktextstyle),
+                  Text("mntincnstb1 in Hive: ${prefsdata.get("mntincnstb1", defaultValue: 0)}", style: darktextstyle),
+                  Text("mntincstb1 in UI: $mntincstb1", style: darktextstyle),
+                  Text("mntincnstb1 in UI: $mntincnstb1", style: darktextstyle),
+                ],
+              ),
+            ),
+          ),
+          ElevatedButton(onPressed: _generateTestData, child: Text("توليد بيانات اختبار")),*/
         ],
       ),
     );
