@@ -1,16 +1,82 @@
-# budget_it
+An App that "budget it" up for you !
+samples, guidance on mobile development, and a full API reference.
 
-an app that "budget it" up for you !
+# Budget_It
+
+Budget_It is a personal budgeting and financial tracking app built with Flutter. It helps you manage your monthly and annual finances, track your savings goals, and visualize your financial performance over time.
+
+## Features
+
+- **Monthly and Annual Budgeting:**
+	- Set and adjust your monthly and annual income and expenses.
+	- Track both stable and unstable (variable) income sources.
+- **Savings Tracking:**
+	- Set monthly savings goals and monitor your progress.
+	- Visualize your net credit and savings growth over time.
+- **Budget History:**
+	- Automatically records changes to your budget, savings, and net credit.
+	- View historical data and trends for the last 6 months.
+- **Statistics and Analysis:**
+	- See detailed stats and graphs for your budgeting performance.
+	- Analyze best and worst months, average savings, and more.
+- **Customizable UI:**
+	- Light and dark themes.
+	- Adjustable font sizes and card colors.
+- **Data Storage:**
+	- Uses Hive for fast, local, and persistent data storage.
+	- GetStorage for quick settings and preferences.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
+- [Flutter SDK](https://flutter.dev/docs/get-started/install)
+- Dart
 
-A few resources to get you started if this is your first Flutter project:
+### Installation
+1. Clone the repository:
+	 ```sh
+	 git clone https://github.com/mohammed-nor/Budget_It.git
+	 cd Budget_It
+	 ```
+2. Install dependencies:
+	 ```sh
+	 flutter pub get
+	 ```
+3. Generate Hive adapters (if needed):
+	 ```sh
+	 dart run build_runner build --delete-conflicting-outputs
+	 ```
+4. Run the app:
+	 ```sh
+	 flutter run
+	 ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Project Structure
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `lib/`
+	- `main.dart` - App entry point
+	- `models/` - Data models (e.g., `budget_history.dart`)
+	- `screens/` - UI screens (e.g., `home.dart`, `budget.dart`, `stats.dart`)
+	- `services/` - Utility and adapter files
+- `test/` - Widget and unit tests
+
+## Dependencies
+- [Flutter](https://flutter.dev/)
+- [Hive](https://pub.dev/packages/hive)
+- [Hive Flutter](https://pub.dev/packages/hive_flutter)
+- [GetX](https://pub.dev/packages/get)
+- [GetStorage](https://pub.dev/packages/get_storage)
+- [Syncfusion Flutter Charts](https://pub.dev/packages/syncfusion_flutter_charts)
+- [Intl](https://pub.dev/packages/intl)
+
+## Screenshots
+
+_Add screenshots of your app here._
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+**Developed by mohammed-nor**
