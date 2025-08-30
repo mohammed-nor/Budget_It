@@ -329,7 +329,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 ElevatedButton.icon(
                   onPressed: _showAddSpendingDialog,
                   icon: const Icon(Icons.add),
-                  label: Text("إضافة مصروف قادم", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                  label: Text("", style: darktextstyle.copyWith(fontSize: fontSize1)),
                   style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(50, 50, 50, 1.0), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
                 ),
                 Text("المصاريف القادمة", style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2, fontWeight: FontWeight.bold)),
@@ -349,7 +349,7 @@ class _BudgetpageState extends State<Budgetpage> {
                     final daysUntil = item.date.difference(DateTime.now()).inDays;
 
                     return Card(
-                      color: const Color.fromRGBO(40, 40, 40, 1.0),
+                      color: const Color.fromRGBO(40, 40, 40, 1.0).withOpacity(0.1),
                       margin: const EdgeInsets.only(bottom: 8),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
@@ -962,8 +962,9 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
           ),
+
+          _buildUpcomingSpendingCard(context),
           _buildBudgetHistoryCard(context),
-          _buildUpcomingSpendingCard(context), // Add this line
 
           Card(
             elevation: 2,
