@@ -8,6 +8,8 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:budget_it/models/budget_history.dart';
 import 'package:intl/intl.dart';
+import 'package:budget_it/models/upcoming_spending.dart';
+import 'package:uuid/uuid.dart';
 
 class Budgetpage extends StatefulWidget {
   const Budgetpage({super.key});
@@ -26,12 +28,17 @@ class _BudgetpageState extends State<Budgetpage> {
   Box<BudgetHistory>? historyBox;
   List<BudgetHistory> budgetHistory = [];
 
+  // Add these fields to the _BudgetpageState class
+  Box<UpcomingSpending>? upcomingSpendingBox;
+  List<UpcomingSpending> upcomingSpendingList = [];
+
   @override
   void initState() {
     super.initState();
     cardcolor = prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0));
     _initHistoryBox();
     _loadBudgetHistory();
+    _initUpcomingSpendingBox();
   }
 
   Future<void> _initHistoryBox() async {
@@ -43,6 +50,52 @@ class _BudgetpageState extends State<Budgetpage> {
       budgetHistory = historyBox!.values.toList();
       budgetHistory.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     }
+  }
+
+  // Add this method to initialize the upcoming spending box
+  Future<void> _initUpcomingSpendingBox() async {
+    upcomingSpendingBox = await Hive.openBox<UpcomingSpending>('upcoming_spending');
+    _loadUpcomingSpending();
+  }
+
+  // Add this method to load upcoming spending from Hive
+  void _loadUpcomingSpending() {
+    if (upcomingSpendingBox != null && upcomingSpendingBox!.isNotEmpty) {
+      setState(() {
+        upcomingSpendingList = upcomingSpendingBox!.values.toList();
+        // Sort by date (closest first)
+        upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+      });
+    }
+  }
+
+  /// Calculates total spending between two dates based on upcoming_spending entries
+  ///
+  /// [startDate] - The beginning of the date range
+  /// [endDate] - The end of the date range
+  /// Returns the sum of all spending amounts within the date range
+  num calculateSpendingBetweenDates(DateTime startDate, DateTime endDate) {
+    if (upcomingSpendingBox == null || upcomingSpendingBox!.isEmpty) {
+      return 0;
+    }
+
+    // Get all spending entries that fall between the start and end dates
+    final spendingEntries =
+        upcomingSpendingBox!.values
+            .where((entry) => (entry.date.isAfter(startDate) || entry.date.isAtSameMomentAs(startDate)) && (entry.date.isBefore(endDate) || entry.date.isAtSameMomentAs(endDate)))
+            .toList();
+
+    if (spendingEntries.isEmpty) {
+      return 0;
+    }
+
+    // Sum up all spending amounts
+    num totalSpending = 0;
+    for (var entry in spendingEntries) {
+      totalSpending += entry.amount;
+    }
+
+    return totalSpending;
   }
 
   void _saveCurrentState() {
@@ -258,6 +311,244 @@ class _BudgetpageState extends State<Budgetpage> {
     );
   }
 
+  // Add this method to create the new card
+  Widget _buildUpcomingSpendingCard(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Card(
+      elevation: 5,
+      color: cardcolor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _showAddSpendingDialog,
+                  icon: const Icon(Icons.add),
+                  label: Text("إضافة مصروف قادم", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(50, 50, 50, 1.0), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
+                ),
+                Text("المصاريف القادمة", style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2, fontWeight: FontWeight.bold)),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            upcomingSpendingList.isEmpty
+                ? Padding(padding: const EdgeInsets.symmetric(vertical: 20), child: Text("لا توجد مصاريف قادمة مسجلة", style: darktextstyle.copyWith(fontSize: fontSize1, color: Colors.grey[400])))
+                : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: upcomingSpendingList.length,
+                  itemBuilder: (context, index) {
+                    final item = upcomingSpendingList[index];
+                    final daysUntil = item.date.difference(DateTime.now()).inDays;
+
+                    return Card(
+                      color: const Color.fromRGBO(40, 40, 40, 1.0),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            // Delete button
+                            GestureDetector(
+                              onTap: () => _deleteUpcomingSpending(item.id),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: const Color.fromRGBO(200, 50, 50, 0.5), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.delete, color: Colors.white, size: 20),
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            // Item details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(item.title, style: darktextstyle.copyWith(fontSize: fontSize1, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                        style: darktextstyle.copyWith(fontSize: fontSize1 * 0.85, color: Colors.grey[400]),
+                                      ),
+                                      Text(
+                                        "${daysUntil < 0 ? 'متأخر بـ ${-daysUntil}' : 'متبقي ${daysUntil}'} يوم",
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.85,
+                                          color:
+                                              daysUntil < 0
+                                                  ? Colors.red[300]
+                                                  : daysUntil < 7
+                                                  ? Colors.orange[300]
+                                                  : Colors.green[300],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            // Amount
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(color: const Color.fromRGBO(30, 30, 30, 1.0), borderRadius: BorderRadius.circular(8)),
+                              child: Text("${item.amount} درهم", style: darktextstyle.copyWith(fontSize: fontSize1, fontWeight: FontWeight.bold, color: const Color.fromRGBO(253, 95, 95, 1.0))),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Add dialog to create new spending
+  void _showAddSpendingDialog() {
+    final titleController = TextEditingController();
+    final amountController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color.fromRGBO(30, 30, 30, 1.0),
+          title: Text("إضافة مصروف قادم", style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2), textAlign: TextAlign.right),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title field
+                TextField(
+                  controller: titleController,
+                  style: darktextstyle,
+                  textAlign: TextAlign.right,
+                  decoration: InputDecoration(labelText: "عنوان المصروف", labelStyle: darktextstyle.copyWith(color: Colors.grey), border: const OutlineInputBorder()),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Amount field
+                TextField(
+                  controller: amountController,
+                  style: darktextstyle,
+                  textAlign: TextAlign.right,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: "المبلغ (درهم)", labelStyle: darktextstyle.copyWith(color: Colors.grey), border: const OutlineInputBorder()),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Date picker
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    return Column(
+                      children: [
+                        Text("التاريخ: ${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}", style: darktextstyle),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(50, 50, 50, 1.0)),
+                          onPressed: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2100),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(colorScheme: const ColorScheme.dark(primary: Color.fromRGBO(106, 253, 95, 1.0), surface: Color.fromRGBO(30, 30, 30, 1.0))),
+                                  child: child!,
+                                );
+                              },
+                            );
+
+                            if (picked != null) {
+                              setState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                          child: const Text("اختر التاريخ"),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("إلغاء", style: darktextstyle),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color.fromRGBO(106, 253, 95, 1.0)),
+              child: Text("إضافة", style: darktextstyle.copyWith(color: Colors.black)),
+              onPressed: () {
+                if (titleController.text.isNotEmpty && amountController.text.isNotEmpty) {
+                  _addUpcomingSpending(titleController.text, num.tryParse(amountController.text) ?? 0, selectedDate);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Method to add a new upcoming spending
+  void _addUpcomingSpending(String title, num amount, DateTime date) {
+    if (upcomingSpendingBox != null) {
+      final newSpending = UpcomingSpending(title: title, amount: amount, date: date);
+
+      upcomingSpendingBox!.add(newSpending);
+
+      setState(() {
+        upcomingSpendingList = upcomingSpendingBox!.values.toList();
+        upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+      });
+    }
+  }
+
+  // Method to delete an upcoming spending
+  void _deleteUpcomingSpending(String id) {
+    if (upcomingSpendingBox != null) {
+      // Find the item with the given id
+      final int index = upcomingSpendingBox!.values.toList().indexWhere((item) => item.id == id);
+
+      if (index >= 0) {
+        // Delete the item at the found index
+        upcomingSpendingBox!.deleteAt(index);
+
+        setState(() {
+          upcomingSpendingList = upcomingSpendingBox!.values.toList();
+          upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
@@ -441,18 +732,18 @@ class _BudgetpageState extends State<Budgetpage> {
                     Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
 
                     Text(
-                      " المبلغ عندك في أول اليوم هو ${((nowcredit + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} درهما ",
+                      " المبلغ عندك في أول اليوم هو ${((nowcredit - calculateSpendingBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} درهما ",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      " المبلغ الذي وفرته هو ${(nownetcredit + count30thsPassed(startDate, today) * (mntsaving))} درهما ",
+                      " المبلغ الذي وفرته هو ${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving))} درهما ",
                       style: darktextstyle.copyWith(fontSize: fontSize1, color: const Color.fromRGBO(106, 253, 95, 1.0)),
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving) > 0
-                          ? " المبلغ الذي ينقصك هو ${totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
+                      totsaving + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving) > 0
+                          ? " المبلغ الذي ينقصك هو ${totsaving + calculateSpendingBetweenDates(today, startDate) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
                           : " مبروك , لقد حققت هدفك ",
                       style: darktextstyle.copyWith(
                         fontSize: fontSize1,
@@ -474,7 +765,7 @@ class _BudgetpageState extends State<Budgetpage> {
                         style: darktextstyle.copyWith(
                           fontSize: fontSize1,
                           color:
-                              ((0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))) / daysInCurrentMonth) /
+                              (0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))) /
                                           ((0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12)) -
                                                   (mntsaving - 0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12)))) /
                                               daysInCurrentMonth) >
@@ -483,6 +774,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                   : const Color.fromARGB(255, 216, 19, 1),
                         ),
                       ),
+
                       Text("المبلغ الامثل إنفاقه في اليوم", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     ],
                   ),
@@ -505,11 +797,12 @@ class _BudgetpageState extends State<Budgetpage> {
                             height: 25,
                             child: Center(
                               child: Text(
-                                "${(((nowcredit + (daysdiff(startDate, ramadane) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, ramadane) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
+                                "${(((nowcredit - calculateSpendingBetweenDates(startDate, ramadane) + (daysdiff(startDate, ramadane) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, ramadane) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
                                 style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   color:
-                                      ((nowcredit +
+                                      ((nowcredit -
+                                                  calculateSpendingBetweenDates(startDate, ramadane) +
                                                   (daysdiff(startDate, ramadane) + 1) *
                                                       (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) +
                                                   count30thsPassed(startDate, ramadane) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)) >
@@ -524,11 +817,12 @@ class _BudgetpageState extends State<Budgetpage> {
                             height: 25,
                             child: Center(
                               child: Text(
-                                "${(((nowcredit + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
+                                "${(((nowcredit - calculateSpendingBetweenDates(startDate, aidfitr) + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
                                 style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   color:
-                                      nowcredit +
+                                      nowcredit -
+                                                  calculateSpendingBetweenDates(startDate, aidfitr) +
                                                   (daysdiff(startDate, aidfitr) + 1) *
                                                       (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) +
                                                   count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp) >
@@ -543,11 +837,12 @@ class _BudgetpageState extends State<Budgetpage> {
                             height: 25,
                             child: Center(
                               child: Text(
-                                "${(((nowcredit + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
+                                "${(((nowcredit - calculateSpendingBetweenDates(startDate, aidfadha) + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp)))).round()}",
                                 style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   color:
-                                      nowcredit +
+                                      nowcredit -
+                                                  calculateSpendingBetweenDates(startDate, aidfadha) +
                                                   (daysdiff(startDate, aidfadha) + 1) *
                                                       (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) +
                                                   count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp) >
@@ -567,15 +862,30 @@ class _BudgetpageState extends State<Budgetpage> {
                         children: [
                           SizedBox(
                             height: 25,
-                            child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, ramadane) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
+                            child: Center(
+                              child: Text(
+                                "(${(nownetcredit - calculateSpendingBetweenDates(startDate, ramadane) + count30thsPassed(startDate, ramadane) * (mntsaving))})",
+                                style: darktextstyle.copyWith(fontSize: fontSize1),
+                              ),
+                            ),
                           ),
                           SizedBox(
                             height: 25,
-                            child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, aidfitr) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
+                            child: Center(
+                              child: Text(
+                                "(${(nownetcredit - calculateSpendingBetweenDates(startDate, aidfitr) + count30thsPassed(startDate, aidfitr) * (mntsaving))})",
+                                style: darktextstyle.copyWith(fontSize: fontSize1),
+                              ),
+                            ),
                           ),
                           SizedBox(
                             height: 25,
-                            child: Center(child: Text("(${(nownetcredit + count30thsPassed(startDate, aidfadha) * (mntsaving))})", style: darktextstyle.copyWith(fontSize: fontSize1))),
+                            child: Center(
+                              child: Text(
+                                "(${(nownetcredit - calculateSpendingBetweenDates(startDate, aidfadha) + count30thsPassed(startDate, aidfadha) * (mntsaving))})",
+                                style: darktextstyle.copyWith(fontSize: fontSize1),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -653,6 +963,8 @@ class _BudgetpageState extends State<Budgetpage> {
             ),
           ),
           _buildBudgetHistoryCard(context),
+          _buildUpcomingSpendingCard(context), // Add this line
+
           Card(
             elevation: 2,
             color: cardcolor,
@@ -663,7 +975,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 const SizedBox(height: 20),
                 Text("تدبير الموارد الخاصة بك", style: darktextstyle.copyWith(fontSize: fontSize1)),
                 const SizedBox(height: 20),
-                moneyinput(size, totsaving, "totsaving", "المبلغ الإجمالي المراد جمعه"),
+                moneyinput(size, totsaving, "totsaving", "المبلغ الإجمالي المراد توفيره"),
                 Padding(
                   padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
                   child: Row(
@@ -719,7 +1031,7 @@ class _BudgetpageState extends State<Budgetpage> {
                   ),
                 ),
 
-                moneyinput(size, mntsaving, "mntsaving", "المبلغ الشهري المرتقب إقطاعه"),
+                moneyinput(size, mntsaving, "mntsaving", "المبلغ الشهري المرتقب إدخاره"),
 
                 moneyinput(size, freemnt, "freemnt", "عدد أشهر الراحة السنوية"),
                 const SizedBox(height: 20),
