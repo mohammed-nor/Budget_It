@@ -405,17 +405,6 @@ class _BudgetpageState extends State<Budgetpage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                /*Text("Total Savings",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("${calculateSavingsSoFar().toStringAsFixed(2)}"),
-                Text("Daily Limit",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                    "${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12)) / daysInCurrentMonth).toStringAsFixed(2)}"),
-                Text("ining to Goal",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("\$${calculateiningToGoal().toStringAsFixed(2)}"),
-                */
                 const SizedBox(height: 20),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -426,7 +415,6 @@ class _BudgetpageState extends State<Budgetpage> {
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                       textAlign: TextAlign.center,
                     ),
-                    //Text("", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     Text(" عدد الأيام المتبقية للأجرة هو ${daysleftInCurrentMonth()} أيام ", style: darktextstyle.copyWith(fontSize: fontSize1)),
                     TableCalendar(
                       focusedDay: today,
@@ -457,13 +445,11 @@ class _BudgetpageState extends State<Budgetpage> {
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                       textAlign: TextAlign.center,
                     ),
-                    //const SizedBox(height: 20),
                     Text(
                       " المبلغ الذي وفرته هو ${(nownetcredit + count30thsPassed(startDate, today) * (mntsaving))} درهما ",
                       style: darktextstyle.copyWith(fontSize: fontSize1, color: const Color.fromRGBO(106, 253, 95, 1.0)),
                       textAlign: TextAlign.center,
                     ),
-                    //const SizedBox(height: 20),
                     Text(
                       totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving) > 0
                           ? " المبلغ الذي ينقصك هو ${totsaving - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما "
@@ -476,105 +462,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     ),
                   ],
                 ),
-
-                //const SizedBox(height: 20),
-                // ValueListenableBuilder(
-                //   valueListenable: prefsdata.listenable(),
-                //   builder: (context, box, _) {
-                //     return Text(
-                //         "${prefsdata.get('totsaving', defaultValue: 5)}");
-                //   },
-                // ),
-
-                /*HorizontalWeekCalendar(
-                  minDate: DateTime(2023, 12, 31),
-                  maxDate: DateTime(2025, 1, 31),
-                  initialDate: startDate,
-                  onDateChange: (DateTime date) {
-                    setState(() {
-                      prefsdata.put("selectedDate".toString(), date);
-                      startDate = prefsdata.get("selectedDate");
-                    });
-                  },
-                ),*/
-
-                /*Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Selected Date",
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      DateFormat('dd MMM yyyy').format(selectedDate),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),*/
-
-                /*DateTimeFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Enter Date',
-                      ),
-                      firstDate: DateTime.now().add(const Duration(days: 10)),
-                      lastDate: DateTime.now().add(const Duration(days: 40)),
-                      initialPickerDateTime:
-                          DateTime.now().add(const Duration(days: 20)),
-                      onChanged: (DateTime? value) {
-                        prefsdata.put("startDate".toString(), Value);
-                        startDate = prefsdata.get("startDate");
-                      },
-                    ),*/
-
-                /*Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                          (30 *
-                                  (1 -
-                                      (((0.5 *
-                                                  ((mntinc +
-                                                              mntnstblinc *
-                                                                  (1 -
-                                                                      0.01 *
-                                                                          mntperinc)) *
-                                                          (1 - freemnt / 12) -
-                                                      (mntexp + annexp / 12))) /
-                                              daysInCurrentMonth) /
-                                          ((0.5 *
-                                                      ((mntinc +
-                                                                  mntnstblinc *
-                                                                      (1 -
-                                                                          0.01 *
-                                                                              mntperinc)) *
-                                                              (1 -
-                                                                  freemnt /
-                                                                      12) -
-                                                          (mntexp +
-                                                              annexp / 12)) -
-                                                  (mntsaving -
-                                                      0.5 *
-                                                          ((mntinc + mntnstblinc) *
-                                                                  (1 -
-                                                                      freemnt /
-                                                                          12) -
-                                                              (mntexp +
-                                                                  annexp /
-                                                                      12)))) /
-                                              daysInCurrentMonth))))
-
-                              .toString(),
-                          style: darktextstyle),
-                      Text("عدد الأيام الإستثنائية لإنفاق المبلغ الأقصى شهريا",
-                          style: darktextstyle),
-                    ],
-                  ),
-                ),*/
                 Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -603,7 +490,6 @@ class _BudgetpageState extends State<Budgetpage> {
                 infocalculated((totsaving - nownetcredit) / mntsaving, "عدد أشهر الإدخار"),
                 infocalculated((totsaving - nownetcredit) / (0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))), "عدد أشهر الإذخار الأمثل"),
                 infocalculated(0.5 * ((mntinc + mntnstblinc) * (1 - freemnt / 12) - (mntexp + annexp / 12)), "أقصى ما يمكن ادخاره"),
-                //const SizedBox(height: 20),
                 Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -693,38 +579,6 @@ class _BudgetpageState extends State<Budgetpage> {
                           ),
                         ],
                       ),
-                      /*Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            SizedBox(
-                              height: 25,
-                              child: Center(
-                                child: Text(
-                                  "<=",
-                                  style: darktextstyle,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 25,
-                              child: Center(
-                                child: Text(
-                                  "<=",
-                                  style: darktextstyle,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 25,
-                              child: Center(
-                                child: Text(
-                                  "<=",
-                                  style: darktextstyle,
-                                ),
-                              ),
-                            ),
-                          ]),*/
                       Column(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -794,34 +648,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     ],
                   ),
                 ),
-                //const SizedBox(height: 20),
-                /*OutlinedButton(
-                  onPressed: () => prefsdata.deleteFromDisk(),
-                  child: SizedBox(
-                    width: size.width * 0.25,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        const Icon(Icons.restore, color: Colors.red),
-                        Text("إعادة الظبط", style: darktextstyle.copyWith(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                OutlinedButton(
-                  onPressed: () => Get.isDarkMode ? Get.changeTheme(ThemeData.dark()) : Get.changeTheme(ThemeData.light()),
-                  child: SizedBox(
-                    width: size.width * 0.25,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        const Icon(Icons.dark_mode_outlined, color: Colors.red),
-                        Text("تغيير التيم", style: darktextstyle.copyWith(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                ),*/
                 const SizedBox(height: 20),
               ],
             ),
@@ -834,17 +660,6 @@ class _BudgetpageState extends State<Budgetpage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                /*Text("Total Savings",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("${calculateSavingsSoFar().toStringAsFixed(2)}"),
-                Text("Daily Limit",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                    "${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12)) / daysInCurrentMonth).toStringAsFixed(2)}"),
-                Text("ining to Goal",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("\$${calculateiningToGoal().toStringAsFixed(2)}"),
-                */
                 const SizedBox(height: 20),
                 Text("تدبير الموارد الخاصة بك", style: darktextstyle.copyWith(fontSize: fontSize1)),
                 const SizedBox(height: 20),
@@ -862,13 +677,8 @@ class _BudgetpageState extends State<Budgetpage> {
                           textAlign: TextAlign.center,
                           style: darktextstyle.copyWith(fontSize: fontSize2),
                           initialValue: nowcredit.toString(),
-                          decoration: InputDecoration(
-                            hintStyle: darktextstyle.copyWith(fontSize: fontSize2 + 20),
-                            //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                            border: OutlineInputBorder(gapPadding: 1),
-                          ),
+                          decoration: InputDecoration(hintStyle: darktextstyle.copyWith(fontSize: fontSize2 + 20), border: OutlineInputBorder(gapPadding: 1)),
                           onChanged: (newval) {
-                            //box.write('quote', 2);
                             final v = int.tryParse(newval);
                             if (v == null) {
                               setState(() {
@@ -876,13 +686,11 @@ class _BudgetpageState extends State<Budgetpage> {
                                 prefsdata.put("nownetcredit", 0);
                                 nownetcredit = prefsdata.get("nownetcredit".toString());
                                 print(nownetcredit.toString() + "nownetcredit".toString());
-                                //nownetcredit = 0;
                               });
                             } else {
                               setState(() {
                                 pickStartDate(context);
                                 prefsdata.put("nowcredit".toString(), v);
-                                //prefsdata.put("nownetcredit".toString(), v - (((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysDifference.toInt() + 1));
                                 prefsdata.put(
                                   "nownetcredit".toString(),
                                   v -
@@ -915,105 +723,6 @@ class _BudgetpageState extends State<Budgetpage> {
 
                 moneyinput(size, freemnt, "freemnt", "عدد أشهر الراحة السنوية"),
                 const SizedBox(height: 20),
-
-                // ValueListenableBuilder(
-                //   valueListenable: prefsdata.listenable(),
-                //   builder: (context, box, _) {
-                //     return Text(
-                //         "${prefsdata.get('totsaving', defaultValue: 5)}");
-                //   },
-                // ),
-
-                /*HorizontalWeekCalendar(
-                  minDate: DateTime(2023, 12, 31),
-                  maxDate: DateTime(2025, 1, 31),
-                  initialDate: startDate,
-                  onDateChange: (DateTime date) {
-                    setState(() {
-                      prefsdata.put("selectedDate".toString(), date);
-                      startDate = prefsdata.get("selectedDate");
-                    });
-                  },
-                ),*/
-
-                /*Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Selected Date",
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      DateFormat('dd MMM yyyy').format(selectedDate),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),*/
-
-                /*DateTimeFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Enter Date',
-                      ),
-                      firstDate: DateTime.now().add(const Duration(days: 10)),
-                      lastDate: DateTime.now().add(const Duration(days: 40)),
-                      initialPickerDateTime:
-                          DateTime.now().add(const Duration(days: 20)),
-                      onChanged: (DateTime? value) {
-                        prefsdata.put("startDate".toString(), Value);
-                        startDate = prefsdata.get("startDate");
-                      },
-                    ),*/
-
-                /*Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                          (30 *
-                                  (1 -
-                                      (((0.5 *
-                                                  ((mntinc +
-                                                              mntnstblinc *
-                                                                  (1 -
-                                                                      0.01 *
-                                                                          mntperinc)) *
-                                                          (1 - freemnt / 12) -
-                                                      (mntexp + annexp / 12))) /
-                                              daysInCurrentMonth) /
-                                          ((0.5 *
-                                                      ((mntinc +
-                                                                  mntnstblinc *
-                                                                      (1 -
-                                                                          0.01 *
-                                                                              mntperinc)) *
-                                                              (1 -
-                                                                  freemnt /
-                                                                      12) -
-                                                          (mntexp +
-                                                              annexp / 12)) -
-                                                  (mntsaving -
-                                                      0.5 *
-                                                          ((mntinc + mntnstblinc) *
-                                                                  (1 -
-                                                                      freemnt /
-                                                                          12) -
-                                                              (mntexp +
-                                                                  annexp /
-                                                                      12)))) /
-                                              daysInCurrentMonth))))
-
-                              .toString(),
-                          style: darktextstyle),
-                      Text("عدد الأيام الإستثنائية لإنفاق المبلغ الأقصى شهريا",
-                          style: darktextstyle),
-                    ],
-                  ),
-                ),*/
-                //const SizedBox(height: 20),
               ],
             ),
           ),
@@ -1076,26 +785,6 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
           ),
-          /*Card(
-            elevation: 5,
-            margin: const EdgeInsets.all(15),
-            color: const Color.fromARGB(249, 67, 154, 43),
-            child: Column(
-              children: [
-                SfCalendar(
-                  view: CalendarView.month,
-                  dataSource: ValueDataSource(_getDailyEvents()),
-                  monthViewSettings: MonthViewSettings(
-                    showAgenda: true,
-                    // Shows events in a list below the calendar
-                  ),
-                ),
-                SizedBox(
-                  height: 50,
-                )
-              ],
-            ),
-          ),*/
         ],
       ),
     );
@@ -1109,19 +798,13 @@ class _BudgetpageState extends State<Budgetpage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            //height: size.height * 0.07,
             width: size.width * 0.17 * fontSize2 / 16,
             child: TextFormField(
               textAlign: TextAlign.center,
               style: darktextstyle.copyWith(fontSize: fontSize2),
               initialValue: boxvariable.toString(),
-              decoration: InputDecoration(
-                hintStyle: darktextstyle.copyWith(fontSize: fontSize2),
-                //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                border: OutlineInputBorder(gapPadding: 1),
-              ),
+              decoration: InputDecoration(hintStyle: darktextstyle.copyWith(fontSize: fontSize2), border: OutlineInputBorder(gapPadding: 1)),
               onChanged: (newval) {
-                //box.write('quote', 2);
                 final v = int.tryParse(newval);
                 if (v == null) {
                   setState(() {
@@ -1129,7 +812,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     prefsdata.put(boxvariablename, 0);
                     boxvariable = prefsdata.get(boxvariablename.toString());
                     print(boxvariable.toString() + boxvariablename.toString());
-                    //nowcredit = 0;
                   });
                 } else {
                   setState(() {
@@ -1141,7 +823,6 @@ class _BudgetpageState extends State<Budgetpage> {
                 }
               },
               keyboardType: TextInputType.number,
-              //maxLength: 10,
             ),
           ),
           Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2), textAlign: TextAlign.right),
@@ -1179,7 +860,6 @@ class _BudgetpageState extends State<Budgetpage> {
                   prefsdata.put(boxvariablename.toString(), newValue);
                   boxvariable = prefsdata.get(boxvariablename.toString());
                   print(boxvariable.toString() + boxvariablename.toString());
-                  // Add this line to save state when values change
                   _saveCurrentState();
                 });
               },
@@ -1266,15 +946,4 @@ class _BudgetpageState extends State<Budgetpage> {
       today = day;
     });
   }
-
-  /*String getFirstDayOfRamadan(nowcredit,startDate,mntinc,mntnstblinc,mntperinc) {
-    DateTime ramadane =
-        HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 9, 1);
-    DateTime aidfitr =
-        HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 10, 1);
-    DateTime aidfadha =
-        HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10);
-
-    return 'First day of Ramadan : ${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}     =>  ${nowcredit + (ramadane.difference(startDate).inDays + 1) * -(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc) * (1 - prefsdata.get("freemnt") / 12) - (prefsdata.get("mntexp") + prefsdata.get("annexp") / 12) - (prefsdata.get("mntsaving"))) / daysInCurrentMonth) + (ramadane.month - DateTime(prefsdata.get("startDate").year, prefsdata.get("startDate").month, 29).month + 12 * (ramadane.year - prefsdata.get("selectedDate").year)) * (prefsdata.get("mntinc") - prefsdata.get("mntinc"))).toString()} \n day of aid al fitr : ${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')}\n day of aid al adha : ${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')}';
-  }*/
 }

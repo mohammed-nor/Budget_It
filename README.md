@@ -1,7 +1,6 @@
-An App that "budget it" up for you , ideal for salaries !
-samples, guidance on mobile development, and a full API reference.
+An App that "budget it" up for you , ideal for salaries ! Here you will find samples, guidance on mobile development, and a full API reference.
 
-# Budget_It
+# Budget It!
 
 Budget_It is a personal budgeting and financial tracking app built with Flutter. It helps you manage your monthly and annual finances, track your savings goals, and visualize your financial performance over time.
 
