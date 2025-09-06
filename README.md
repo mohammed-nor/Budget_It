@@ -23,7 +23,6 @@ Budget_It is a personal budgeting and financial tracking app built with Flutter.
 	- Adjustable font sizes and card colors.
 - **Data Storage:**
 	- Uses Hive for fast, local, and persistent data storage.
-	- GetStorage for quick settings and preferences.
 
 ## Getting Started
 
@@ -64,7 +63,6 @@ Budget_It is a personal budgeting and financial tracking app built with Flutter.
 - [Hive](https://pub.dev/packages/hive)
 - [Hive Flutter](https://pub.dev/packages/hive_flutter)
 - [GetX](https://pub.dev/packages/get)
-- [GetStorage](https://pub.dev/packages/get_storage)
 - [Syncfusion Flutter Charts](https://pub.dev/packages/syncfusion_flutter_charts)
 - [Intl](https://pub.dev/packages/intl)
 
