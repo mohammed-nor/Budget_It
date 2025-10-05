@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "flutter",
+			"command": "flutter",
+			"args": [
+				"build",
+				"apk",
+				"--release",
+				"&&",
+				"flutter",
+				"build",
+				"web",
+				"--release",
+				"&&",
+				"flutter",
+				"build",
+				"windows",
+				"--release"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"label": "flutter: flutter build apk web windows --release",
+			"detail": ""
+		}
+	]
+}

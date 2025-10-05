@@ -1,8 +1,8 @@
-import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:budget_it/screens/budget.dart';
 import 'package:budget_it/screens/profil.dart';
 import 'package:budget_it/screens/stats.dart';
+import 'package:budget_it/screens/wallet.dart';
 import 'package:hive/hive.dart';
 
 final prefsdata = Hive.box('data');
@@ -19,7 +19,7 @@ void initState() async {
   //await Hive.openBox("boxname");
 }
 
-int pageindex = 2;
+int pageindex = 0;
 
 class _MyhomeState extends State<Myhome> {
   final prefsdata = Hive.box('data');
@@ -37,28 +37,26 @@ class _MyhomeState extends State<Myhome> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: prefsdata.get("selectedColor", defaultValue: Colors.black),
-
-        //backgroundColor: ProfilpageState().selectedColor,
+        backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
         body: getbody(),
         bottomNavigationBar: getfooter(),
-        floatingActionButton: FloatingActionButton(
+        /*floatingActionButton: FloatingActionButton(
           onPressed: () async {
             /* await FirebaseFirestore.instance
                 .collection('data')
                 .add({'timestamp': Timestamp.fromDate(DateTime.now())}); */
             setTabs(2);
           },
-          backgroundColor: Color(Colors.pink.value),
+          backgroundColor: Colors.pink,
           child: const Icon(Icons.query_stats, size: 25),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterDocked,
+        floatingActionButtonLocation: FloatingActionButtonLocation.miniEndDocked,*/
       ),
     );
   }
 
   Widget getbody() {
-    return IndexedStack(index: pageindex, children: [Statspage(), Profilpage(), Budgetpage()]);
+    return IndexedStack(index: pageindex, children: [Budgetpage(), WalletPage(), Statspage(), Profilpage()]);
   }
 
   /// It returns an AnimatedBottomNavigationBar widget with a list of icons, an active color, an active
@@ -67,19 +65,38 @@ class _MyhomeState extends State<Myhome> {
   /// Returns:
   ///   A widget.
   Widget getfooter() {
-    List<IconData> listactions = [Icons.calendar_month, Icons.settings];
-    return AnimatedBottomNavigationBar(
-      icons: listactions,
-      activeColor: Colors.white,
-      // backgroundGradient: LinearGradient(colors: [prefsdata.get("cardcolor", defaultValue: Colors.black), Colors.black], begin: Alignment.topCenter, end: Alignment.bottomCenter),
-      activeIndex: pageindex,
-      //backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black),
-      onTap: (index) {
-        setTabs(index);
-      },
-      gapLocation: GapLocation.center,
-      backgroundColor: Colors.black,
-      notchSmoothness: NotchSmoothness.defaultEdge,
+    List<IconData> listactions = [Icons.account_balance_wallet, Icons.wallet, Icons.calendar_month, Icons.settings_outlined];
+    List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
+    return Theme(
+      data: ThemeData(splashColor: Colors.transparent, highlightColor: Colors.transparent),
+      child: BottomNavigationBar(
+        currentIndex: pageindex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.black,
+        selectedItemColor: Color.fromARGB(
+          255,
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50).clamp(0, 255),
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50).clamp(0, 255),
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50).clamp(0, 255),
+        ),
+        unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        elevation: 0,
+        iconSize: 26,
+        selectedIconTheme: const IconThemeData(size: 30),
+        selectedFontSize: 12,
+        unselectedFontSize: 10,
+        items: List.generate(listactions.length, (index) {
+          return BottomNavigationBarItem(
+            icon: AnimatedContainer(duration: const Duration(milliseconds: 200), padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0), child: Icon(listactions[index])),
+            label: labels[index],
+          );
+        }),
+        onTap: (index) {
+          setTabs(index);
+        },
+      ),
     );
   }
 

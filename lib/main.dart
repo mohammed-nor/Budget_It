@@ -20,6 +20,8 @@ void main() async {
   await Hive.openBox<BudgetHistory>('budget_history');
   await Hive.openBox<UpcomingSpending>('upcoming_spending');
   await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
-
+  await Hive.openBox('budgets');
+  
+  
   runApp(GetMaterialApp(debugShowCheckedModeBanner: false, home: const Myhome(), darkTheme: ThemeData.dark(), theme: ThemeData.light(), themeMode: ThemeMode.dark));
 }

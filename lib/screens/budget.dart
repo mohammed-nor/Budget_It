@@ -192,7 +192,7 @@ class _BudgetpageState extends State<Budgetpage> {
   Widget _buildUpcomingSpendingCard(BuildContext context) {
     return Card(
       elevation: 5,
-      color: cardcolor,
+      color: prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -791,6 +791,79 @@ class _BudgetpageState extends State<Budgetpage> {
       );
     }
 
+    /*     Widget moneyinput2(size, boxvariable, boxvariablename, String textlabel) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [const Color.fromARGB(10, 45, 45, 45), const Color.fromARGB(125, 35, 35, 35)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), offset: const Offset(0, 2), blurRadius: 4)],
+          border: Border.all(color: const Color.fromRGBO(106, 253, 95, 0.2), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  height: 48 * fontSize2 / 16,
+                  width: size.width * 0.2 * fontSize2 / 16,
+                  child: TextFormField(
+                    textAlign: TextAlign.center,
+                    style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.bold),
+                    initialValue: boxvariable.toString(),
+                    decoration: InputDecoration(
+                      hintStyle: darktextstyle.copyWith(fontSize: fontSize2, color: Colors.grey[600]),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(80, 80, 80, 1.0), width: 1)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(106, 253, 95, 0.7), width: 1.5)),
+                      filled: true,
+                      fillColor: const Color.fromRGBO(25, 25, 25, 1.0),
+                    ),
+                    onChanged: (newval) {
+                      final v = int.tryParse(newval);
+                      if (v == null) {
+                        setState(() {
+                          pickStartDate(context);
+                          prefsdata.put("nownetcredit", 0);
+                          boxvariable = prefsdata.get("nownetcredit".toString());
+                          prefsdata.put("nowcredit", 0);
+                          boxvariable = prefsdata.get("nowcredit".toString());
+                          _saveCurrentState();
+                        });
+                      } else {
+                        setState(() {
+                          pickStartDate(context);
+                          prefsdata.put(
+                            "nownetcredit".toString(),
+                            v -
+                                ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth()))
+                                    .round(),
+                          );
+                          boxvariable = prefsdata.get("nownetcredit".toString());
+                          prefsdata.put("nowcredit".toString(), v);
+                          boxvariablename = prefsdata.get("nowcredit".toString());
+                          _saveCurrentState();
+                        });
+                      }
+                    },
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[800]!, width: 0.5)),
+              child: Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.w500), textAlign: TextAlign.right),
+            ),
+          ],
+        ),
+      );
+    } */
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: ListView(
@@ -1034,7 +1107,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                                 nownetcredit -
                                                 count30thsPassed(startDate, today) * (mntsaving) >
                                             0
-                                        ? "${totsaving + calculateEarningsBetweenDates(startDate, today) - calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما"
+                                        ? "${totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)} درهما"
                                         : "مبروك، لقد حققت هدفك!",
                                     style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 1.2,
@@ -1107,7 +1180,7 @@ class _BudgetpageState extends State<Budgetpage> {
                             height: 25,
                             child: Center(
                               child: Text(
-                                "${(((nowcredit - calculateSpendingBetweenDates(startDate, aidfitr) + calculateEarningsBetweenDates(startDate, aidfitr) + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round())}",
+                                "${((nowcredit - calculateSpendingBetweenDates(startDate, aidfitr) + calculateEarningsBetweenDates(startDate, aidfitr) + (daysdiff(startDate, aidfitr) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfitr) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()}",
                                 style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   color:
@@ -1128,7 +1201,7 @@ class _BudgetpageState extends State<Budgetpage> {
                             height: 25,
                             child: Center(
                               child: Text(
-                                "${(((nowcredit - calculateSpendingBetweenDates(startDate, aidfadha) + calculateEarningsBetweenDates(startDate, aidfadha) + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round())}",
+                                "${((nowcredit - calculateSpendingBetweenDates(startDate, aidfadha) + calculateEarningsBetweenDates(startDate, aidfadha) + (daysdiff(startDate, aidfadha) + 1) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, aidfadha) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()}",
                                 style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   color:
@@ -1175,6 +1248,36 @@ class _BudgetpageState extends State<Budgetpage> {
                             child: Center(
                               child: Text(
                                 "(${(nownetcredit - calculateSpendingBetweenDates(startDate, aidfadha) + calculateEarningsBetweenDates(startDate, aidfadha) + count30thsPassed(startDate, aidfadha) * (mntsaving))})",
+                                style: darktextstyle.copyWith(fontSize: fontSize1),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            height: 25,
+                            child: Center(
+                              child: Text(
+                                "${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')}",
+                                style: darktextstyle.copyWith(fontSize: fontSize1),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 25,
+                            child: Center(
+                              child: Text("${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')}", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 25,
+                            child: Center(
+                              child: Text(
+                                "${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')}",
                                 style: darktextstyle.copyWith(fontSize: fontSize1),
                               ),
                             ),
@@ -1237,7 +1340,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 Text("تدبير الموارد الخاصة بك", style: darktextstyle.copyWith(fontSize: fontSize1)),
                 const SizedBox(height: 20),
                 moneyinput(size, totsaving, "totsaving", "المبلغ الإجمالي المراد توفيره"),
-
+                /*
                 moneyinput(
                   size,
                   nowcredit,
@@ -1245,6 +1348,83 @@ class _BudgetpageState extends State<Budgetpage> {
                   "المبلغ المتوفر يوم"
                       " ${startDate.year}-${startDate.month}-${startDate.day} "
                       "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} يوم )",
+                ),*/
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [const Color.fromARGB(10, 45, 45, 45), const Color.fromARGB(125, 35, 35, 35)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), offset: const Offset(0, 2), blurRadius: 4)],
+                    border: Border.all(color: const Color.fromRGBO(106, 253, 95, 0.2), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            height: 48 * fontSize2 / 16,
+                            width: size.width * 0.2 * fontSize2 / 16,
+                            child: TextFormField(
+                              textAlign: TextAlign.center,
+                              style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.bold),
+                              initialValue: nowcredit.toString(),
+                              decoration: InputDecoration(
+                                hintStyle: darktextstyle.copyWith(fontSize: fontSize2, color: Colors.grey[600]),
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(80, 80, 80, 1.0), width: 1)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(106, 253, 95, 0.7), width: 1.5)),
+                                filled: true,
+                                fillColor: const Color.fromRGBO(25, 25, 25, 1.0),
+                              ),
+                              onChanged: (newval) {
+                                final v = int.tryParse(newval);
+                                if (v == null) {
+                                  setState(() {
+                                    pickStartDate(context);
+                                    prefsdata.put("nownetcredit", 0);
+                                    nownetcredit = prefsdata.get("nownetcredit".toString());
+                                    prefsdata.put("nowcredit", 0);
+                                    nowcredit = prefsdata.get("nowcredit".toString());
+                                    _saveCurrentState();
+                                  });
+                                } else {
+                                  setState(() {
+                                    pickStartDate(context);
+                                    prefsdata.put(
+                                      "nownetcredit".toString(),
+                                      v -
+                                          ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) *
+                                                  (daysleftInCurrentMonth()))
+                                              .round(),
+                                    );
+                                    nownetcredit = prefsdata.get("nownetcredit".toString());
+                                    prefsdata.put("nowcredit".toString(), v);
+                                    nowcredit = prefsdata.get("nowcredit".toString());
+                                    _saveCurrentState();
+                                  });
+                                }
+                              },
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[800]!, width: 0.5)),
+                        child: Text(
+                          "المبلغ المتوفر يوم"
+                          " ${startDate.year}-${startDate.month}-${startDate.day} "
+                          "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} يوم )",
+                          style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.w500),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 moneyinput(size, mntsaving, "mntsaving", "المبلغ الشهري المرتقب إدخاره"),
 
@@ -1466,6 +1646,7 @@ class _BudgetpageState extends State<Budgetpage> {
                     prefsdata.put(boxvariablename, 0);
                     boxvariable = prefsdata.get(boxvariablename.toString());
                     print(boxvariable.toString() + boxvariablename.toString());
+                    _saveCurrentState();
                   });
                 } else {
                   setState(() {
@@ -1473,6 +1654,7 @@ class _BudgetpageState extends State<Budgetpage> {
                     prefsdata.put(boxvariablename.toString(), v);
                     boxvariable = prefsdata.get(boxvariablename.toString());
                     print(boxvariable.toString() + boxvariablename.toString());
+                    _saveCurrentState();
                   });
                 }
               },
@@ -1623,20 +1805,6 @@ class _BudgetpageState extends State<Budgetpage> {
 
     return count;
   }
-
-  /*Widget coloredinfocalculated(num value, labeltext) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(value.toString(), style: darktextstyle.copyWith(fontSize: fontSize1, color: 0.6 > 0.5 ? const Color.fromARGB(255, 216, 19, 1) : const Color.fromARGB(255, 127, 255, 131))),
-          Text(labeltext, style: darktextstyle.copyWith(fontSize: fontSize1)),
-        ],
-      ),
-    );
-  }*/
 
   Widget coloredinfocalculated(num value, String labelText, {num? threshold, Color? positiveColor, Color? negativeColor, IconData? icon}) {
     // Set default threshold to 0.5 if not provided
