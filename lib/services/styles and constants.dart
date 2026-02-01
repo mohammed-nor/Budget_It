@@ -14,7 +14,7 @@ final Map<String, Color> colorMap = {
   'Green': Color.fromRGBO(0, 46, 2, 1.0),
   'Blue': Color.fromRGBO(97, 134, 255, 0.1843137254901961),
   'Dark': Color.fromRGBO(14, 14, 14, 0.1843137254901961),
-  'Light': Color.fromRGBO(50, 50, 50, 1),
+  'Light': Color.fromRGBO(157, 157, 157, 1),
   'Yellow': Color.fromRGBO(255, 255, 0, 0.1843137254901961),
   'Purple': Color.fromRGBO(255, 0, 255, 0.1843137254901961),
 };

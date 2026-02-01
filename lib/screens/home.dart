@@ -35,11 +35,14 @@ class _MyhomeState extends State<Myhome> {
   /// Returns:
   ///   A widget.
   Widget build(BuildContext context) {
+    List<IconData> listactions = [Icons.account_balance_wallet, Icons.wallet, Icons.calendar_month, Icons.settings_outlined];
+    List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
     return SafeArea(
       child: Scaffold(
-        backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
+        //backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
+        backgroundColor: Color.fromRGBO(20, 20, 20, 1.0),
         body: getbody(),
-        bottomNavigationBar: getfooter(),
+        //bottomNavigationBar: getfooter(),
         /*floatingActionButton: FloatingActionButton(
           onPressed: () async {
             /* await FirebaseFirestore.instance
@@ -51,6 +54,38 @@ class _MyhomeState extends State<Myhome> {
           child: const Icon(Icons.query_stats, size: 25),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.miniEndDocked,*/
+        bottomNavigationBar: Theme(
+          data: ThemeData(splashColor: Colors.black, highlightColor: Colors.transparent),
+          child: BottomNavigationBar(
+            currentIndex: pageindex,
+            type: BottomNavigationBarType.fixed,
+            // backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
+            backgroundColor: Colors.black,
+            selectedItemColor: Color.fromARGB(
+              255,
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50).clamp(0, 255),
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50).clamp(0, 255),
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50).clamp(0, 255),
+            ),
+            unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            elevation: 0,
+            iconSize: 26,
+            selectedIconTheme: const IconThemeData(size: 30),
+            selectedFontSize: 12,
+            unselectedFontSize: 10,
+            items: List.generate(listactions.length, (index) {
+              return BottomNavigationBarItem(
+                icon: AnimatedContainer(duration: const Duration(milliseconds: 200), padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0), child: Icon(listactions[index])),
+                label: labels[index],
+              );
+            }),
+            onTap: (index) {
+              setTabs(index);
+            },
+          ),
+        ),
       ),
     );
   }
@@ -72,7 +107,8 @@ class _MyhomeState extends State<Myhome> {
       child: BottomNavigationBar(
         currentIndex: pageindex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+
         selectedItemColor: Color.fromARGB(
           255,
           (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50).clamp(0, 255),

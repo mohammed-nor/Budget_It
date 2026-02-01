@@ -7,7 +7,6 @@ import 'package:budget_it/services/styles%20and%20constants.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:budget_it/models/budget_history.dart';
-import 'package:intl/intl.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -247,7 +246,7 @@ class _StatspageState extends State<Statspage> {
     num mntperinc = prefsdata.get("mntperinc", defaultValue: 5);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0)) == Color.fromRGBO(50, 50, 50, 1) ? Color.fromRGBO(227, 227, 227, 1) : Colors.black,
       body: ListView(
         padding: const EdgeInsets.all(7),
         children: <Widget>[

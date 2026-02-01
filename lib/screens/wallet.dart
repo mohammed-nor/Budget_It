@@ -73,7 +73,8 @@ class _WalletPageState extends State<WalletPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0)) == Color.fromRGBO(50, 50, 50, 1) ? Color.fromRGBO(227, 227, 227, 1) : Colors.black,
+
       body: ListView(
         padding: const EdgeInsets.all(8),
         children: [
@@ -94,7 +95,7 @@ class _WalletPageState extends State<WalletPage> {
             );
           }),
           Card(
-            color: cardColor,
+            color: prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0)),
             margin: const EdgeInsets.symmetric(vertical: 12),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -198,7 +199,8 @@ class BudgetCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF232323), Color(0xFF1A1A1A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        color: prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0)),
+        //gradient: const LinearGradient(colors: [Color(0xFF232323), Color(0xFF1A1A1A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), offset: const Offset(0, 4), blurRadius: 10)],
         border: Border.all(color: Colors.green.withOpacity(0.15), width: 1.5),
