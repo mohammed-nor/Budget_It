@@ -19,10 +19,12 @@
 				"windows",
 				"--release"
 			],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"problemMatcher": [],
-			"label": "flutter: flutter build apk web windows --release",
-			"detail": ""
+			"label": "flutter: flutter build apk web windows --release"
 		}
 	]
 }
