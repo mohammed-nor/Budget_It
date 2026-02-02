@@ -69,10 +69,10 @@ Budget_It is a personal budgeting and financial tracking app built with Flutter.
 ## Screenshots
 
 <p float="left">
-  <img src="screenshots/home1.jpg" width="532" height="1050"/>
-  <img src="screenshots/home2.jpg" width="200"/>
-  <img src="screenshots/stats.jpg" width="200"/>
-  <img src="screenshots/setting.jpg" width="200"/>
+  <img src="screenshots/home1.jpg" width="532" height="1050" alt=""/>
+  <img src="screenshots/home2.jpg" width="532" alt=""/>
+  <img src="screenshots/stats.jpg" width="532" alt=""/>
+  <img src="screenshots/setting.jpg" width="532" alt=""/>
 
 </p>
 
