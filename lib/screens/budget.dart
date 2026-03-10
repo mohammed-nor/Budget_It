@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:hive/hive.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
-import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart' as sfs;
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'dart:math' as math;
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:budget_it/models/budget_history.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
@@ -62,6 +63,7 @@ class _BudgetpageState extends State<Budgetpage> {
   int bbPeriod = 7; // SMA period for Bollinger
   double bbMultiplier = 1.2;
   double vv = 80;
+  Box<dynamic>? chartSettingsBox;
   // Std-dev multiplier for Bollinger
 
   // Simple data class for candle points
@@ -87,6 +89,23 @@ class _BudgetpageState extends State<Budgetpage> {
     _loadBudgetHistory();
     _initUpcomingSpendingBox();
     _initUnexpectedEarningsBox();
+    _initChartSettings();
+  }
+
+  Future<void> _initChartSettings() async {
+    chartSettingsBox = await Hive.openBox('chart_settings');
+    setState(() {
+      displayCount =
+          chartSettingsBox?.get('displayCount', defaultValue: 40) ?? 40;
+      bbPeriod = chartSettingsBox?.get('bbPeriod', defaultValue: 7) ?? 7;
+      bbMultiplier =
+          chartSettingsBox?.get('bbMultiplier', defaultValue: 1.2) ?? 1.2;
+      vv = chartSettingsBox?.get('vv', defaultValue: 80.0) ?? 80.0;
+    });
+  }
+
+  void _saveChartSetting(String key, dynamic value) {
+    chartSettingsBox?.put(key, value);
   }
 
   Future<void> _initHistoryBox() async {
@@ -140,9 +159,9 @@ class _BudgetpageState extends State<Budgetpage> {
     );*/
     DateTime firstDay = DateTime(
       today.year,
-      today.month ,
+      today.month,
       1,
-    ).subtract(const Duration(days: 90));
+    ).subtract(const Duration(days: 140));
     DateTime lastDay = DateTime(
       today.year,
       today.month + 1,
@@ -195,15 +214,67 @@ class _BudgetpageState extends State<Budgetpage> {
             .round();
 
     // helper to evaluate the opening value using the exact formula provided by the user.
+
     num evaluateOpening(DateTime todayVar) {
+      final num monthlyTerm =
+          ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+              (1 - freemnt / 12) -
+          mntexp);
+
+      // If the requested day is before the stored start date, compute opening at
+      // startDatePref then roll it back to todayVar by applying net changes that
+      // happened between todayVar (earlier) and startDatePref (later).
+      if (todayVar.isBefore(startDatePref)) {
+        // Opening computed at startDatePref using the original formula (safe because todayVar == startDatePref is not before)
+        final num openingAtStart =
+            ((nowcredit +
+                    calculateSpendingBetweenDates(
+                      startDatePref,
+                      startDatePref,
+                    ) -
+                    calculateEarningsBetweenDates(
+                      startDatePref,
+                      startDatePref,
+                    ) +
+                    (daysdiff(startDatePref, startDatePref)) *
+                        (-dailySpending) +
+                    count30thsPassed(startDatePref, startDatePref) *
+                        monthlyTerm))
+                .round();
+
+        // Net changes that occurred between the earlier day (todayVar) and startDatePref
+        // When moving backward in time, previous spending should be added back and previous earnings removed.
+        final num spendsBetween = calculateSpendingBetweenDates(
+          todayVar,
+          startDatePref,
+        );
+        final num earnsBetween = calculateEarningsBetweenDates(
+          todayVar,
+          startDatePref,
+        );
+        final num dailyAdjust =
+            (daysdiff(todayVar, startDatePref)) * (-dailySpending);
+        final num thirtiethAdjust =
+            count30thsPassed(todayVar, startDatePref) * monthlyTerm;
+
+        // Apply adjustments to roll the opening back to todayVar
+        final num openingAtToday =
+            (openingAtStart +
+                    spendsBetween -
+                    earnsBetween -
+                    dailyAdjust -
+                    thirtiethAdjust)
+                .round();
+
+        return openingAtToday;
+      }
+
+      // Normal case: startDatePref is on-or-before todayVar — use original formula
       return ((nowcredit -
               calculateSpendingBetweenDates(startDatePref, todayVar) +
               calculateEarningsBetweenDates(startDatePref, todayVar) +
               (daysdiff(startDatePref, todayVar)) * (-dailySpending) +
-              count30thsPassed(startDatePref, todayVar) *
-                  ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
-                          (1 - freemnt / 12) -
-                      mntexp)))
+              count30thsPassed(startDatePref, todayVar) * monthlyTerm))
           .round();
     }
 
@@ -812,11 +883,14 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // Divider then full list of unexpected earnings (existing UX)
+            const SizedBox(height: 8),
 
             unexpectedEarningsList.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
                       "لا توجد مداخيل غير متوقعة مسجلة",
                       style: darktextstyle.copyWith(
@@ -1128,6 +1202,25 @@ class _BudgetpageState extends State<Budgetpage> {
         });
       }
     }
+  }
+
+  String _getArabicMonthName(int month) {
+    const months = [
+      '',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'ماي',
+      'يونيو',
+      'يوليوز',
+      'غشت',
+      'شتنبر',
+      'أكتوبر',
+      'نونبر',
+      'دجنبر',
+    ];
+    return month > 0 && month < months.length ? months[month] : '';
   }
 
   @override
@@ -1729,12 +1822,9 @@ class _BudgetpageState extends State<Budgetpage> {
                     // without changing any existing open/high/low/close calculations.
                     Builder(
                       builder: (context) {
-                        final int bbP =
-                            bbPeriod; // window length for SMA (from state)
-                        final double bbM =
-                            bbMultiplier; // stddev multiplier (from state)
-                        final int dispCount =
-                            displayCount; // show last N points when available
+                        final int bbP = bbPeriod;
+                        final double bbM = bbMultiplier;
+                        final int dispCount = displayCount;
 
                         // Compute bands over the full candleData (do NOT change calculation logic)
                         final List<_BandPoint> fullBandData = [];
@@ -1789,7 +1879,7 @@ class _BudgetpageState extends State<Budgetpage> {
                             : List<_BandPoint>.from(fullBandData);
 
                         return SizedBox(
-                          height: 450,
+                          height: 400,
                           child: displayCandles.isEmpty
                               ? Center(
                                   child: Text(
@@ -1800,8 +1890,34 @@ class _BudgetpageState extends State<Budgetpage> {
                                   ),
                                 )
                               : SfCartesianChart(
-                                  primaryXAxis: DateTimeAxis(),
-                                  primaryYAxis: NumericAxis(),
+                                  primaryXAxis: DateTimeAxis(
+                                    dateFormat: DateFormat('d MMM'),
+                                    intervalType: DateTimeIntervalType.days,
+                                    interval: 7,
+                                    majorGridLines: const MajorGridLines(
+                                      width: 1,
+                                    ),
+                                    edgeLabelPlacement:
+                                        EdgeLabelPlacement.shift,
+                                  ),
+                                  primaryYAxis: NumericAxis(
+                                    minimum:
+                                        displayCandles
+                                            .map((c) => c.low)
+                                            .fold<num>(
+                                              double.infinity,
+                                              (min, v) => v < min ? v : min,
+                                            ) -
+                                        1500,
+                                    maximum:
+                                        displayCandles
+                                            .map((c) => c.high)
+                                            .fold<num>(
+                                              double.negativeInfinity,
+                                              (max, v) => v > max ? v : max,
+                                            ) +
+                                        1500,
+                                  ),
                                   tooltipBehavior: TooltipBehavior(
                                     enable: true,
                                   ),
@@ -1880,6 +1996,10 @@ class _BudgetpageState extends State<Budgetpage> {
                     ExpansionTile(
                       //backgroundColor: cardcolor,
                       //collapsedBackgroundColor: cardcolor,
+                      tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 1.0,
+                        vertical: 0,
+                      ),
                       title: Center(
                         child: Text(
                           'مبيان التغييرات',
@@ -1910,7 +2030,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     fontSize: fontSize1 * 0.9,
                                   ),
                                 ),
-                                SfSlider(
+                                sfs.SfSlider(
                                   min: 5.0,
                                   max: 105.0,
                                   interval: 20,
@@ -1922,6 +2042,10 @@ class _BudgetpageState extends State<Budgetpage> {
                                     setState(() {
                                       displayCount = (newValue as double)
                                           .round();
+                                      _saveChartSetting(
+                                        'displayCount',
+                                        displayCount,
+                                      );
                                     });
                                   },
                                 ),
@@ -1931,19 +2055,19 @@ class _BudgetpageState extends State<Budgetpage> {
                                   style: darktextstyle.copyWith(
                                     fontSize: fontSize1 * 0.9,
                                   ),
-                                  textDirection: TextDirection.rtl,
+                                  //textDirection: TextDirection.rtl,
                                 ),
-                                SfSlider(
+                                sfs.SfSlider(
                                   min: 1.0,
                                   max: 31.0,
                                   interval: 2,
                                   showTicks: true,
                                   showLabels: true,
-
                                   value: bbPeriod.toDouble(),
                                   onChanged: (dynamic newValue) {
                                     setState(() {
                                       bbPeriod = (newValue as double).round();
+                                      _saveChartSetting('bbPeriod', bbPeriod);
                                     });
                                   },
                                 ),
@@ -1953,9 +2077,9 @@ class _BudgetpageState extends State<Budgetpage> {
                                   style: darktextstyle.copyWith(
                                     fontSize: fontSize1 * 0.9,
                                   ),
-                                  textDirection: TextDirection.rtl,
+                                  //textDirection: TextDirection.rtl,
                                 ),
-                                SfSlider(
+                                sfs.SfSlider(
                                   min: 0.0,
                                   max: 100.0,
                                   interval: 20,
@@ -1967,6 +2091,11 @@ class _BudgetpageState extends State<Budgetpage> {
                                       vv = newValue as double;
                                       bbMultiplier =
                                           ((100 - vv) * 3.5 / 100 + 0.5);
+                                      _saveChartSetting('vv', vv);
+                                      _saveChartSetting(
+                                        'bbMultiplier',
+                                        bbMultiplier,
+                                      );
                                     });
                                   },
                                 ),
@@ -2655,47 +2784,524 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
           ),
-          _buildUpcomingSpendingCard(context),
 
           // Candle-like chart card: shows evolution of budget (nownetcredit)
           Card(
             elevation: 5,
             color: cardcolor,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  /* Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("تطور الرصيد", style: darktextstyle.copyWith(fontSize: fontSize1, fontWeight: FontWeight.bold)),
-                      // Granularity selector
-                      DropdownButton<String>(
-                        dropdownColor: cardcolor,
-                        value: chartGranularity,
-                        items: const [
-                          DropdownMenuItem(value: 'Day', child: Text('يومي')),
-                          DropdownMenuItem(value: 'Week', child: Text('أسبوعي')),
-                          DropdownMenuItem(value: 'Month', child: Text('شهري')),
+                  const SizedBox(height: 12),
+
+                  // Summary + distribution + top-3
+                  Builder(
+                    builder: (context) {
+                      // Compute month range (current month)
+                      final DateTime monthStart = DateTime(
+                        DateTime.now().year,
+                        DateTime.now().month,
+                        1,
+                      );
+                      final DateTime monthEnd = DateTime(
+                        DateTime.now().year,
+                        DateTime.now().month + 1,
+                        1,
+                      ).subtract(const Duration(days: 1));
+
+                      // Totals for the month
+                      // Totals for all time
+                      num totalIncomeMonth = 0;
+                      for (var e in unexpectedEarningsList) {
+                        totalIncomeMonth += e.amount;
+                      }
+
+                      num totalSpendingMonth = 0;
+                      for (var s in upcomingSpendingList) {
+                        totalSpendingMonth += s.amount;
+                      }
+
+                      final num netMonth =
+                          totalIncomeMonth - totalSpendingMonth;
+
+                      // Prepare daily distribution data for the chart (day -> totals)
+                      final int daysInMonth = monthEnd.day;
+                      // final List<int> days = List<int>.generate(daysInMonth, (i) => i + 1); // unused
+                      final List<num> dailyIncome = List<num>.filled(
+                        daysInMonth,
+                        0,
+                      );
+                      final List<num> dailySpend = List<num>.filled(
+                        daysInMonth,
+                        0,
+                      );
+
+                      for (var e in unexpectedEarningsList) {
+                        if ((e.date.isAfter(monthStart) ||
+                                e.date.isAtSameMomentAs(monthStart)) &&
+                            (e.date.isBefore(monthEnd) ||
+                                e.date.isAtSameMomentAs(monthEnd))) {
+                          final idx = e.date.day - 1;
+                          if (idx >= 0 && idx < daysInMonth) {
+                            dailyIncome[idx] += e.amount;
+                          }
+                        }
+                      }
+                      for (var s in upcomingSpendingList) {
+                        if ((s.date.isAfter(monthStart) ||
+                                s.date.isAtSameMomentAs(monthStart)) &&
+                            (s.date.isBefore(monthEnd) ||
+                                s.date.isAtSameMomentAs(monthEnd))) {
+                          final idx = s.date.day - 1;
+                          if (idx >= 0 && idx < daysInMonth) {
+                            dailySpend[idx] += s.amount;
+                          }
+                        }
+                      }
+
+                      // Top-3 lists across full data (not limited to month) for visibility
+                      final List unexpectedSortedDesc = List.from(
+                        unexpectedEarningsList,
+                      )..sort((a, b) => b.amount.compareTo(a.amount));
+                      final top3Income = unexpectedSortedDesc.take(3).toList();
+
+                      final List upcomingSortedDesc = List.from(
+                        upcomingSpendingList,
+                      )..sort((a, b) => b.amount.compareTo(a.amount));
+                      final top3Spending = upcomingSortedDesc.take(3).toList();
+
+                      // Chart data model
+                      final List<Map<String, dynamic>> chartData = [];
+                      for (int i = 0; i < daysInMonth; i++) {
+                        chartData.add({
+                          'day': (i + 1).toString(),
+                          'income': dailyIncome[i],
+                          'spend': dailySpend[i],
+                        });
+                      }
+
+                      return Column(
+                        children: [
+                          // Totals row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${totalSpendingMonth.toString()} درهم',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.05,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color.fromRGBO(
+                                          253,
+                                          95,
+                                          95,
+                                          1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'مجموع المصاريف',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Net
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${netMonth.toString()} درهم',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.25,
+                                        fontWeight: FontWeight.bold,
+                                        color: netMonth >= 0
+                                            ? Colors.green[300]
+                                            : Colors.red[300],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'الرصيد الصافي',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Income
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${totalIncomeMonth.toString()} درهم',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.05,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color.fromRGBO(
+                                          106,
+                                          253,
+                                          95,
+                                          1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'مجموع المداخيل',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Spending
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // --- New: Global statistics for unexpected earnings and spendings ---
+
+                          // --- End statistics ---
+                          const SizedBox(height: 12),
+
+                          // Distribution chart (compact)
+                          SizedBox(
+                            height: 140,
+                            child: SfCartesianChart(
+                              primaryXAxis: CategoryAxis(
+                                labelRotation: 0,
+                                interval: (daysInMonth / 4).ceilToDouble(),
+                                majorGridLines: const MajorGridLines(width: 0),
+                                edgeLabelPlacement: EdgeLabelPlacement.shift,
+                              ),
+                              primaryYAxis: NumericAxis(
+                                labelFormat: '{value}',
+                                majorGridLines: const MajorGridLines(
+                                  width: 0.5,
+                                ),
+                              ),
+                              tooltipBehavior: TooltipBehavior(enable: true),
+                              legend: Legend(
+                                isVisible: true,
+                                position: LegendPosition.bottom,
+                              ),
+                              series:
+                                  <
+                                    CartesianSeries<
+                                      Map<String, dynamic>,
+                                      String
+                                    >
+                                  >[
+                                    ColumnSeries<Map<String, dynamic>, String>(
+                                      name: 'دخل',
+                                      dataSource: chartData,
+                                      xValueMapper: (m, _) =>
+                                          m['day'] as String,
+                                      yValueMapper: (m, _) =>
+                                          m['income'] as num,
+                                      color: const Color.fromRGBO(
+                                        106,
+                                        253,
+                                        95,
+                                        1.0,
+                                      ),
+                                    ),
+                                    ColumnSeries<Map<String, dynamic>, String>(
+                                      name: 'مصاريف',
+                                      dataSource: chartData,
+                                      xValueMapper: (m, _) =>
+                                          m['day'] as String,
+                                      yValueMapper: (m, _) => m['spend'] as num,
+                                      color: const Color.fromRGBO(
+                                        253,
+                                        95,
+                                        95,
+                                        1.0,
+                                      ),
+                                    ),
+                                  ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Builder(
+                            builder: (context) {
+                              // Gather all dates for range
+                              final allDates = <DateTime>[];
+                              for (var e in unexpectedEarningsList) {
+                                allDates.add(e.date);
+                              }
+                              for (var s in upcomingSpendingList) {
+                                allDates.add(s.date);
+                              }
+                              if (allDates.isEmpty) {
+                                return Text(
+                                  'لا توجد بيانات كافية للإحصائيات',
+                                  style: darktextstyle.copyWith(
+                                    fontSize: fontSize1,
+                                  ),
+                                );
+                              }
+                              allDates.sort();
+                              final firstDate = allDates.first;
+                              final lastDate = allDates.last;
+                              final monthsSpan =
+                                  ((lastDate.year - firstDate.year) * 12 +
+                                          (lastDate.month - firstDate.month) +
+                                          1)
+                                      .clamp(1, 10000);
+
+                              // Earnings
+                              final totalEarnings = unexpectedEarningsList
+                                  .fold<num>(0, (sum, e) => sum + e.amount);
+                              final avgEarningsPerMonth =
+                                  totalEarnings / monthsSpan;
+                              final avgEarningsPerEntry =
+                                  unexpectedEarningsList.isNotEmpty
+                                  ? totalEarnings /
+                                        unexpectedEarningsList.length
+                                  : 0;
+
+                              // Spendings
+                              final totalSpendings = upcomingSpendingList
+                                  .fold<num>(0, (sum, s) => sum + s.amount);
+                              final avgSpendingsPerMonth =
+                                  totalSpendings / monthsSpan;
+                              final avgSpendingsPerEntry =
+                                  upcomingSpendingList.isNotEmpty
+                                  ? totalSpendings / upcomingSpendingList.length
+                                  : 0;
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'المصاريف غير القارة',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 1.05,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color.fromRGBO(
+                                                  253,
+                                                  95,
+                                                  95,
+                                                  1.0,
+                                                ),
+                                              ),
+                                            ),
+
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'المتوسط/شهر: ${avgSpendingsPerMonth.toStringAsFixed(2)}',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'المتوسط/عملية: ${avgSpendingsPerEntry.toStringAsFixed(2)}',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'المداخيل غير القارة',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color.fromRGBO(
+                                                  106,
+                                                  253,
+                                                  95,
+                                                  1.0,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'المتوسط/شهر: ${avgEarningsPerMonth.toStringAsFixed(2)}',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'المتوسط/عملية: ${avgEarningsPerEntry.toStringAsFixed(2)}',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            },
+                          ), // Top-3 lists side-by-side
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Top incomes
+
+                              // Top spendings
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'أكبر 3 مصاريف',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...top3Spending.map((it) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 6,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '${it.amount}',
+                                                style: darktextstyle.copyWith(
+                                                  fontSize: fontSize1,
+                                                  color: const Color.fromRGBO(
+                                                    253,
+                                                    95,
+                                                    95,
+                                                    1.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              it.title ?? '-',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'أكبر 3 مداخل',
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.85,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...top3Income.map((it) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 6,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                '${it.amount}',
+                                                style: darktextstyle.copyWith(
+                                                  fontSize: fontSize1,
+                                                  color: const Color.fromRGBO(
+                                                    106,
+                                                    253,
+                                                    95,
+                                                    1.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              it.title ?? '-',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
-                        onChanged: (v) {
-                          if (v == null) return;
-                          setState(() {
-                            chartGranularity = v;
-                            _generateCandleData();
-                          });
-                        },
-                      ),
-                    ],
-                  ),*/
-                  const SizedBox(height: 8),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
           ),
 
           _buildUnexpectedEarningsCard(context),
+          _buildUpcomingSpendingCard(context),
+
           Card(
             elevation: 2,
             color: cardcolor,
@@ -3386,7 +3992,7 @@ class _BudgetpageState extends State<Budgetpage> {
           SizedBox(
             height: size.height * 0.07,
             width: size.width * 0.3,
-            child: SfSlider(
+            child: sfs.SfSlider(
               min: 0.0,
               max: 100.0,
               interval: 50,
@@ -3398,7 +4004,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 color: Colors.blue,
                 size: 14.0,
               ),
-              tooltipShape: const SfPaddleTooltipShape(),
+              tooltipShape: const sfs.SfPaddleTooltipShape(),
               value: boxvariable as num,
               onChanged: (dynamic newValue) {
                 setState(() {
@@ -3426,10 +4032,12 @@ class _BudgetpageState extends State<Budgetpage> {
     Color? customColor,
     IconData? icon,
   }) {
+    bool isAchieved = labelText.contains("أشهر") && value <= 0;
+
     // Determine color based on value (positive = green, negative = red, or use custom)
     final Color valueColor =
         customColor ??
-        (value > 0
+        (isAchieved || value > 0
             ? const Color.fromRGBO(106, 253, 95, 1.0)
             : value < 0
             ? const Color.fromRGBO(253, 95, 95, 1.0)
@@ -3438,7 +4046,9 @@ class _BudgetpageState extends State<Budgetpage> {
     // Choose icon if not provided
     final IconData displayIcon =
         icon ??
-        (labelText.contains("أشهر")
+        (isAchieved
+            ? Icons.emoji_events
+            : labelText.contains("أشهر")
             ? Icons.calendar_month
             : labelText.contains("ادخار")
             ? Icons.savings
@@ -3498,10 +4108,14 @@ class _BudgetpageState extends State<Budgetpage> {
                   );
                 },
                 child: Text(
-                  value.isNaN ? "0" : value.round().toString(),
-                  key: ValueKey<String>(value.toString()),
+                  isAchieved
+                      ? "الهدف محقق"
+                      : (value.isNaN ? "0" : value.round().toString()),
+                  key: ValueKey<String>(
+                    isAchieved ? "الهدف محقق" : value.toString(),
+                  ),
                   style: darktextstyle.copyWith(
-                    fontSize: fontSize1,
+                    fontSize: isAchieved ? fontSize1 * 0.8 : fontSize1,
                     fontWeight: FontWeight.bold,
                     color: valueColor,
                   ),
