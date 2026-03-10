@@ -5,7 +5,7 @@
     targetSdkVersion="16"
     mergedManifest="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml"
     manifestMergeReport="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\outputs\logs\manifest-merger-release-report.txt"
-    proguardFiles="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\intermediates\default_proguard_files\global\proguard-android.txt-8.9.1"
+    proguardFiles="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\intermediates\default_proguard_files\global\proguard-android.txt-8.7.3"
     partialResultsDir="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\intermediates\lint_vital_partial_results\release\lintVitalAnalyzeRelease\out">
   <buildFeatures
       namespacing="REQUIRED"/>
@@ -26,6 +26,6 @@
       applicationId="net.jonhanson.flutter_native_splash"
       generatedSourceFolders="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\generated\ap_generated_sources\release\out"
       generatedResourceFolders="C:\Users\pc\StudioProjects\Budget_It\build\flutter_native_splash\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\pc\.gradle\caches\8.11.1\transforms\bdcc66afc721511309bbf152847a7970\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\pc\.gradle\caches\8.9\transforms\d0c94814b2c746f61d53f40b9fc289b8\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>
