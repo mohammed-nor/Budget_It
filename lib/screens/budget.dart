@@ -848,176 +848,177 @@ class _BudgetpageState extends State<Budgetpage> {
 
   Widget _buildUnexpectedEarningsCard(BuildContext context) {
     return Card(
-      elevation: 5,
-      color: cardcolor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _showAddEarningDialog,
-                  icon: const Icon(Icons.add),
-                  label: Text(
-                    "",
-                    style: darktextstyle.copyWith(fontSize: fontSize1),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(40, 80, 40, 1.0),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+        elevation: 5,
+        color: cardcolor,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _showAddEarningDialog,
+                    icon: const Icon(Icons.add),
+                    label: Text(
+                      "",
+                      style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
-                  ),
-                ),
-                Text(
-                  "مداخيل غير قارة",
-                  style: darktextstyle.copyWith(
-                    fontSize: fontSize1 * 1.2,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Divider then full list of unexpected earnings (existing UX)
-            const SizedBox(height: 8),
-
-            unexpectedEarningsList.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      "لا توجد مداخيل غير متوقعة مسجلة",
-                      style: darktextstyle.copyWith(
-                        fontSize: fontSize1,
-                        color: Colors.grey[400],
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromRGBO(40, 80, 40, 1.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: unexpectedEarningsList.length,
-                    itemBuilder: (context, index) {
-                      final item = unexpectedEarningsList[index];
-                      final daysAgo = DateTime.now()
-                          .difference(item.date)
-                          .inDays;
+                  ),
+                  Text(
+                    "مداخيل غير قارة",
+                    style: darktextstyle.copyWith(
+                      fontSize: fontSize1 * 1.2,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
 
-                      return Card(
-                        color: const Color.fromRGBO(40, 50, 40, 0.2),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              // Delete button
-                              GestureDetector(
-                                onTap: () => _deleteUnexpectedEarning(item.id),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromRGBO(
-                                      200,
-                                      50,
-                                      50,
-                                      0.5,
+              const SizedBox(height: 12),
+
+              // Divider then full list of unexpected earnings (existing UX)
+              const SizedBox(height: 8),
+
+              unexpectedEarningsList.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        "لا توجد مداخيل غير متوقعة مسجلة",
+                        style: darktextstyle.copyWith(
+                          fontSize: fontSize1,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: unexpectedEarningsList.length,
+                      itemBuilder: (context, index) {
+                        final item = unexpectedEarningsList[index];
+                        final daysAgo = DateTime.now()
+                            .difference(item.date)
+                            .inDays;
+
+                        return Card(
+                          color: const Color.fromRGBO(40, 50, 40, 0.2),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // Delete button
+                                GestureDetector(
+                                  onTap: () => _deleteUnexpectedEarning(item.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        200,
+                                        50,
+                                        50,
+                                        0.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
+                                    child: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                // Item details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.85,
+                                              color: Colors.grey[400],
+                                            ),
+                                          ),
+                                          Text(
+                                            daysAgo == 0
+                                                ? "اليوم"
+                                                : daysAgo == 1
+                                                ? "بالأمس"
+                                                : "منذ $daysAgo يوم",
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.85,
+                                              color: daysAgo < 3
+                                                  ? Colors.green[300]
+                                                  : Colors.grey[400],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                // Amount
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(30, 50, 30, 1.0),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Item details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: darktextstyle.copyWith(
-                                        fontSize: fontSize1,
-                                        fontWeight: FontWeight.bold,
+                                  child: Text(
+                                    "${item.amount} درهم",
+                                    style: darktextstyle.copyWith(
+                                      fontSize: fontSize1,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color.fromRGBO(
+                                        106,
+                                        253,
+                                        95,
+                                        1.0,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.85,
-                                            color: Colors.grey[400],
-                                          ),
-                                        ),
-                                        Text(
-                                          daysAgo == 0
-                                              ? "اليوم"
-                                              : daysAgo == 1
-                                              ? "بالأمس"
-                                              : "منذ $daysAgo يوم",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.85,
-                                            color: daysAgo < 3
-                                                ? Colors.green[300]
-                                                : Colors.grey[400],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Amount
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(30, 50, 30, 1.0),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "${item.amount} درهم",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      106,
-                                      253,
-                                      95,
-                                      1.0,
-                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ],
+                        );
+                      },
+                    ),
+            ],
+          ),
         ),
-      ),
+
     );
   }
 

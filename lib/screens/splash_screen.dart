@@ -117,9 +117,9 @@ class _SplashScreenState extends State<SplashScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Text(
-                    'Manage Your Money Wisely',
+                    'سبيلك للتوازن المالي',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.lato(
+                    style: GoogleFonts.elMessiri(
                       fontSize: 16,
                       color: Colors.white70,
                       letterSpacing: 0.5,
@@ -127,16 +127,16 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 60),
+                const SizedBox(height: 370),
                 // Developer and Copyright
                 Text(
-                  'Developed by NOR Mohammed',
-                  style: GoogleFonts.lato(fontSize: 13, color: Colors.white54),
+                  'مطور من طرف محمد نور',
+                  style: GoogleFonts.elMessiri(fontSize: 13, color: Colors.white54),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '© 2024 NOR Mohammed. All Rights Reserved.',
-                  style: GoogleFonts.lato(fontSize: 12, color: Colors.white38),
+                  '© 2026 جميع الحقوق محفوظة',
+                  style: GoogleFonts.elMessiri(fontSize: 12, color: Colors.white38),
                 ),
               ],
             ),
