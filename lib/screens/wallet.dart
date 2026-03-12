@@ -1,6 +1,12 @@
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:budget_it/services/gemini_service.dart';
+import 'package:budget_it/screens/api_key_manager_screen.dart';
+import 'package:budget_it/models/budget_history.dart';
+import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -11,14 +17,44 @@ class WalletPage extends StatefulWidget {
 
 class _WalletPageState extends State<WalletPage> {
   late Box budgetsBox;
+  late Box dataBox;
+
+  String? _aiAdvice;
+  bool _isLoadingAdvice = false;
+  String? _adviceError;
+  DateTime? _lastAdviceTime;
 
   final List<SpendingCategory> categories = [
-    SpendingCategory(title: 'الإستخدام الشخصي', description: 'Electricity and water bills', budget: 150),
-    SpendingCategory(title: 'الإستخدام المنزلي', description: 'Groceries and dining', budget: 500),
-    SpendingCategory(title: 'النقل', description: 'Gas and public transit', budget: 200),
-    SpendingCategory(title: 'الترفيه', description: 'Movies and activities', budget: 100),
-    SpendingCategory(title: 'الطوارئ', description: 'Other expenses', budget: 100),
-    SpendingCategory(title: 'صدقة', description: 'Car maintenance and insurance', budget: 250),
+    SpendingCategory(
+      title: 'الإستخدام الشخصي',
+      description: 'Electricity and water bills',
+      budget: 150,
+    ),
+    SpendingCategory(
+      title: 'الإستخدام المنزلي',
+      description: 'Groceries and dining',
+      budget: 500,
+    ),
+    SpendingCategory(
+      title: 'النقل',
+      description: 'Gas and public transit',
+      budget: 200,
+    ),
+    SpendingCategory(
+      title: 'الترفيه',
+      description: 'Movies and activities',
+      budget: 100,
+    ),
+    SpendingCategory(
+      title: 'الطوارئ',
+      description: 'Other expenses',
+      budget: 100,
+    ),
+    SpendingCategory(
+      title: 'صدقة',
+      description: 'Car maintenance and insurance',
+      budget: 250,
+    ),
   ];
 
   final double maxIncrement = 3000;
@@ -31,14 +67,68 @@ class _WalletPageState extends State<WalletPage> {
   void initState() {
     super.initState();
     budgetsBox = Hive.box('budgets');
+    dataBox = Hive.box('data');
+
+    GeminiService.initialize();
+
+    // Load previously saved advice
+    _loadSavedAdvice();
+
     for (var i = 0; i < categories.length; i++) {
       final saved = budgetsBox.get(categories[i].title);
       if (saved != null) categories[i].budget = saved;
       super.initState();
-      cardcolor = prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0));
+      cardcolor = prefsdata.get(
+        "cardcolor",
+        defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+      );
     }
-    // Correctly load saved increment
-    num monthlyIncrement = budgetsBox.get('monthlyIncrement', defaultValue: 3000);
+  }
+
+  // Helper method to determine if theme is dark
+  bool _isDarkTheme() {
+    final cardColor = prefsdata.get(
+      "cardcolor",
+      defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+    );
+    if (cardColor is Color) {
+      final luminance = cardColor.computeLuminance();
+      return luminance < 0.5;
+    }
+    return true;
+  }
+
+  // Helper method to get text color based on theme
+  Color _getTextColor() {
+    return _isDarkTheme() ? Colors.white : Colors.black87;
+  }
+
+  // Helper method to get secondary text color based on theme
+  Color _getSecondaryTextColor() {
+    return _isDarkTheme() ? Colors.white70 : Colors.black54;
+  }
+
+  void _loadSavedAdvice() {
+    final savedAdvice = dataBox.get('ai_advice');
+    final savedTimestamp = dataBox.get('ai_advice_timestamp');
+
+    if (savedAdvice != null) {
+      setState(() {
+        _aiAdvice = savedAdvice;
+        if (savedTimestamp != null) {
+          _lastAdviceTime = DateTime.parse(savedTimestamp);
+        }
+      });
+    }
+  }
+
+  void _saveAdviceToStorage(String advice) {
+    try {
+      dataBox.put('ai_advice', advice);
+      dataBox.put('ai_advice_timestamp', DateTime.now().toIso8601String());
+    } catch (e) {
+      print('Error saving advice to storage: $e');
+    }
   }
 
   double getCategoryIncrement(int index) {
@@ -56,7 +146,10 @@ class _WalletPageState extends State<WalletPage> {
     final keyDate = '${categories[index].title}_lastUpdateDate';
     final keyAmount = '${categories[index].title}_lastUpdateAmount';
     final lastUpdateDateStr = budgetsBox.get(keyDate);
-    final lastUpdateAmount = budgetsBox.get(keyAmount, defaultValue: categories[index].budget);
+    final lastUpdateAmount = budgetsBox.get(
+      keyAmount,
+      defaultValue: categories[index].budget,
+    );
 
     if (lastUpdateDateStr == null) return categories[index].budget;
 
@@ -70,107 +163,728 @@ class _WalletPageState extends State<WalletPage> {
     return newBudget < 0 ? 0 : newBudget;
   }
 
+  Future<void> _fetchFinancialAdvice() async {
+    if (!GeminiService.hasApiKey()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please configure your Gemini API key first'),
+          action: SnackBarAction(
+            label: 'Setup',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ApiKeyManagerScreen(),
+                ),
+              );
+              if (result == true && mounted) {
+                _fetchFinancialAdvice();
+              }
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingAdvice = true;
+      _adviceError = null;
+    });
+
+    try {
+      // Get income and spending data from budget page (prefsdata)
+      final num mntinc = prefsdata.get("mntinc", defaultValue: 4300);
+      final num mntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 2000);
+      final num mntperinc = prefsdata.get("mntperinc", defaultValue: 40);
+      final num freemnt = prefsdata.get("freemnt", defaultValue: 2);
+      final num mntexp = prefsdata.get("mntexp", defaultValue: 2000);
+      final num annexp = prefsdata.get("annexp", defaultValue: 7000);
+      final num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
+
+      // Calculate daily spending using budget page formula
+      final now = DateTime.now();
+      final daysInCurrentMonth = DateTime(now.year, now.month + 1, 0).day;
+      final num mntSpending =
+          ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                          (1 - freemnt / 12) -
+                      (mntexp + annexp / 12) -
+                      (mntsaving)) /
+                  daysInCurrentMonth))
+              .round() *
+          30.45;
+
+      // Get data from Budget page (budget_history box)
+      final budgetHistoryBox = Hive.box<BudgetHistory>('budget_history');
+      final upcomingSpendingBox = Hive.box<UpcomingSpending>(
+        'upcoming_spending',
+      );
+
+      // Calculate total net credit from history
+      double totalNetCredit = 0;
+      int recordCount = 0;
+
+      for (var i = 0; i < budgetHistoryBox.length; i++) {
+        final history = budgetHistoryBox.getAt(i);
+        if (history != null) {
+          totalNetCredit += history.nownetcredit;
+          recordCount++;
+        }
+      }
+
+      final averageNetCredit = recordCount > 0
+          ? totalNetCredit / recordCount
+          : 0;
+
+      // Get upcoming spending to include in analysis
+      double upcomingExpenses = 0;
+      for (var i = 0; i < upcomingSpendingBox.length; i++) {
+        final upcoming = upcomingSpendingBox.getAt(i);
+        if (upcoming != null) {
+          upcomingExpenses += upcoming.amount;
+        }
+      }
+
+      final categoryBudgets = <String, double>{};
+      for (var category in categories) {
+        categoryBudgets[category.title] = getCurrentBudget(
+          categories.indexOf(category),
+        );
+      }
+
+      // Calculate saved amount from budget history
+      // Represents total accumulated net credit
+      double savedAmount = 0;
+      if (budgetHistoryBox.isNotEmpty) {
+        final latestHistory = budgetHistoryBox.getAt(
+          budgetHistoryBox.length - 1,
+        );
+        if (latestHistory != null) {
+          savedAmount = latestHistory.nownetcredit.toDouble();
+        }
+      }
+
+      final advice = await GeminiService.generateFinancialAdvice(
+        categoryBudgets: categoryBudgets,
+        monthlyIncome: mntinc.toDouble(),
+        fixedmonthlyExpenses: mntexp.toDouble(),
+        currentSavings: mntsaving.toDouble(),
+        netCredit: averageNetCredit.toDouble(),
+        categoryDescriptions: categories.map((c) => c.description).toList(),
+        upcomingExpenses: upcomingExpenses,
+        availableFunds: mntSpending.toDouble(),
+        savedAmount: savedAmount,
+      );
+
+      if (mounted) {
+        setState(() {
+          _aiAdvice = advice;
+          _lastAdviceTime = DateTime.now();
+          _isLoadingAdvice = false;
+        });
+        // Save advice to storage
+        _saveAdviceToStorage(advice);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _adviceError = e.toString();
+          _isLoadingAdvice = false;
+        });
+      }
+    }
+  }
+
+  void _openApiKeyManager() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ApiKeyManagerScreen()),
+    );
+    if (result == true && mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0)) == Color.fromRGBO(50, 50, 50, 1) ? Color.fromRGBO(227, 227, 227, 1) : Colors.black,
-
-      body: ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          ...List.generate(categories.length, (index) {
-            return BudgetCard(
-              category: categories[index],
-              onBudgetChanged: (newValue) {
-                setState(() {
-                  categories[index].budget = newValue;
-                  budgetsBox.put(categories[index].title, newValue);
-                  saveCategoryUpdate(index, newValue);
-                });
-              },
-              cardColor: cardColor,
-              index: index,
-              getCategoryIncrement: getCategoryIncrement,
-              getCurrentBudget: getCurrentBudget,
-            );
-          }),
-          Card(
-            color: prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0)),
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('الزيادة الشهرية', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-                  const SizedBox(height: 8),
-                  Text('حدد قيمة الزيادة الشهرية، لا تتجاوز $maxIncrement درهم', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70)),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: TextEditingController(text: monthlyIncrement.toString()),
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'الزيادة الشهرية', border: const OutlineInputBorder(), suffixText: 'درهم', labelStyle: const TextStyle(color: Colors.white)),
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: (value) {
-                      double val = double.tryParse(value) ?? 0;
-                      if (val > maxIncrement) val = maxIncrement;
-                      setState(() {
-                        monthlyIncrement = val;
-                        budgetsBox.put('monthlyIncrement', monthlyIncrement);
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return ValueListenableBuilder(
+      valueListenable: prefsdata.listenable(keys: ['cardcolor']),
+      builder: (context, box, child) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: ListView(
+            padding: const EdgeInsets.all(8),
+            children: [
+              // AI Financial Advisor Section
+              Card(
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            monthlyIncrement = (monthlyIncrement - 10).clamp(0, maxIncrement);
-                            budgetsBox.put('monthlyIncrement', monthlyIncrement);
-                          });
-                        },
-                        child: const Text('-10'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.settings,
+                              color: Colors.green,
+                            ),
+                            onPressed: _openApiKeyManager,
+                            tooltip: 'Configure API Key',
+                          ),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.smart_toy,
+                                color: Colors.green,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'مستشار مالي ذكي',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color: _getTextColor(),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            monthlyIncrement = (monthlyIncrement - 1).clamp(0, maxIncrement);
-                            budgetsBox.put('monthlyIncrement', monthlyIncrement);
-                          });
-                        },
-                        child: const Text('-1'),
+                      const SizedBox(height: 12),
+                      Text(
+                        'احصل على نصائح مالية مخصصة بناءً على عادات إنفاقك',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: _getSecondaryTextColor(),
+                          fontSize: 14,
+                        ),
                       ),
-                      const SizedBox(width: 40),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            monthlyIncrement = (monthlyIncrement + 1).clamp(0, maxIncrement);
-                            budgetsBox.put('monthlyIncrement', monthlyIncrement);
-                          });
-                        },
-                        child: const Text('+1'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            monthlyIncrement = (monthlyIncrement + 10).clamp(0, maxIncrement);
-                            budgetsBox.put('monthlyIncrement', monthlyIncrement);
-                          });
-                        },
-                        child: const Text('+10'),
+                      const SizedBox(height: 16),
+                      if (_isLoadingAdvice)
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade900.withOpacity(0.2),
+                                Colors.blue.shade800.withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.blue.shade400.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 24,
+                            horizontal: 16,
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade700.withOpacity(
+                                      0.2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const SizedBox(
+                                    height: 50,
+                                    width: 50,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.blue,
+                                      ),
+                                      strokeWidth: 3,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'جاري تحليل بيانات الإنفاق...',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Colors.blue.shade300,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'يرجى الانتظار قليلاً',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Colors.blue.shade400,
+                                        fontSize: 12,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (_adviceError != null)
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.red.shade900.withOpacity(0.25),
+                                Colors.red.shade800.withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.red.shade400.withOpacity(0.4),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade700.withOpacity(
+                                        0.3,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red.shade300,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'خطأ في جلب النصائح',
+                                      style: TextStyle(
+                                        color: Colors.red.shade300,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                _adviceError!.replaceAll('Exception: ', ''),
+                                style: TextStyle(
+                                  color: Colors.red.shade200,
+                                  fontSize: 12,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_aiAdvice != null)
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.green.shade900.withOpacity(0.3),
+                                Colors.green.shade800.withOpacity(0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.green.shade400.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade700.withOpacity(
+                                        0.4,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.auto_awesome,
+                                      color: Colors.green.shade300,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'نصائح شخصية',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: Colors.green.shade300,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Advice Content with Markdown Rendering (RTL for Arabic)
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: MarkdownBody(
+                                  data: _aiAdvice!,
+                                  selectable: true,
+                                  styleSheet: MarkdownStyleSheet(
+                                    h1: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: Colors.green.shade300,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                    h2: Theme.of(context).textTheme.titleLarge
+                                        ?.copyWith(
+                                          color: Colors.green.shade300,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                    h3: Theme.of(context).textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: Colors.green.shade300,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                    p: Theme.of(context).textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: _getTextColor(),
+                                          fontSize: 13,
+                                          height: 1.8,
+                                        ),
+                                    strong: TextStyle(
+                                      color: Colors.green.shade300,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                    em: TextStyle(
+                                      color: Colors.green.shade200,
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
+                                    ),
+                                    listBullet: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: _getTextColor(),
+                                          fontSize: 13,
+                                          height: 1.6,
+                                        ),
+                                    code: TextStyle(
+                                      backgroundColor: Colors.green.shade900
+                                          .withOpacity(0.3),
+                                      color: Colors.green.shade200,
+                                      fontFamily: 'monospace',
+                                      fontSize: 12,
+                                    ),
+                                    blockquoteDecoration: BoxDecoration(
+                                      border: Border(
+                                        right: BorderSide(
+                                          color: Colors.green.shade400,
+                                          width: 4,
+                                        ),
+                                      ),
+                                      color: Colors.green.shade900.withOpacity(
+                                        0.15,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              // Divider
+                              Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.green.shade700.withOpacity(0.3),
+                                      Colors.green.shade700.withOpacity(0.1),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Last Updated
+                              if (_lastAdviceTime != null)
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.access_time,
+                                          color: Colors.green.shade400,
+                                          size: 14,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'آخر تحديث',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                color: Colors.green.shade400,
+                                                fontSize: 11,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      _lastAdviceTime!
+                                          .toLocal()
+                                          .toString()
+                                          .split('.')[0],
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: Colors.green.shade300,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        )
+                      else
+                        Text(
+                          'اضغط الزر أدناه للحصول على نصائح مالية مخصصة',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: _getSecondaryTextColor(),
+                                fontSize: 13,
+                              ),
+                        ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoadingAdvice
+                              ? null
+                              : _fetchFinancialAdvice,
+                          icon: Icon(
+                            _isLoadingAdvice
+                                ? Icons.schedule
+                                : (_aiAdvice != null
+                                      ? Icons.refresh
+                                      : Icons.lightbulb_outline),
+                            size: 20,
+                          ),
+                          label: Text(
+                            _aiAdvice != null
+                                ? 'تحديث النصائح'
+                                : 'احصل على نصائح',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade700,
+                            foregroundColor: _getTextColor(),
+                            disabledBackgroundColor: Colors.green.shade900
+                                .withOpacity(0.4),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 20,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 4,
+                            shadowColor: Colors.green.withOpacity(0.4),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text('القيمة الحالية: ${monthlyIncrement.toStringAsFixed(2)} درهم', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.green.shade400)),
-                ],
+                ),
               ),
-            ),
+              ...List.generate(categories.length, (index) {
+                return BudgetCard(
+                  category: categories[index],
+                  onBudgetChanged: (newValue) {
+                    setState(() {
+                      categories[index].budget = newValue;
+                      budgetsBox.put(categories[index].title, newValue);
+                      saveCategoryUpdate(index, newValue);
+                    });
+                  },
+                  cardColor: cardColor,
+                  index: index,
+                  getCategoryIncrement: getCategoryIncrement,
+                  getCurrentBudget: getCurrentBudget,
+                );
+              }),
+              Card(
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'الزيادة الشهرية',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: _getTextColor(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'حدد قيمة الزيادة الشهرية، لا تتجاوز $maxIncrement درهم',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: _getSecondaryTextColor(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: TextEditingController(
+                          text: monthlyIncrement.toString(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'الزيادة الشهرية',
+                          border: const OutlineInputBorder(),
+                          suffixText: 'درهم',
+                          labelStyle: TextStyle(color: _getTextColor()),
+                        ),
+                        style: TextStyle(color: _getTextColor()),
+                        onChanged: (value) {
+                          double val = double.tryParse(value) ?? 0;
+                          if (val > maxIncrement) val = maxIncrement;
+                          setState(() {
+                            monthlyIncrement = val;
+                            budgetsBox.put(
+                              'monthlyIncrement',
+                              monthlyIncrement,
+                            );
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                monthlyIncrement = (monthlyIncrement - 10)
+                                    .clamp(0, maxIncrement);
+                                budgetsBox.put(
+                                  'monthlyIncrement',
+                                  monthlyIncrement,
+                                );
+                              });
+                            },
+                            child: const Text('-10'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                monthlyIncrement = (monthlyIncrement - 1).clamp(
+                                  0,
+                                  maxIncrement,
+                                );
+                                budgetsBox.put(
+                                  'monthlyIncrement',
+                                  monthlyIncrement,
+                                );
+                              });
+                            },
+                            child: const Text('-1'),
+                          ),
+                          const SizedBox(width: 40),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                monthlyIncrement = (monthlyIncrement + 1).clamp(
+                                  0,
+                                  maxIncrement,
+                                );
+                                budgetsBox.put(
+                                  'monthlyIncrement',
+                                  monthlyIncrement,
+                                );
+                              });
+                            },
+                            child: const Text('+1'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                monthlyIncrement = (monthlyIncrement + 10)
+                                    .clamp(0, maxIncrement);
+                                budgetsBox.put(
+                                  'monthlyIncrement',
+                                  monthlyIncrement,
+                                );
+                              });
+                            },
+                            child: const Text('+10'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'القيمة الحالية: ${monthlyIncrement.toStringAsFixed(2)} درهم',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.green.shade400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -195,14 +909,40 @@ class BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Helper methods for theme-aware colors
+    bool isDarkTheme() {
+      final cardColor = prefsdata.get(
+        "cardcolor",
+        defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+      );
+      if (cardColor is Color) {
+        final luminance = cardColor.computeLuminance();
+        return luminance < 0.5;
+      }
+      return true;
+    }
+
+    Color getTextColor() => isDarkTheme() ? Colors.white : Colors.black87;
+    Color getSecondaryTextColor() =>
+        isDarkTheme() ? Colors.white70 : Colors.black54;
+
     final List<double> incrementRatios = [0.55, 0.20, 0.10, 0.05, 0.05, 0.05];
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       decoration: BoxDecoration(
-        color: prefsdata.get("cardcolor", defaultValue: Color.fromRGBO(20, 20, 20, 1.0)),
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
         //gradient: const LinearGradient(colors: [Color(0xFF232323), Color(0xFF1A1A1A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.25), offset: const Offset(0, 4), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
+          ),
+        ],
         border: Border.all(color: Colors.green.withOpacity(0.15), width: 1.5),
       ),
       child: Padding(
@@ -215,34 +955,68 @@ class BudgetCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.wallet, color: Colors.green, size: 22),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.wallet,
+                    color: Colors.green,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(category.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20))),
+                Expanded(
+                  child: Text(
+                    category.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: getTextColor(),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(category.description, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70, fontSize: 15)),
+            Text(
+              category.description,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: getSecondaryTextColor(),
+                fontSize: 15,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               'نسبة الزيادة الشهرية: ${(incrementRatios[index] * 100).toStringAsFixed(0)}% (${getCategoryIncrement(index).toStringAsFixed(2)} درهم)',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green.shade400, fontSize: 14),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.green.shade400,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 10),
             TextField(
-              controller: TextEditingController(text: getCurrentBudget(index).toStringAsFixed(2)),
+              controller: TextEditingController(
+                text: getCurrentBudget(index).toStringAsFixed(2),
+              ),
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'الباقي',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.green, width: 1.2)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.green, width: 1.2),
+                ),
                 labelStyle: const TextStyle(color: Colors.white),
                 floatingLabelAlignment: FloatingLabelAlignment.center,
                 suffixText: 'درهم',
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.15),
               ),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                color: getTextColor(),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
               onChanged: (value) {
                 if (value.isNotEmpty) {
                   onBudgetChanged(double.parse(value));
@@ -254,22 +1028,46 @@ class BudgetCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade900, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade900,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () => onBudgetChanged(category.budget - 5),
                   child: const Text('-5'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade900, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade900,
+                    foregroundColor: getTextColor(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () => onBudgetChanged(category.budget - 1),
                   child: const Text('-1'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade900, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade900,
+                    foregroundColor: getTextColor(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () => onBudgetChanged(category.budget + 1),
                   child: const Text('+1'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade900, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade900,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () => onBudgetChanged(category.budget + 5),
                   child: const Text('+5'),
                 ),
@@ -287,5 +1085,9 @@ class SpendingCategory {
   final String description;
   double budget;
 
-  SpendingCategory({required this.title, required this.description, required this.budget});
+  SpendingCategory({
+    required this.title,
+    required this.description,
+    required this.budget,
+  });
 }

@@ -2,9 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-//import 'package:google_fonts/google_fonts.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
-//import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:budget_it/models/budget_history.dart';
 
@@ -64,7 +63,9 @@ class _StatspageState extends State<Statspage> {
 
         print("Loaded ${budgetHistory.length} history entries");
         for (var entry in budgetHistory) {
-          print("Entry date: ${entry.timestamp}, savings: ${entry.nownetcredit}");
+          print(
+            "Entry date: ${entry.timestamp}, savings: ${entry.nownetcredit}",
+          );
         }
 
         // Populate income fields based on history
@@ -92,7 +93,8 @@ class _StatspageState extends State<Statspage> {
     }
 
     // Get distinct months, sorted newest to oldest
-    List<String> monthKeys = monthlyData.keys.toList()..sort((a, b) => b.compareTo(a));
+    List<String> monthKeys = monthlyData.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
 
     // Calculate variations for the last 5 months
     List<Map<String, num>> lastFiveMonths = [];
@@ -103,17 +105,25 @@ class _StatspageState extends State<Statspage> {
 
       // Generate a reasonably stable income variation based on the monthData and nownetcredit
       // We use the nownetcredit as a hint about that month's financial situation
-      double stableVariation = 1.0 + (monthData.nownetcredit % 10) / 100; // Small variation
-      double unstableVariation = 1.0 + (monthData.nownetcredit % 20 - 10) / 100; // Larger variation
+      double stableVariation =
+          1.0 + (monthData.nownetcredit % 10) / 100; // Small variation
+      double unstableVariation =
+          1.0 + (monthData.nownetcredit % 20 - 10) / 100; // Larger variation
 
-      lastFiveMonths.add({'stableIncome': (currentMntinc * stableVariation).round(), 'unstableIncome': (currentMntnstblinc * unstableVariation).round()});
+      lastFiveMonths.add({
+        'stableIncome': (currentMntinc * stableVariation).round(),
+        'unstableIncome': (currentMntnstblinc * unstableVariation).round(),
+      });
     }
 
     // If we don't have 5 months of data, generate synthetic data based on the last real month
     if (lastFiveMonths.isEmpty) {
       // No data at all, use current values
       for (int i = 0; i < 5; i++) {
-        lastFiveMonths.add({'stableIncome': currentMntinc, 'unstableIncome': currentMntnstblinc});
+        lastFiveMonths.add({
+          'stableIncome': currentMntinc,
+          'unstableIncome': currentMntnstblinc,
+        });
       }
     } else {
       // Fill in missing months with variations of the oldest month we have
@@ -121,10 +131,17 @@ class _StatspageState extends State<Statspage> {
 
       while (lastFiveMonths.length < 5) {
         // Create slight variations from oldest data for synthetic history
-        double stableVariation = 0.95 + (Random().nextDouble() * 0.1); // 0.95-1.05
-        double unstableVariation = 0.9 + (Random().nextDouble() * 0.2); // 0.9-1.1
+        double stableVariation =
+            0.95 + (Random().nextDouble() * 0.1); // 0.95-1.05
+        double unstableVariation =
+            0.9 + (Random().nextDouble() * 0.2); // 0.9-1.1
 
-        lastFiveMonths.add({'stableIncome': (oldestMonth['stableIncome']! * stableVariation).round(), 'unstableIncome': (oldestMonth['unstableIncome']! * unstableVariation).round()});
+        lastFiveMonths.add({
+          'stableIncome': (oldestMonth['stableIncome']! * stableVariation)
+              .round(),
+          'unstableIncome': (oldestMonth['unstableIncome']! * unstableVariation)
+              .round(),
+        });
       }
     }
 
@@ -162,7 +179,20 @@ class _StatspageState extends State<Statspage> {
 
   String getMonthName(int index) {
     // Arabic month names
-    final List<String> arabicMonthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
+    final List<String> arabicMonthNames = [
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'غشت',
+      'شتنبر',
+      'أكتوبر',
+      'نونبر',
+      'دجنبر',
+    ];
 
     if (budgetHistory.isEmpty || index >= budgetHistory.length) {
       // Calculate a month name based on current date
@@ -219,6 +249,23 @@ class _StatspageState extends State<Statspage> {
 
   @override
   Widget build(BuildContext context) {
+    // Helper methods for theme-aware colors
+    bool isDarkTheme() {
+      final cardColor = prefsdata.get(
+        "cardcolor",
+        defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+      );
+      if (cardColor is Color) {
+        final luminance = cardColor.computeLuminance();
+        return luminance < 0.5;
+      }
+      return true;
+    }
+
+    Color getTextColor() => isDarkTheme() ? Colors.white : Colors.black87;
+    Color getSecondaryTextColor() =>
+        isDarkTheme() ? Colors.white70 : Colors.black54;
+
     final size = MediaQuery.of(context).size;
     //print(box.read('quote'));
     double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
@@ -245,496 +292,770 @@ class _StatspageState extends State<Statspage> {
     num mntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 3000);
     num mntperinc = prefsdata.get("mntperinc", defaultValue: 5);
 
-    return Scaffold(
-      backgroundColor: prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0)) == Color.fromRGBO(50, 50, 50, 1) ? Color.fromRGBO(227, 227, 227, 1) : Colors.black,
-      body: ListView(
-        padding: const EdgeInsets.all(7),
-        children: <Widget>[
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(20),
-            color: cardcolor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text("مداخيل الأشهر الخمسة الماضية", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return ValueListenableBuilder(
+      valueListenable: prefsdata.listenable(keys: ['cardcolor']),
+      builder: (context, box, child) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+          body: ListView(
+            padding: const EdgeInsets.all(7),
+            children: <Widget>[
+              Card(
+                elevation: 5,
+                //margin: const EdgeInsets.all(20),
+                color: cardcolor,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb1.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb1", 0);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb1".toString(), v);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
+                    const SizedBox(height: 20),
+                    Text(
+                      "مداخيل الأشهر الخمسة الماضية",
+                      style: darktextstyle.copyWith(
+                        fontSize: fontSize1,
+                        color: getTextColor(),
                       ),
                     ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb1.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincnstb1.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "غير قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb1", 0);
+                                  mntincnstb1 = prefsdata.get(
+                                    mntincnstb1.toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincnstb1".toString(), v);
+                                  mntincnstb1 = prefsdata.get(
+                                    mntincnstb1.toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb1", 0);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb1", v);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincstb1.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincstb1", 0);
+                                  mntincstb1 = prefsdata.get(
+                                    "mntincstb1".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb1", v);
+                                  mntincstb1 = prefsdata.get(
+                                    "mntincstb1".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        Text(
+                          getMonthName(0),
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize2,
+                            color: getTextColor(),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(getMonthName(0), style: darktextstyle.copyWith(fontSize: fontSize2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincnstb2.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "غير قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb2", 0);
+                                  mntincnstb2 = prefsdata.get(
+                                    "mntincnstb2".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincnstb2".toString(), v);
+                                  mntincnstb2 = prefsdata.get(
+                                    "mntincnstb2".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincstb2.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincstb2", 0);
+                                  mntincstb2 = prefsdata.get(
+                                    "mntincstb2".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb2".toString(), v);
+                                  mntincstb2 = prefsdata.get(
+                                    "mntincstb2".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        Text(
+                          getMonthName(1),
+                          style: darktextstyle.copyWith(fontSize: fontSize2),
+                        ),
+                      ],
+                    ),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincnstb3.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "غير قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (newval) {
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb3", 0);
+                                  mntincnstb3 = prefsdata.get(
+                                    "mntincnstb3".toString(),
+                                  );
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincnstb3".toString(), v);
+                                  mntincnstb3 = prefsdata.get(
+                                    "mntincnstb3".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincstb3.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (newval) {
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb3", 0);
+                                  mntincnstb3 = prefsdata.get(
+                                    "mntincnstb3".toString(),
+                                  );
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb3".toString(), v);
+                                  mntincnstb3 = prefsdata.get(
+                                    "mntincnstb3".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        Text(
+                          getMonthName(2),
+                          style: darktextstyle.copyWith(fontSize: fontSize2),
+                        ),
+                      ],
+                    ),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincnstb4.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "غير قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb4", 0);
+                                  mntincnstb4 = prefsdata.get(
+                                    "mntincnstb4".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincnstb4".toString(), v);
+                                  mntincstb4 = prefsdata.get(
+                                    "mntincstb4".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincstb4.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincstb4", 0);
+                                  mntincstb4 = prefsdata.get(
+                                    "mntincstb4".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb4".toString(), v);
+                                  mntincstb4 = prefsdata.get(
+                                    "mntincstb4".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        Text(
+                          getMonthName(3),
+                          style: darktextstyle.copyWith(fontSize: fontSize2),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincnstb5.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "غير قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                              //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                            ),
+                            onChanged: (newval) {
+                              //box.write('quote', 2);
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincnstb5", 0);
+                                  mntincstb5 = prefsdata.get(
+                                    "mntincstb5".toString(),
+                                  );
+                                  //nownetcredit = 0;
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb5".toString(), v);
+                                  mntincstb5 = prefsdata.get(
+                                    "mntincstb5".toString(),
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        SizedBox(
+                          height: size.height * 0.09,
+                          width: size.width * 0.20,
+                          child: TextFormField(
+                            initialValue: mntincstb5.toString(),
+                            decoration: InputDecoration(
+                              label: Text(
+                                "قارة",
+                                style: darktextstyle.copyWith(
+                                  fontSize: fontSize2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (newval) {
+                              final v = double.tryParse(newval);
+                              if (v == null) {
+                                setState(() {
+                                  prefsdata.put("mntincstb5", 0);
+                                  mntincstb5 = prefsdata.get(
+                                    "mntincstb5",
+                                    defaultValue: 0,
+                                  );
+                                });
+                              } else {
+                                setState(() {
+                                  prefsdata.put("mntincstb5", v);
+                                  mntincstb5 = prefsdata.get(
+                                    "mntincstb5",
+                                    defaultValue: v,
+                                  );
+                                });
+                              }
+                            },
+                            keyboardType: TextInputType.number,
+                            maxLength: 10,
+                          ),
+                        ),
+                        Text(
+                          getMonthName(4),
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize2,
+                            color: getTextColor(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+              ),
+
+              Card(
+                elevation: 5,
+                //margin: const EdgeInsets.all(20),
+                color: cardcolor,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb2.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                    const SizedBox(height: 30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          ((mntincnstb1 +
+                                      mntincnstb2 +
+                                      mntincnstb3 +
+                                      mntincnstb4 +
+                                      mntincnstb5) /
+                                  5)
+                              .roundToDouble()
+                              .toString(),
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize1,
+                            color: getTextColor(),
+                          ),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb2", 0);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb2".toString(), v);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb2.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                        Text(
+                          " + ",
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize1,
+                            color: getTextColor(),
+                          ),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb2", 0);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb2".toString(), v);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(1), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb3.toString(),
-                        decoration: InputDecoration(label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb3", 0);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb3".toString(), v);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb3.toString(),
-                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb3", 0);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb3".toString(), v);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(2), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb4.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                        Text(
+                          ((mntincstb1 +
+                                      mntincstb2 +
+                                      mntincstb3 +
+                                      mntincstb4 +
+                                      mntincstb5) /
+                                  5)
+                              .roundToDouble()
+                              .toString(),
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize1,
+                            color: getTextColor(),
+                          ),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb4", 0);
-                              mntincnstb4 = prefsdata.get("mntincnstb4".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb4".toString(), v);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb4.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                        Text(
+                          " = ",
+                          style: darktextstyle.copyWith(
+                            fontSize: fontSize1,
+                            color: getTextColor(),
+                          ),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb4", 0);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb4".toString(), v);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(3), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb5.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
+                        Text(
+                          ((mntincstb1 +
+                                      mntincstb2 +
+                                      mntincstb3 +
+                                      mntincstb4 +
+                                      mntincstb5 +
+                                      mntincnstb1 +
+                                      mntincnstb2 +
+                                      mntincnstb3 +
+                                      mntincnstb4 +
+                                      mntincnstb5) /
+                                  5)
+                              .roundToDouble()
+                              .toString(),
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
                         ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb5", 0);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb5".toString(), v);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
-                            });
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "معدل الدخل الشهري",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "${[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "${[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) - (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "أقصى زيادة عن المتوسط",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "${-[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min) + (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "${-[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "أقصى إنخفاص عن المتوسط",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))) / 30.5}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "مجموع التشتت عن المتوسط",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "${([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) - [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) / ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) + [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min))}",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "  ",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                        Text(
+                          "معدل التشتت",
+                          style: darktextstyle.copyWith(fontSize: fontSize1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Padding(
+                      padding: const EdgeInsets.all(19.0),
+                      child: SfLinearGauge(
+                        showTicks: false,
+                        axisTrackStyle: const LinearAxisTrackStyle(
+                          thickness: 20,
+                          edgeStyle: LinearEdgeStyle.bothCurve,
+                          gradient: LinearGradient(
+                            colors: [
+                              Color.fromARGB(255, 157, 0, 185),
+                              Color.fromARGB(255, 0, 136, 247),
+                            ],
+                            begin: Alignment.centerRight,
+                            end: Alignment.centerLeft,
+                            stops: [0.01, 0.05],
+                            tileMode: TileMode.decal,
+                          ),
+                        ),
+                        animateRange: true,
+                        animationDuration: 3000,
+                        markerPointers: [
+                          LinearShapePointer(
+                            value:
+                                ([
+                                      mntincstb1,
+                                      mntincstb2,
+                                      mntincstb3,
+                                      mntincstb4,
+                                      mntincstb5,
+                                    ].reduce(max) +
+                                    [
+                                      mntincnstb1,
+                                      mntincnstb2,
+                                      mntincnstb3,
+                                      mntincnstb4,
+                                      mntincnstb5,
+                                    ].reduce(max) -
+                                    [
+                                      mntincstb1,
+                                      mntincstb2,
+                                      mntincstb3,
+                                      mntincstb4,
+                                      mntincstb5,
+                                    ].reduce(min) -
+                                    [
+                                      mntincnstb1,
+                                      mntincnstb2,
+                                      mntincnstb3,
+                                      mntincnstb4,
+                                      mntincnstb5,
+                                    ].reduce(min)) /
+                                ([
+                                      mntincstb1,
+                                      mntincstb2,
+                                      mntincstb3,
+                                      mntincstb4,
+                                      mntincstb5,
+                                    ].reduce(max) +
+                                    [
+                                      mntincnstb1,
+                                      mntincnstb2,
+                                      mntincnstb3,
+                                      mntincnstb4,
+                                      mntincnstb5,
+                                    ].reduce(max) +
+                                    [
+                                      mntincstb1,
+                                      mntincstb2,
+                                      mntincstb3,
+                                      mntincstb4,
+                                      mntincnstb5,
+                                    ].reduce(min) +
+                                    [
+                                      mntincnstb1,
+                                      mntincnstb2,
+                                      mntincnstb3,
+                                      mntincnstb4,
+                                      mntincnstb5,
+                                    ].reduce(min)) *
+                                100,
+                            height: 15,
+                            width: 15,
+                          ),
+                        ],
+                        ranges: const [
+                          LinearGaugeRange(startValue: 0, endValue: 100),
+                        ],
+                        labelFormatterCallback: (label) {
+                          if (label == '0') {
+                            return 'ممتاز';
                           }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb5.toString(),
-                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb5", 0);
-                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb5", v);
-                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: v);
-                            });
+                          if (label == '10') {
+                            return '';
                           }
+                          if (label == '20') {
+                            return '';
+                          }
+                          if (label == '30') {
+                            return '';
+                          }
+                          if (label == '40') {
+                            return '';
+                          }
+                          if (label == '60') {
+                            return '';
+                          }
+                          if (label == '70') {
+                            return '';
+                          }
+                          if (label == '80') {
+                            return '';
+                          }
+                          if (label == '90') {
+                            return '';
+                          }
+
+                          if (label == '50') {
+                            return 'جيد';
+                          }
+
+                          if (label == '100') {
+                            return 'عشوائي';
+                          }
+
+                          return label;
                         },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
                       ),
                     ),
-                    Text(getMonthName(4), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(20),
-            color: cardcolor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(((mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5).roundToDouble().toString(), style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(" + ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(((mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5) / 5).roundToDouble().toString(), style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(" = ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      ((mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5 + mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5).roundToDouble().toString(),
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("معدل الدخل الشهري", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      "${[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) - (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("أقصى زيادة عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${-[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min) + (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      "${-[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("أقصى إنخفاص عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))) / 30.5}", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("مجموع التشتت عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) - [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) / ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) + [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min))}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("معدل التشتت", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Padding(
-                  padding: const EdgeInsets.all(19.0),
-                  child: SfLinearGauge(
-                    showTicks: false,
-                    axisTrackStyle: const LinearAxisTrackStyle(
-                      thickness: 20,
-                      edgeStyle: LinearEdgeStyle.bothCurve,
-                      gradient: LinearGradient(
-                        colors: [Color.fromARGB(255, 157, 0, 185), Color.fromARGB(255, 0, 136, 247)],
-                        begin: Alignment.centerRight,
-                        end: Alignment.centerLeft,
-                        stops: [0.01, 0.05],
-                        tileMode: TileMode.decal,
-                      ),
-                    ),
-                    animateRange: true,
-                    animationDuration: 3000,
-                    markerPointers: [
-                      LinearShapePointer(
-                        value:
-                            ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) -
-                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) -
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) /
-                            ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) +
-                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincnstb5].reduce(min) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) *
-                            100,
-                        height: 15,
-                        width: 15,
-                      ),
-                    ],
-                    ranges: const [LinearGaugeRange(startValue: 0, endValue: 100)],
-                    labelFormatterCallback: (label) {
-                      if (label == '0') {
-                        return 'ممتاز';
-                      }
-                      if (label == '10') {
-                        return '';
-                      }
-                      if (label == '20') {
-                        return '';
-                      }
-                      if (label == '30') {
-                        return '';
-                      }
-                      if (label == '40') {
-                        return '';
-                      }
-                      if (label == '60') {
-                        return '';
-                      }
-                      if (label == '70') {
-                        return '';
-                      }
-                      if (label == '80') {
-                        return '';
-                      }
-                      if (label == '90') {
-                        return '';
-                      }
-
-                      if (label == '50') {
-                        return 'جيد';
-                      }
-
-                      if (label == '100') {
-                        return 'عشوائي';
-                      }
-
-                      return label;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
-                /* RichText(
+                    const SizedBox(height: 20),
+                    /* RichText(
                         text: TextSpan(style: darkteststyle, children: [
                       TextSpan(text: "مجموع"),
                       TextSpan(text: "  "),
@@ -742,10 +1063,10 @@ class _StatspageState extends State<Statspage> {
                           text:
                               "${(0.5 * ((mntinc! + mntnstblinc! * (1 - 0.01 * mntperinc!)) * (1 - freemnt! / 12) - (mntexp! + annexp! / 12))) / 30.5}"),
                     ])) */
-              ],
-            ),
-          ),
-          /*Card(
+                  ],
+                ),
+              ),
+              /*Card(
             elevation: 5,
             color: cardcolor,
             child: Padding(
@@ -765,8 +1086,10 @@ class _StatspageState extends State<Statspage> {
             ),
           ),
           ElevatedButton(onPressed: _generateTestData, child: Text("توليد بيانات اختبار")),*/
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
 
     /* double  tt = ([
