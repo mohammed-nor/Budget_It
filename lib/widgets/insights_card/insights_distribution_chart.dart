@@ -4,10 +4,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 class InsightsDistributionChart extends StatelessWidget {
   final List<Map<String, dynamic>> chartData;
 
-  const InsightsDistributionChart({
-    super.key,
-    required this.chartData,
-  });
+  const InsightsDistributionChart({super.key, required this.chartData});
 
   @override
   Widget build(BuildContext context) {
@@ -44,46 +41,29 @@ class InsightsDistributionChart extends StatelessWidget {
           primaryXAxis: CategoryAxis(
             labelRotation: 0,
             interval: (daysInMonth / 4).ceilToDouble(),
-            majorGridLines: const MajorGridLines(
-              width: 0,
-            ),
+            majorGridLines: const MajorGridLines(width: 0),
             edgeLabelPlacement: EdgeLabelPlacement.shift,
           ),
           primaryYAxis: NumericAxis(
             labelFormat: '{value}',
-            majorGridLines: const MajorGridLines(
-              width: 0.5,
-            ),
+            majorGridLines: const MajorGridLines(width: 0.5),
           ),
           tooltipBehavior: TooltipBehavior(enable: true),
-          legend: Legend(
-            isVisible: true,
-            position: LegendPosition.bottom,
-          ),
+          legend: Legend(isVisible: true, position: LegendPosition.bottom),
           series: <CartesianSeries<Map<String, dynamic>, String>>[
             ColumnSeries<Map<String, dynamic>, String>(
               name: 'دخل',
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['income'] as num,
-              color: const Color.fromRGBO(
-                106,
-                253,
-                95,
-                1.0,
-              ),
+              color: const Color.fromRGBO(106, 253, 95, 1.0),
             ),
             ColumnSeries<Map<String, dynamic>, String>(
               name: 'مصاريف',
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['spend'] as num,
-              color: const Color.fromRGBO(
-                253,
-                95,
-                95,
-                1.0,
-              ),
+              color: const Color.fromRGBO(253, 95, 95, 1.0),
             ),
           ],
         ),

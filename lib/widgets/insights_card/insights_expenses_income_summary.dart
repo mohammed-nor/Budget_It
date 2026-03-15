@@ -128,10 +128,7 @@ class _ExpenseIncomeCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: borderColor,
-          width: 1.5,
-        ),
+        border: Border.all(color: borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: titleColor.withOpacity(0.1),
@@ -152,11 +149,7 @@ class _ExpenseIncomeCard extends StatelessWidget {
                   color: iconBgColor,
                   borderRadius: BorderRadius.circular(5),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 16,
-                ),
+                child: Icon(icon, color: iconColor, size: 16),
               ),
               const SizedBox(width: 8),
               Expanded(

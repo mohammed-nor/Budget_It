@@ -67,8 +67,7 @@ class InsightsTotalsRow extends StatelessWidget {
               borderColor: netMonth >= 0
                   ? const Color.fromRGBO(106, 253, 95, 0.2)
                   : const Color.fromRGBO(253, 95, 95, 0.2),
-              valueColor:
-                  netMonth >= 0 ? Colors.green[300]! : Colors.red[300]!,
+              valueColor: netMonth >= 0 ? Colors.green[300]! : Colors.red[300]!,
               iconColor: netMonth >= 0
                   ? const Color.fromRGBO(106, 253, 95, 1.0)
                   : const Color.fromRGBO(253, 95, 95, 1.0),
@@ -132,10 +131,7 @@ class _StatCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: borderColor,
-          width: 1,
-        ),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -149,11 +145,7 @@ class _StatCard extends StatelessWidget {
                   color: iconBgColor,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  icon,
-                  size: 14,
-                  color: iconColor,
-                ),
+                child: Icon(icon, size: 14, color: iconColor),
               ),
               const SizedBox(width: 5),
               Text(

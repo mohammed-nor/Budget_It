@@ -57,19 +57,12 @@ class InsightsCard extends StatelessWidget {
                   totalSpendingMonth += s.amount;
                 }
 
-                final num netMonth =
-                    totalIncomeMonth - totalSpendingMonth;
+                final num netMonth = totalIncomeMonth - totalSpendingMonth;
 
                 // Prepare daily distribution data for the chart (day -> totals)
                 final int daysInMonth = monthEnd.day;
-                final List<num> dailyIncome = List<num>.filled(
-                  daysInMonth,
-                  0,
-                );
-                final List<num> dailySpend = List<num>.filled(
-                  daysInMonth,
-                  0,
-                );
+                final List<num> dailyIncome = List<num>.filled(daysInMonth, 0);
+                final List<num> dailySpend = List<num>.filled(daysInMonth, 0);
 
                 for (var e in unexpectedEarningsList) {
                   if ((e.date.isAfter(monthStart) ||
@@ -100,9 +93,8 @@ class InsightsCard extends StatelessWidget {
                 )..sort((a, b) => b.amount.compareTo(a.amount));
                 final top3Income = unexpectedSortedDesc.take(3).toList();
 
-                final List upcomingSortedDesc = List.from(
-                  upcomingSpendingList,
-                )..sort((a, b) => b.amount.compareTo(a.amount));
+                final List upcomingSortedDesc = List.from(upcomingSpendingList)
+                  ..sort((a, b) => b.amount.compareTo(a.amount));
                 final top3Spending = upcomingSortedDesc.take(3).toList();
 
                 // Chart data model
@@ -125,9 +117,7 @@ class InsightsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     // Distribution chart
-                    InsightsDistributionChart(
-                      chartData: chartData,
-                    ),
+                    InsightsDistributionChart(chartData: chartData),
                     Builder(
                       builder: (context) {
                         // Gather all dates for range
@@ -141,9 +131,7 @@ class InsightsCard extends StatelessWidget {
                         if (allDates.isEmpty) {
                           return Text(
                             'لا توجد بيانات كافية للإحصائيات',
-                            style: darktextstyle.copyWith(
-                              fontSize: fontSize1,
-                            ),
+                            style: darktextstyle.copyWith(fontSize: fontSize1),
                           );
                         }
                         allDates.sort();
@@ -159,14 +147,17 @@ class InsightsCard extends StatelessWidget {
                         final num fixedExpenses = mntexp + annexp / 12;
 
                         // Earnings
-                        final totalEarnings = unexpectedEarningsList
-                            .fold<num>(0, (sum, e) => sum + e.amount);
-                        final avgEarningsPerMonth =
-                            totalEarnings / monthsSpan;
+                        final totalEarnings = unexpectedEarningsList.fold<num>(
+                          0,
+                          (sum, e) => sum + e.amount,
+                        );
+                        final avgEarningsPerMonth = totalEarnings / monthsSpan;
 
                         // Variable Spendings (upcoming spending only)
-                        final totalSpendings = upcomingSpendingList
-                            .fold<num>(0, (sum, s) => sum + s.amount);
+                        final totalSpendings = upcomingSpendingList.fold<num>(
+                          0,
+                          (sum, s) => sum + s.amount,
+                        );
                         final avgSpendingsPerMonth =
                             totalSpendings / monthsSpan;
 

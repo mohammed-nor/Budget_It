@@ -26,9 +26,7 @@ class InsightsTopLists extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'أكبر 3 مصاريف',
-                style: darktextstyle.copyWith(
-                  fontSize: fontSize1 * 0.8,
-                ),
+                style: darktextstyle.copyWith(fontSize: fontSize1 * 0.8),
               ),
               const SizedBox(height: 8),
               ...top3Spending.map((it) {
@@ -49,9 +47,7 @@ class InsightsTopLists extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         it.title ?? '-',
-                        style: darktextstyle.copyWith(
-                          fontSize: fontSize1,
-                        ),
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -71,9 +67,7 @@ class InsightsTopLists extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'أكبر 3 مداخل',
-                style: darktextstyle.copyWith(
-                  fontSize: fontSize1 * 0.85,
-                ),
+                style: darktextstyle.copyWith(fontSize: fontSize1 * 0.85),
               ),
               const SizedBox(height: 8),
               ...top3Income.map((it) {
@@ -94,9 +88,7 @@ class InsightsTopLists extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         it.title ?? '-',
-                        style: darktextstyle.copyWith(
-                          fontSize: fontSize1,
-                        ),
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

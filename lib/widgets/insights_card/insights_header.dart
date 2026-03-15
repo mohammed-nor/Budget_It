@@ -7,10 +7,7 @@ class InsightsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 12,
-        horizontal: 16,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
