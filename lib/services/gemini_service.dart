@@ -157,9 +157,9 @@ class GeminiService {
         .join('\n');
 
     final totalBudget = categoryBudgets.values.fold(0.0, (a, b) => a + b);
-    final remainingAfterExpenses = monthlyIncome - fixedmonthlyExpenses;
-    final projectedWithUpcoming = remainingAfterExpenses - upcomingExpenses;
     final variableExpenses = fixedmonthlyExpenses - fixedMonthlyExpenses;
+    final remainingAfterFixedExpenses = monthlyIncome - fixedMonthlyExpenses;
+    final projectedAfterUpcoming = remainingAfterFixedExpenses - upcomingExpenses;
 
     return '''You are an experienced financial advisor. Analyze this person's monthly budget based on their actual spending history from their Budget page and provide personalized financial advice in Arabic (العربية). Focus on:
 1. Actual spending analysis and patterns from their records
@@ -169,17 +169,18 @@ class GeminiService {
 5. Actionable recommendations
 
 **Financial Overview (from Budget Page Data):**
-- Monthly Income: ${monthlyIncome.toStringAsFixed(2)} MAD
-- Total Monthly Expenses: ${(fixedmonthlyExpenses + variableExpenses).toStringAsFixed(2)} MAD
-  - Fixed Expenses: ${fixedMonthlyExpenses.toStringAsFixed(2)} MAD
-  - Variable Expenses: ${variableExpenses.toStringAsFixed(2)} MAD
-- Remaining After Expenses: ${remainingAfterExpenses.toStringAsFixed(2)} MAD
-- Upcoming Planned Expenses: ${upcomingExpenses.toStringAsFixed(2)} MAD
-- Projected After Upcoming: ${projectedWithUpcoming.toStringAsFixed(2)} MAD
-- Current Savings (Average): ${currentSavings.toStringAsFixed(2)} MAD
-- Total Saved Amount (Accumulated): ${savedAmount.toStringAsFixed(2)} MAD
-- Available Free Funds: ${availableFunds.toStringAsFixed(2)} MAD
-- Average Net Credit Balance: ${netCredit.toStringAsFixed(2)} MAD
+- المداخيل الشهرية الكلية (Total Monthly Income): ${monthlyIncome.toStringAsFixed(2)} MAD
+  - المداخيل الشهرية القارة (Fixed Monthly Income): ${monthlyIncome.toStringAsFixed(2)} MAD (الدخل المستقر)
+- المصاريف الشهرية الكلية (Total Monthly Expenses): ${(fixedMonthlyExpenses + variableExpenses).toStringAsFixed(2)} MAD
+  -  المصاريف القارة للكراء و الفواتير(Fixed Monthly Expenses - الفواتير والدائنة): ${fixedMonthlyExpenses.toStringAsFixed(2)} MAD
+  - المصاريف المتغيرة (Variable Expenses - غير القارة): ${variableExpenses.toStringAsFixed(2)} MAD
+- المتبقي بعد المصاريف القارة (Remaining After Fixed Expenses): ${remainingAfterFixedExpenses.toStringAsFixed(2)} MAD
+- المصاريف المجدولة القادمة (Upcoming Planned Expenses): ${upcomingExpenses.toStringAsFixed(2)} MAD
+- المتوقع بعد المصاريف المجدولة (Projected After Upcoming): ${projectedAfterUpcoming.toStringAsFixed(2)} MAD
+- المبلغ المرتقب إدخاره شهرياً (Expected Monthly Savings Target): ${currentSavings.toStringAsFixed(2)} MAD
+- إجمالي المبلغ المدخر (Total Accumulated Savings): ${savedAmount.toStringAsFixed(2)} MAD
+- الأموال المتاحة الحرة (Available Free Funds): ${availableFunds.toStringAsFixed(2)} MAD
+- متوسط الرصيد الصافي (Average Net Credit Balance): ${netCredit.toStringAsFixed(2)} MAD
 
 **Budget Allocation by Category (Current):**
 $budgetBreakdown
@@ -188,18 +189,19 @@ $budgetBreakdown
 
 **Analysis Focus Areas:**
 - This data is based on ACTUAL spending history tracked in the app (not estimates)
+- تصنيف المصاريف: المصاريف القارة (mntexp + annexp) vs المصاريف المتغيرة (upcoming spendings)
 - Total accumulated savings: ${savedAmount.toStringAsFixed(2)} MAD
 - Consider seasonal patterns and upcoming obligations
 - Account for free available funds when making recommendations
 - Provide realistic savings targets based on historical data
 
 Please provide:
-1. **تحليل الإنفاق** (Spending Analysis) - Key patterns from actual spending history
-2. **فرص الادخار** (Savings Opportunities) - Realistic areas to cut back
-3. **تحسين الميزانية** (Budget Optimization) - How to rebalance based on real data
-4. **الصحة المالية** (Financial Health) - Overall assessment
-5. **التوصيات** (Recommendations) - Specific, actionable steps
+1. **تحليل الإنفاق** (Spending Analysis) - Key patterns from actual spending history (المصاريف القارة vs المتغيرة)
+2. **فرص الادخار** (Savings Opportunities) - Realistic areas to optimize spending while maintaining fixed obligations
+3. **تحسين الميزانية** (Budget Optimization) - How to rebalance variable expenses based on real data, preserving essential fixed expenses
+4. **الصحة المالية** (Financial Health) - Overall assessment of balance between fixed and variable spending
+5. **التوصيات** (Recommendations) - Specific, actionable steps with focus on managing variable expenses while maintaining fixed obligations
 
-Keep the advice concise, practical, and encouraging. Use Arabic for main headings and English for details if needed. Reference the actual numbers provided.''';
+Keep the advice concise, practical, and encouraging. Use Arabic for main headings and English for details if needed. Reference the actual numbers provided. Emphasize the importance of fixed expenses (الفواتير والدائنة) as non-negotiable commitments.''';
   }
 }

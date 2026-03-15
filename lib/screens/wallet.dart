@@ -331,20 +331,12 @@ class _WalletPageState extends State<WalletPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           IconButton(
-                            icon: const Icon(
-                              Icons.settings,
-                              color: Colors.green,
-                            ),
+                            icon: const Icon(Icons.key, color: Colors.green),
                             onPressed: _openApiKeyManager,
                             tooltip: 'Configure API Key',
                           ),
                           Row(
                             children: [
-                              const Icon(
-                                Icons.smart_toy,
-                                color: Colors.green,
-                                size: 24,
-                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'مستشار مالي ذكي',

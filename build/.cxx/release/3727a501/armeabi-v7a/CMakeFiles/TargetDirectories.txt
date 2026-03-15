@@ -1,2 +1,0 @@
-C:/Users/pc/StudioProjects/Budget_It/build/.cxx/release/3727a501/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/pc/StudioProjects/Budget_It/build/.cxx/release/3727a501/armeabi-v7a/CMakeFiles/rebuild_cache.dir
