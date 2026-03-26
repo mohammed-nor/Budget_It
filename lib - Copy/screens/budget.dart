@@ -11,11 +11,6 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:budget_it/models/budget_history.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:budget_it/models/unexpected_earning.dart';
-import 'package:budget_it/widgets/insights_card/insights_card.dart';
-import 'package:get/get.dart';
-import 'package:budget_it/utils/theme_controller.dart';
-import 'package:budget_it/utils/color_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class Budgetpage extends StatefulWidget {
   const Budgetpage({super.key});
@@ -25,7 +20,7 @@ class Budgetpage extends StatefulWidget {
 }
 
 void initState() {
-  Color cardcolor = prefsdata.get(
+  cardcolor = prefsdata.get(
     "cardcolor",
     defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
   );
@@ -53,11 +48,6 @@ class _BandPoint {
 }
 
 class _BudgetpageState extends State<Budgetpage> {
-  late ThemeController themeController;
-  Color cardcolor = prefsdata.get(
-    "cardcolor",
-    defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
-  );
   DateTime today = DateTime(
     DateTime.now().year,
     DateTime.now().month,
@@ -91,7 +81,6 @@ class _BudgetpageState extends State<Budgetpage> {
   @override
   void initState() {
     super.initState();
-    themeController = Get.find<ThemeController>();
     cardcolor = prefsdata.get(
       "cardcolor",
       defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
@@ -472,10 +461,10 @@ class _BudgetpageState extends State<Budgetpage> {
             width: size.width * 0.17 * fontSize2 / 16,
             child: TextFormField(
               textAlign: TextAlign.center,
-              style: themedTextStyle(fontSize: fontSize2),
+              style: darktextstyle.copyWith(fontSize: fontSize2),
               initialValue: boxvariable.toString(),
               decoration: InputDecoration(
-                hintStyle: themedTextStyle(fontSize: fontSize2),
+                hintStyle: darktextstyle.copyWith(fontSize: fontSize2),
                 border: OutlineInputBorder(gapPadding: 1),
               ),
               onChanged: (newval) {
@@ -532,9 +521,7 @@ class _BudgetpageState extends State<Budgetpage> {
                     style: darktextstyle.copyWith(fontSize: fontSize1),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.error.withOpacity(0.7),
+                    backgroundColor: const Color.fromARGB(255, 80, 43, 40),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
@@ -543,7 +530,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 ),
                 Text(
                   "مصاريف غير قارة",
-                  style: themedTextStyle(
+                  style: darktextstyle.copyWith(
                     fontSize: fontSize1 * 1.2,
                     fontWeight: FontWeight.bold,
                   ),
@@ -558,7 +545,10 @@ class _BudgetpageState extends State<Budgetpage> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
                       "لا توجد مصاريف قادمة مسجلة",
-                      style: themedTextStyle(fontSize: fontSize1),
+                      style: darktextstyle.copyWith(
+                        fontSize: fontSize1,
+                        color: Colors.grey[400],
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -621,11 +611,12 @@ class _BudgetpageState extends State<Budgetpage> {
                                           "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
                                           style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 0.85,
+                                            color: Colors.grey[400],
                                           ),
                                         ),
                                         Text(
                                           "${daysUntil < 0 ? 'متأخر بـ ${-daysUntil}' : 'متبقي $daysUntil'} يوم",
-                                          style: themedTextStyle(
+                                          style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 0.85,
                                             color: daysUntil < 0
                                                 ? Colors.red[300]
@@ -653,7 +644,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                 ),
                                 child: Text(
                                   "${item.amount} درهم",
-                                  style: themedTextStyle(
+                                  style: darktextstyle.copyWith(
                                     fontSize: fontSize1,
                                     fontWeight: FontWeight.bold,
                                     color: const Color.fromRGBO(
@@ -694,11 +685,11 @@ class _BudgetpageState extends State<Budgetpage> {
               children: [
                 TextField(
                   controller: titleController,
-                  style: themedTextStyle(),
+                  style: darktextstyle,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     labelText: "عنوان المصروف",
-                    labelStyle: themedTextStyle(color: Colors.grey),
+                    labelStyle: darktextstyle.copyWith(color: Colors.grey),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -782,7 +773,10 @@ class _BudgetpageState extends State<Budgetpage> {
                 backgroundColor: const Color.fromARGB(255, 253, 95, 95),
               ),
 
-              child: Text("إلغاء", style: themedTextStyle(color: Colors.black)),
+              child: Text(
+                "إلغاء",
+                style: darktextstyle.copyWith(color: Colors.black),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -791,7 +785,10 @@ class _BudgetpageState extends State<Budgetpage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromRGBO(106, 253, 95, 1.0),
               ),
-              child: Text("إضافة", style: themedTextStyle(color: Colors.black)),
+              child: Text(
+                "إضافة",
+                style: darktextstyle.copyWith(color: Colors.black),
+              ),
               onPressed: () {
                 if (titleController.text.isNotEmpty &&
                     amountController.text.isNotEmpty) {
@@ -869,9 +866,7 @@ class _BudgetpageState extends State<Budgetpage> {
                     style: darktextstyle.copyWith(fontSize: fontSize1),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.5),
+                    backgroundColor: const Color.fromRGBO(40, 80, 40, 1.0),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
@@ -880,7 +875,7 @@ class _BudgetpageState extends State<Budgetpage> {
                 ),
                 Text(
                   "مداخيل غير قارة",
-                  style: themedTextStyle(
+                  style: darktextstyle.copyWith(
                     fontSize: fontSize1 * 1.2,
                     fontWeight: FontWeight.bold,
                   ),
@@ -898,7 +893,10 @@ class _BudgetpageState extends State<Budgetpage> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
                       "لا توجد مداخيل غير متوقعة مسجلة",
-                      style: themedTextStyle(fontSize: fontSize1),
+                      style: darktextstyle.copyWith(
+                        fontSize: fontSize1,
+                        color: Colors.grey[400],
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -949,7 +947,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                   children: [
                                     Text(
                                       item.title,
-                                      style: themedTextStyle(
+                                      style: darktextstyle.copyWith(
                                         fontSize: fontSize1,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -961,8 +959,9 @@ class _BudgetpageState extends State<Budgetpage> {
                                       children: [
                                         Text(
                                           "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                          style: themedTextStyle(
+                                          style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 0.85,
+                                            color: Colors.grey[400],
                                           ),
                                         ),
                                         Text(
@@ -971,7 +970,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                               : daysAgo == 1
                                               ? "بالأمس"
                                               : "منذ $daysAgo يوم",
-                                          style: themedTextStyle(
+                                          style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 0.85,
                                             color: daysAgo < 3
                                                 ? Colors.green[300]
@@ -998,7 +997,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                 ),
                                 child: Text(
                                   "${item.amount} درهم",
-                                  style: themedTextStyle(
+                                  style: darktextstyle.copyWith(
                                     fontSize: fontSize1,
                                     fontWeight: FontWeight.bold,
                                     color: const Color.fromRGBO(
@@ -1034,7 +1033,7 @@ class _BudgetpageState extends State<Budgetpage> {
           backgroundColor: const Color.fromRGBO(30, 40, 30, 1.0),
           title: Text(
             "إضافة دخل غير متوقع",
-            style: themedTextStyle(fontSize: fontSize1 * 1.2),
+            style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2),
             textAlign: TextAlign.right,
           ),
           content: SingleChildScrollView(
@@ -1045,11 +1044,11 @@ class _BudgetpageState extends State<Budgetpage> {
                 // Title field
                 TextField(
                   controller: titleController,
-                  style: themedTextStyle(),
+                  style: darktextstyle,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     labelText: "مصدر الدخل",
-                    labelStyle: themedTextStyle(color: Colors.grey),
+                    labelStyle: darktextstyle.copyWith(color: Colors.grey),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -1078,7 +1077,7 @@ class _BudgetpageState extends State<Budgetpage> {
                       children: [
                         Text(
                           "التاريخ: ${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
-                          style: themedTextStyle(),
+                          style: darktextstyle,
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton(
@@ -1134,7 +1133,7 @@ class _BudgetpageState extends State<Budgetpage> {
               style: TextButton.styleFrom(
                 foregroundColor: const Color.fromRGBO(253, 95, 95, 1.0),
               ),
-              child: Text("إلغاء", style: themedTextStyle()),
+              child: Text("إلغاء", style: darktextstyle),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -1143,7 +1142,10 @@ class _BudgetpageState extends State<Budgetpage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromRGBO(106, 253, 95, 1.0),
               ),
-              child: Text("إضافة", style: themedTextStyle(color: Colors.black)),
+              child: Text(
+                "إضافة",
+                style: darktextstyle.copyWith(color: Colors.black),
+              ),
               onPressed: () {
                 if (titleController.text.isNotEmpty &&
                     amountController.text.isNotEmpty) {
@@ -1200,41 +1202,6 @@ class _BudgetpageState extends State<Budgetpage> {
         });
       }
     }
-  }
-
-  String _getArabicMonthName(int month) {
-    const months = [
-      '',
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'ماي',
-      'يونيو',
-      'يوليوز',
-      'غشت',
-      'شتنبر',
-      'أكتوبر',
-      'نونبر',
-      'دجنبر',
-    ];
-    return month > 0 && month < months.length ? months[month] : '';
-  }
-
-  TextStyle themedTextStyle({
-    double? fontSize,
-    Color? color,
-    FontWeight? fontWeight,
-  }) {
-    final isDark = themeController.isDarkMode.value;
-    return GoogleFonts.elMessiri(
-      fontWeight: fontWeight ?? FontWeight.w700,
-      fontSize:
-          fontSize ?? prefsdata.get("fontsize2", defaultValue: 15.toDouble()),
-      color:
-          color ??
-          (isDark ? ColorTheme.darkTextPrimary : ColorTheme.lightTextPrimary),
-    );
   }
 
   @override
@@ -1435,15 +1402,94 @@ class _BudgetpageState extends State<Budgetpage> {
       );
     }
 
+    /*     Widget moneyinput2(size, boxvariable, boxvariablename, String textlabel) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [const Color.fromARGB(10, 45, 45, 45), const Color.fromARGB(125, 35, 35, 35)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), offset: const Offset(0, 2), blurRadius: 4)],
+          border: Border.all(color: const Color.fromRGBO(106, 253, 95, 0.2), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  height: 48 * fontSize2 / 16,
+                  width: size.width * 0.2 * fontSize2 / 16,
+                  child: TextFormField(
+                    textAlign: TextAlign.center,
+                    style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.bold),
+                    initialValue: boxvariable.toString(),
+                    decoration: InputDecoration(
+                      hintStyle: darktextstyle.copyWith(fontSize: fontSize2, color: Colors.grey[600]),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(80, 80, 80, 1.0), width: 1)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color.fromRGBO(106, 253, 95, 0.7), width: 1.5)),
+                      filled: true,
+                      fillColor: const Color.fromRGBO(25, 25, 25, 1.0),
+                    ),
+                    onChanged: (newval) {
+                      final v = int.tryParse(newval);
+                      if (v == null) {
+                        setState(() {
+                          pickStartDate(context);
+                          prefsdata.put("nownetcredit", 0);
+                          boxvariable = prefsdata.get("nownetcredit".toString());
+                          prefsdata.put("nowcredit", 0);
+                          boxvariable = prefsdata.get("nowcredit".toString());
+                          _saveCurrentState();
+                        });
+                      } else {
+                        setState(() {
+                          pickStartDate(context);
+                          prefsdata.put(
+                            "nownetcredit".toString(),
+                            v -
+                                ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth()))
+                                    .round(),
+                          );
+                          boxvariable = prefsdata.get("nownetcredit".toString());
+                          prefsdata.put("nowcredit".toString(), v);
+                          boxvariablename = prefsdata.get("nowcredit".toString());
+                          _saveCurrentState();
+                        });
+                      }
+                    },
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[800]!, width: 0.5)),
+              child: Text(textlabel, style: darktextstyle.copyWith(fontSize: fontSize2, fontWeight: FontWeight.w500), textAlign: TextAlign.right),
+            ),
+          ],
+        ),
+      );
+    } */
+
     return Scaffold(
       //backgroundColor: Colors.black,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          prefsdata.get(
+                "cardcolor",
+                defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+              ) ==
+              Color.fromRGBO(50, 50, 50, 1)
+          ? Color.fromRGBO(227, 227, 227, 1)
+          : Colors.black,
       body: ListView(
         padding: const EdgeInsets.all(7),
         children: <Widget>[
           Card(
             elevation: 2,
-            //color: Theme.of(context).cardColor,
             color: cardcolor,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1519,15 +1565,22 @@ class _BudgetpageState extends State<Budgetpage> {
                                       children: [
                                         Text(
                                           "المبلغ المسموح في اليوم",
-                                          style: themedTextStyle(
+                                          style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 0.7,
+                                            color: Colors.grey[400],
                                           ),
                                         ),
                                         Text(
                                           "${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} درهم",
-                                          style: themedTextStyle(
+                                          style: darktextstyle.copyWith(
                                             fontSize: fontSize1 * 1.7,
                                             fontWeight: FontWeight.bold,
+                                            color: const Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              1.0,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -1540,15 +1593,17 @@ class _BudgetpageState extends State<Budgetpage> {
                                   children: [
                                     Text(
                                       "المبلغ الإجمالي المتبقي",
-                                      style: themedTextStyle(
+                                      style: darktextstyle.copyWith(
                                         fontSize: fontSize1 * 0.7,
+                                        color: Colors.grey[400],
                                       ),
                                     ),
                                     Text(
                                       "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} درهم",
-                                      style: themedTextStyle(
+                                      style: darktextstyle.copyWith(
                                         fontSize: fontSize1 * 1.7,
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ],
@@ -1599,7 +1654,9 @@ class _BudgetpageState extends State<Budgetpage> {
                                 Expanded(child: SizedBox(width: 5)),
                                 Text(
                                   "عدد الأيام المتبقية للأجرة ",
-                                  style: themedTextStyle(fontSize: fontSize1),
+                                  style: darktextstyle.copyWith(
+                                    fontSize: fontSize1,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1622,23 +1679,22 @@ class _BudgetpageState extends State<Budgetpage> {
                       ),
                       onDaySelected: _ondayselected,
                       calendarStyle: CalendarStyle(
-                        weekNumberTextStyle: themedTextStyle(
-                          fontSize: fontSize1,
+                        weekNumberTextStyle: const TextStyle(
+                          color: Color(0xFFFFFFFF),
                         ),
-
-                        weekendTextStyle: themedTextStyle(
+                        weekendTextStyle: TextStyle(
                           fontSize: fontSize1,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFFE82064),
                         ),
-                        outsideTextStyle: themedTextStyle(
+                        outsideTextStyle: TextStyle(
                           color: const Color(0xFFBEBEBE),
                         ),
                         todayDecoration: const BoxDecoration(
                           color: Color(0xFFE696B2),
                           shape: BoxShape.circle,
                         ),
-                        todayTextStyle: themedTextStyle(
+                        todayTextStyle: TextStyle(
                           color: Color(0xFFFAFAFA),
                           fontSize: fontSize1,
                           fontWeight: FontWeight.w900,
@@ -1647,12 +1703,12 @@ class _BudgetpageState extends State<Budgetpage> {
                           color: Color(0xFFE82064),
                           shape: BoxShape.circle,
                         ),
-                        selectedTextStyle: themedTextStyle(
+                        selectedTextStyle: TextStyle(
                           color: Color(0xFFFAFAFA),
                           fontSize: fontSize1,
                           fontWeight: FontWeight.w900,
                         ),
-                        defaultTextStyle: themedTextStyle(
+                        defaultTextStyle: TextStyle(
                           fontSize: fontSize1,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFFFFFFFF),
@@ -1710,13 +1766,16 @@ class _BudgetpageState extends State<Budgetpage> {
                                 children: [
                                   Text(
                                     "المبلغ عندك في أول اليوم هو ",
-                                    style: themedTextStyle(fontSize: fontSize1),
+                                    style: darktextstyle.copyWith(
+                                      fontSize: fontSize1,
+                                      color: Colors.grey[350],
+                                    ),
                                     textAlign: TextAlign.right,
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
                                     "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} درهما",
-                                    style: themedTextStyle(
+                                    style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 1.2,
                                       fontWeight: FontWeight.bold,
                                       color: const Color.fromARGB(
@@ -1806,7 +1865,9 @@ class _BudgetpageState extends State<Budgetpage> {
                               ? Center(
                                   child: Text(
                                     'لا توجد بيانات تاريخية كافية',
-                                    style: darktextstyle.copyWith(),
+                                    style: darktextstyle.copyWith(
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 )
                               : SfCartesianChart(
@@ -1816,7 +1877,6 @@ class _BudgetpageState extends State<Budgetpage> {
                                     interval: 7,
                                     majorGridLines: const MajorGridLines(
                                       width: 1,
-                                      color: Color.fromRGBO(200, 200, 200, 0.4),
                                     ),
                                     edgeLabelPlacement:
                                         EdgeLabelPlacement.shift,
@@ -2082,8 +2142,10 @@ class _BudgetpageState extends State<Budgetpage> {
                                 children: [
                                   Text(
                                     "المبلغ الذي وفرته",
-                                    style: themedTextStyle(fontSize: fontSize1),
-
+                                    style: darktextstyle.copyWith(
+                                      fontSize: fontSize1,
+                                      color: Colors.grey[350],
+                                    ),
                                     textAlign: TextAlign.right,
                                   ),
                                   const SizedBox(height: 8),
@@ -2202,7 +2264,10 @@ class _BudgetpageState extends State<Budgetpage> {
                                             0
                                         ? "المبلغ المتبقي للهدف"
                                         : "تهانينا!",
-                                    style: themedTextStyle(fontSize: fontSize1),
+                                    style: darktextstyle.copyWith(
+                                      fontSize: fontSize1,
+                                      color: Colors.grey[350],
+                                    ),
                                     textAlign: TextAlign.right,
                                   ),
                                   const SizedBox(height: 8),
@@ -2826,6 +2891,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                       'مجموع المصاريف',
                                       style: darktextstyle.copyWith(
                                         fontSize: fontSize1,
+                                        color: Colors.grey[400],
                                       ),
                                     ),
                                   ],
@@ -2852,6 +2918,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                       'الرصيد الصافي',
                                       style: darktextstyle.copyWith(
                                         fontSize: fontSize1,
+                                        color: Colors.grey[400],
                                       ),
                                     ),
                                   ],
@@ -2880,6 +2947,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                       'مجموع المداخيل',
                                       style: darktextstyle.copyWith(
                                         fontSize: fontSize1,
+                                        color: Colors.grey[400],
                                       ),
                                     ),
                                   ],
@@ -2902,17 +2970,13 @@ class _BudgetpageState extends State<Budgetpage> {
                               primaryXAxis: CategoryAxis(
                                 labelRotation: 0,
                                 interval: (daysInMonth / 4).ceilToDouble(),
-                                majorGridLines: const MajorGridLines(
-                                  width: 0.5,
-                                  color: Color.fromRGBO(200, 200, 200, 0.3),
-                                ),
+                                majorGridLines: const MajorGridLines(width: 0),
                                 edgeLabelPlacement: EdgeLabelPlacement.shift,
                               ),
                               primaryYAxis: NumericAxis(
                                 labelFormat: '{value}',
                                 majorGridLines: const MajorGridLines(
                                   width: 0.5,
-                                  color: Color.fromRGBO(200, 200, 200, 0.3),
                                 ),
                               ),
                               tooltipBehavior: TooltipBehavior(enable: true),
@@ -3543,6 +3607,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     "فعلي",
                                     style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 0.7,
+                                      color: Colors.grey[400],
                                     ),
                                   ),
                                 ],
@@ -3711,6 +3776,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     "أمثل",
                                     style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 0.7,
+                                      color: Colors.grey[400],
                                     ),
                                   ),
                                 ],
@@ -3739,6 +3805,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     "المدة المثالية",
                                     style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 0.8,
+                                      color: Colors.grey[400],
                                     ),
                                   ),
                                 ],
@@ -3764,6 +3831,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     "المدة الفعلية",
                                     style: darktextstyle.copyWith(
                                       fontSize: fontSize1 * 0.8,
+                                      color: Colors.grey[400],
                                     ),
                                   ),
                                 ],
@@ -4401,7 +4469,10 @@ class clrdinfo extends StatelessWidget {
                     ),
                     Text(
                       isOptimal ? "ميزانية مثالية" : "تحتاج للتعديل",
-                      style: darktextstyle.copyWith(fontSize: fontSize1 * 0.7),
+                      style: darktextstyle.copyWith(
+                        fontSize: fontSize1 * 0.7,
+                        color: Colors.grey[400],
+                      ),
                     ),
                   ],
                 ),

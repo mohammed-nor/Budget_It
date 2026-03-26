@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'services/ColorAdapter.dart';
 import 'models/budget_history.dart';
 import 'models/upcoming_spending.dart';
 import 'models/unexpected_earning.dart';
 import 'screens/splash_screen.dart';
+import 'utils/app_theme.dart';
+import 'utils/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,19 +24,35 @@ void main() async {
   await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
   await Hive.openBox('budgets');
 
-  runApp(
-    GetMaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        textTheme: GoogleFonts.latoTextTheme(ThemeData.dark().textTheme),
-      ),
-      theme: ThemeData(
-        brightness: Brightness.light,
-        textTheme: GoogleFonts.latoTextTheme(ThemeData.light().textTheme),
-      ),
-      themeMode: ThemeMode.dark,
-    ),
-  );
+  // Initialize ThemeController
+  Get.put(ThemeController());
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<ThemeController>(
+      builder: (themeController) {
+        return Obx(
+          () => GetMaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: const SplashScreen(),
+            theme: AppTheme.buildThemeData(
+              isDarkMode: false,
+              accentColor: themeController.accentColor.value,
+            ),
+            darkTheme: AppTheme.buildThemeData(
+              isDarkMode: true,
+              accentColor: themeController.accentColor.value,
+            ),
+            themeMode: themeController.themeMode,
+          ),
+        );
+      },
+    );
+  }
 }

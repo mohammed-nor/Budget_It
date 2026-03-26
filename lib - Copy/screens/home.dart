@@ -14,7 +14,10 @@ class Myhome extends StatefulWidget {
   State<Myhome> createState() => _MyhomeState();
 }
 
-void initState() async {}
+void initState() async {
+  //final prefs = await SharedPreferences.getInstance();
+  //await Hive.openBox("boxname");
+}
 
 int pageindex = 0;
 
@@ -32,12 +35,7 @@ class _MyhomeState extends State<Myhome> {
   /// Returns:
   ///   A widget.
   Widget build(BuildContext context) {
-    List<IconData> listactions = [
-      Icons.account_balance_wallet,
-      Icons.wallet,
-      Icons.calendar_month,
-      Icons.settings_outlined,
-    ];
+    List<IconData> listactions = [Icons.account_balance_wallet, Icons.wallet, Icons.calendar_month, Icons.settings_outlined];
     List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
     return SafeArea(
       child: Scaffold(
@@ -57,10 +55,7 @@ class _MyhomeState extends State<Myhome> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.miniEndDocked,*/
         bottomNavigationBar: Theme(
-          data: ThemeData(
-            splashColor: Colors.black,
-            highlightColor: Colors.transparent,
-          ),
+          data: ThemeData(splashColor: Colors.black, highlightColor: Colors.transparent),
           child: BottomNavigationBar(
             currentIndex: pageindex,
             type: BottomNavigationBarType.fixed,
@@ -68,13 +63,9 @@ class _MyhomeState extends State<Myhome> {
             backgroundColor: Colors.black,
             selectedItemColor: Color.fromARGB(
               255,
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-                  .clamp(0, 255),
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).green +
-                      50)
-                  .clamp(0, 255),
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-                  .clamp(0, 255),
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50).clamp(0, 255),
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50).clamp(0, 255),
+              (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50).clamp(0, 255),
             ),
             unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
             showSelectedLabels: true,
@@ -86,11 +77,7 @@ class _MyhomeState extends State<Myhome> {
             unselectedFontSize: 10,
             items: List.generate(listactions.length, (index) {
               return BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-                  child: Icon(listactions[index]),
-                ),
+                icon: AnimatedContainer(duration: const Duration(milliseconds: 200), padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0), child: Icon(listactions[index])),
                 label: labels[index],
               );
             }),
@@ -104,10 +91,7 @@ class _MyhomeState extends State<Myhome> {
   }
 
   Widget getbody() {
-    return IndexedStack(
-      index: pageindex,
-      children: [Budgetpage(), WalletPage(), Statspage(), Profilpage()],
-    );
+    return IndexedStack(index: pageindex, children: [Budgetpage(), WalletPage(), Statspage(), Profilpage()]);
   }
 
   /// It returns an AnimatedBottomNavigationBar widget with a list of icons, an active color, an active
@@ -116,18 +100,10 @@ class _MyhomeState extends State<Myhome> {
   /// Returns:
   ///   A widget.
   Widget getfooter() {
-    List<IconData> listactions = [
-      Icons.account_balance_wallet,
-      Icons.wallet,
-      Icons.calendar_month,
-      Icons.settings_outlined,
-    ];
+    List<IconData> listactions = [Icons.account_balance_wallet, Icons.wallet, Icons.calendar_month, Icons.settings_outlined];
     List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
     return Theme(
-      data: ThemeData(
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
+      data: ThemeData(splashColor: Colors.transparent, highlightColor: Colors.transparent),
       child: BottomNavigationBar(
         currentIndex: pageindex,
         type: BottomNavigationBarType.fixed,
@@ -135,12 +111,9 @@ class _MyhomeState extends State<Myhome> {
 
         selectedItemColor: Color.fromARGB(
           255,
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-              .clamp(0, 255),
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50)
-              .clamp(0, 255),
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-              .clamp(0, 255),
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50).clamp(0, 255),
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50).clamp(0, 255),
+          (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50).clamp(0, 255),
         ),
         unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
         showSelectedLabels: true,
@@ -152,11 +125,7 @@ class _MyhomeState extends State<Myhome> {
         unselectedFontSize: 10,
         items: List.generate(listactions.length, (index) {
           return BottomNavigationBarItem(
-            icon: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-              child: Icon(listactions[index]),
-            ),
+            icon: AnimatedContainer(duration: const Duration(milliseconds: 200), padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0), child: Icon(listactions[index])),
             label: labels[index],
           );
         }),
