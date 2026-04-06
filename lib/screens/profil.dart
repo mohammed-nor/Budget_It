@@ -17,17 +17,33 @@ class Profilpage extends StatefulWidget {
 
 class _ProfilpageState extends State<Profilpage> {
   //Color selectedColor = Colors.white; // Default color
-  TextStyle darkteststyle2 = TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize1, color: Colors.white);
+  TextStyle darkteststyle2 = TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: fontSize1,
+    color: Colors.white,
+  );
 
-  TextStyle darktextstyle = GoogleFonts.elMessiri(fontWeight: FontWeight.w700, fontSize: fontSize2.toDouble(), color: Colors.white);
+  TextStyle darktextstyle = GoogleFonts.elMessiri(
+    fontWeight: FontWeight.w700,
+    fontSize: fontSize2.toDouble(),
+    color: Colors.white,
+  );
   //String selectedColorName = 'Light';
   @override
   Widget build(BuildContext context) {
     final prefsdata = Hive.box('data');
 
-    TextStyle darkteststyle2 = TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize1, color: Colors.white);
+    TextStyle darkteststyle2 = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: fontSize1,
+      color: Colors.white,
+    );
 
-    TextStyle darktextstyle = GoogleFonts.elMessiri(fontWeight: FontWeight.w700, fontSize: fontSize2.toDouble(), color: Colors.white);
+    TextStyle darktextstyle = GoogleFonts.elMessiri(
+      fontWeight: FontWeight.w700,
+      fontSize: fontSize2.toDouble(),
+      color: Colors.white,
+    );
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -39,25 +55,46 @@ class _ProfilpageState extends State<Profilpage> {
             //margin: const EdgeInsets.all(10),
             color: cardcolor,
             child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15, bottom: 5, top: 5),
+              padding: const EdgeInsets.only(
+                left: 15,
+                right: 15,
+                bottom: 5,
+                top: 5,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 10),
                   const SizedBox(height: 10),
-                  Text("هذا التطبيق تم تطويره من طرف المطور", style: darktextstyle.copyWith(fontSize: fontSize1, color: Colors.grey.shade500), textAlign: TextAlign.center),
-                  ClipOval(child: Image.asset('images/1.png', width: 200, height: 200)),
+                  Text(
+                    "هذا التطبيق تم تطويره من طرف المطور",
+                    style: darktextstyle.copyWith(
+                      fontSize: fontSize1,
+                      color: Colors.grey.shade500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  ClipOval(
+                    child: Image.asset('images/1.png', width: 200, height: 200),
+                  ),
 
                   //clipBehavior: Clip.hardEdge,clipper: ,
                   const SizedBox(height: 10),
-                  const Text(name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const Text(
+                    name,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 5),
-                  Text(email, style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+                  Text(
+                    email,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  ),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
                     onPressed: () async {
                       // Define the URL explicitly (it seems 'githubUrl' might be undefined)
-                      const String githubUrl = "https://github.com/mohammed-nor";
+                      const String githubUrl =
+                          "https://github.com/mohammed-nor";
 
                       try {
                         Uri url = Uri.parse(githubUrl);
@@ -65,13 +102,24 @@ class _ProfilpageState extends State<Profilpage> {
                         if (await canLaunchUrl(url)) {
                           await launchUrl(
                             url,
-                            mode: LaunchMode.externalApplication, // Changed from inAppWebView
+                            mode: LaunchMode
+                                .externalApplication, // Changed from inAppWebView
                           );
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cannot open $githubUrl'), backgroundColor: Colors.red));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Cannot open $githubUrl'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
                     },
                     icon: const Icon(Icons.link),
@@ -80,19 +128,32 @@ class _ProfilpageState extends State<Profilpage> {
                   const SizedBox(height: 10),
                   Text(
                     "هذا التطبيق هدفه مساعدتك على تسيير ماليتك ، دعمك في الادخار و اعطائك فكرة عن تدبيرك المالي ، لكن عليك استحضار التوازن المالي و المنهج الرباني في التدبير من خلال قوله تعالى",
-                    style: darktextstyle.copyWith(fontSize: fontSize1 - 2, color: Colors.grey.shade300),
+                    style: darktextstyle.copyWith(
+                      fontSize: fontSize1 - 2,
+                      color: Colors.grey.shade300,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
 
                   Text(
                     "وَلَا تَجْعَلْ يَدَكَ مَغْلُولَةً إِلَىٰ عُنُقِكَ وَلَا تَبْسُطْهَا كُلَّ ٱلْبَسْطِ فَتَقْعُدَ مَلُومًا مَّحْسُورًا",
-                    style: darktextstyle.copyWith(fontSize: fontSize1 + 2, color: Colors.green),
+                    style: darktextstyle.copyWith(
+                      fontSize: fontSize1 + 2,
+                      color: Colors.green,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
 
-                  Text("صدق الله العظيم", style: darktextstyle.copyWith(fontSize: fontSize1, color: Colors.grey.shade300), textAlign: TextAlign.center),
+                  Text(
+                    "صدق الله العظيم",
+                    style: darktextstyle.copyWith(
+                      fontSize: fontSize1,
+                      color: Colors.grey.shade300,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),
@@ -102,11 +163,20 @@ class _ProfilpageState extends State<Profilpage> {
             //margin: const EdgeInsets.all(10),
             color: cardcolor,
             child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15, bottom: 5, top: 5),
+              padding: const EdgeInsets.only(
+                left: 15,
+                right: 15,
+                bottom: 5,
+                top: 5,
+              ),
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                  Text("الإعدادات", style: darktextstyle, textAlign: TextAlign.right),
+                  Text(
+                    "الإعدادات",
+                    style: darktextstyle,
+                    textAlign: TextAlign.right,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -122,7 +192,11 @@ class _ProfilpageState extends State<Profilpage> {
                           showTicks: true,
                           showLabels: true,
                           enableTooltip: true,
-                          thumbIcon: const Icon(Icons.percent_rounded, color: Colors.blue, size: 14.0),
+                          thumbIcon: const Icon(
+                            Icons.percent_rounded,
+                            color: Colors.blue,
+                            size: 14.0,
+                          ),
                           tooltipShape: const SfPaddleTooltipShape(),
                           value: fontSize1,
                           onChanged: (newValue) {
@@ -134,7 +208,11 @@ class _ProfilpageState extends State<Profilpage> {
                           },
                         ),
                       ),
-                      Text(' حجم خط المعلومات', style: darktextstyle, textAlign: TextAlign.right),
+                      Text(
+                        ' حجم خط المعلومات',
+                        style: darktextstyle,
+                        textAlign: TextAlign.right,
+                      ),
                     ],
                   ),
                   Row(
@@ -151,7 +229,11 @@ class _ProfilpageState extends State<Profilpage> {
                           showTicks: true,
                           showLabels: true,
                           enableTooltip: true,
-                          thumbIcon: const Icon(Icons.percent_rounded, color: Colors.blue, size: 14.0),
+                          thumbIcon: const Icon(
+                            Icons.percent_rounded,
+                            color: Colors.blue,
+                            size: 14.0,
+                          ),
                           tooltipShape: const SfPaddleTooltipShape(),
                           value: fontSize2,
                           onChanged: (newValue) {
@@ -163,7 +245,11 @@ class _ProfilpageState extends State<Profilpage> {
                           },
                         ),
                       ),
-                      Text('حجم خط الإعدادات', style: darktextstyle, textAlign: TextAlign.right),
+                      Text(
+                        'حجم خط الإعدادات',
+                        style: darktextstyle,
+                        textAlign: TextAlign.right,
+                      ),
                     ],
                   ),
                   Row(
@@ -178,30 +264,77 @@ class _ProfilpageState extends State<Profilpage> {
                           value: selectedColorName,
                           alignment: AlignmentDirectional.centerEnd,
                           isExpanded: true,
-                          items:
-                              colorMap.keys.map((colorName) {
-                                return DropdownMenuItem(
-                                  //alignment: AlignmentDirectional.centerEnd,
-                                  value: colorName,
-                                  child: Text(colorName),
-                                );
-                              }).toList(),
+                          items: colorMap.keys.map((colorName) {
+                            return DropdownMenuItem(
+                              //alignment: AlignmentDirectional.centerEnd,
+                              value: colorName,
+                              child: Text(colorName),
+                            );
+                          }).toList(),
                           onChanged: (String? newValue) {
                             setState(() {
                               selectedColorName = newValue!;
                               cardcolor = colorMap[newValue]!;
-                              prefsdata.put("cardcolor", colorMap[newValue] as Color);
+                              prefsdata.put(
+                                "cardcolor",
+                                colorMap[newValue] as Color,
+                              );
                               prefsdata.put("selectedColorName", newValue);
                               ChangeNotifier();
                             });
                           },
                         ),
                       ),
-                      Text('لون الخلفية', style: darktextstyle, textAlign: TextAlign.right),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Card(
+                      Text(
+                        'لون الخلفية',
+                        style: darktextstyle,
+                        textAlign: TextAlign.right,
+                      ),
+                     ],
+                   ),
+                   const SizedBox(height: 10),
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     crossAxisAlignment: CrossAxisAlignment.center,
+                     children: [
+                       SizedBox(
+                         height: MediaQuery.of(context).size.height * 0.07,
+                         width: MediaQuery.of(context).size.width * 0.4,
+                         child: DropdownButton<int>(
+                           dropdownColor: const Color.fromRGBO(30, 30, 30, 1.0),
+                           value: prefsdata.get("payingDay", defaultValue: 30),
+                           alignment: AlignmentDirectional.centerEnd,
+                           isExpanded: true,
+                           items:
+                               List.generate(31, (index) => index + 1).map((
+                                 int value,
+                               ) {
+                                 return DropdownMenuItem<int>(
+                                   value: value,
+                                   child: Text(
+                                     value.toString(),
+                                     style: darktextstyle.copyWith(
+                                       fontSize: fontSize1,
+                                     ),
+                                   ),
+                                 );
+                               }).toList(),
+                           onChanged: (int? newValue) {
+                             setState(() {
+                               prefsdata.put("payingDay", newValue);
+                             });
+                           },
+                         ),
+                       ),
+                       Text(
+                         'يوم صرف الراتب',
+                         style: darktextstyle,
+                         textAlign: TextAlign.right,
+                       ),
+                     ],
+                   ),
+                   const SizedBox(height: 10),
+                   Card(
                     elevation: 5,
                     //color: const Color.fromARGB(0, 183, 28, 28),
                     //margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
@@ -209,9 +342,19 @@ class _ProfilpageState extends State<Profilpage> {
                       onPressed: () {
                         _showResetConfirmationDialog(context);
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
                       icon: const Icon(Icons.delete_forever, size: 24),
-                      label: Text("إعادة ضبط التطبيق", style: darktextstyle.copyWith(fontSize: fontSize1)),
+                      label: Text(
+                        "إعادة ضبط التطبيق",
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
+                      ),
                     ),
                   ),
 
@@ -244,33 +387,63 @@ class _ProfilpageState extends State<Profilpage> {
         return AlertDialog(
           actionsAlignment: MainAxisAlignment.spaceBetween,
           backgroundColor: const Color.fromRGBO(30, 30, 30, 1.0),
-          title: Text("تأكيد إعادة ضبط التطبيق", style: darktextstyle.copyWith(fontSize: fontSize1 * 1.2, color: Colors.red.shade300), textAlign: TextAlign.center),
+          title: Text(
+            "تأكيد إعادة ضبط التطبيق",
+            style: darktextstyle.copyWith(
+              fontSize: fontSize1 * 1.2,
+              color: Colors.red.shade300,
+            ),
+            textAlign: TextAlign.center,
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.delete_forever, color: Colors.red, size: 60),
               const SizedBox(height: 16),
-              Text("سيتم حذف جميع البيانات المخزنة في التطبيق بما في ذلك", style: darktextstyle.copyWith(fontSize: fontSize1), textAlign: TextAlign.center),
+              Text(
+                "سيتم حذف جميع البيانات المخزنة في التطبيق بما في ذلك",
+                style: darktextstyle.copyWith(fontSize: fontSize1),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
               Text(
                 "بيانات الميزانية\nالمصاريف القادمة\nالمداخيل غير المتوقعة\nتاريخ الإدخار\nالإعدادات",
-                style: darktextstyle.copyWith(fontSize: fontSize1 - 2, color: Colors.grey[400]),
+                style: darktextstyle.copyWith(
+                  fontSize: fontSize1 - 2,
+                  color: Colors.grey[400],
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              Text("هذا الإجراء لا يمكن التراجع عنه", style: darktextstyle.copyWith(fontSize: fontSize1, color: Colors.red.shade300, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              Text(
+                "هذا الإجراء لا يمكن التراجع عنه",
+                style: darktextstyle.copyWith(
+                  fontSize: fontSize1,
+                  color: Colors.red.shade300,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
           actions: [
             TextButton(
-              child: Text("إلغاء", style: darktextstyle.copyWith(color: Colors.grey[400])),
+              child: Text(
+                "إلغاء",
+                style: darktextstyle.copyWith(color: Colors.grey[400]),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-              child: Text("نعم، أعد الضبط", style: darktextstyle.copyWith(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+              ),
+              child: Text(
+                "نعم، أعد الضبط",
+                style: darktextstyle.copyWith(color: Colors.white),
+              ),
               onPressed: () async {
                 await _resetAllData();
                 Navigator.of(context).pop();
@@ -278,7 +451,11 @@ class _ProfilpageState extends State<Profilpage> {
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("تمت إعادة ضبط التطبيق بنجاح", style: darktextstyle.copyWith(color: Colors.white), textAlign: TextAlign.center),
+                    content: Text(
+                      "تمت إعادة ضبط التطبيق بنجاح",
+                      style: darktextstyle.copyWith(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
                     backgroundColor: Colors.green.shade800,
                     duration: const Duration(seconds: 3),
                   ),
@@ -295,8 +472,12 @@ class _ProfilpageState extends State<Profilpage> {
     // Get all Hive boxes
     final prefsdata = Hive.box('data');
     final historyBox = await Hive.openBox<BudgetHistory>('budget_history');
-    final upcomingSpendingBox = await Hive.openBox<UpcomingSpending>('upcoming_spending');
-    final unexpectedEarningsBox = await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
+    final upcomingSpendingBox = await Hive.openBox<UpcomingSpending>(
+      'upcoming_spending',
+    );
+    final unexpectedEarningsBox = await Hive.openBox<UnexpectedEarning>(
+      'unexpected_earnings',
+    );
 
     // Clear all boxes
     await prefsdata.clear();
@@ -329,7 +510,10 @@ class _ProfilpageState extends State<Profilpage> {
       prefsdata.put("mntinc", 4300);
       prefsdata.put("mntnstblinc", 2000);
       prefsdata.put("mntperinc", 40);
-      prefsdata.put("startDate", DateTime(DateTime.now().year, DateTime.now().month, 1));
+      prefsdata.put(
+        "startDate",
+        DateTime(DateTime.now().year, DateTime.now().month, 1),
+      );
     });
   }
 }

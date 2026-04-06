@@ -84,9 +84,11 @@ class _BudgetpageState extends State<Budgetpage> {
 
   Box<UpcomingSpending>? upcomingSpendingBox;
   List<UpcomingSpending> upcomingSpendingList = [];
+  bool _isUpcomingSpendingExpanded = false;
 
   Box<UnexpectedEarning>? unexpectedEarningsBox;
   List<UnexpectedEarning> unexpectedEarningsList = [];
+  bool _isUnexpectedEarningsExpanded = false;
 
   @override
   void initState() {
@@ -524,22 +526,44 @@ class _BudgetpageState extends State<Budgetpage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _showAddSpendingDialog,
-                  icon: const Icon(Icons.add),
-                  label: Text(
-                    "",
-                    style: darktextstyle.copyWith(fontSize: fontSize1),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.error.withOpacity(0.7),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+                Row(
+                  children: [
+                    if (upcomingSpendingList.length > 3)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isUpcomingSpendingExpanded =
+                                !_isUpcomingSpendingExpanded;
+                          });
+                        },
+                        icon: Icon(
+                          _isUpcomingSpendingExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          color: Colors.white70,
+                        ),
+                        tooltip: _isUpcomingSpendingExpanded
+                            ? "عرض أقل"
+                            : "عرض المزيد",
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddSpendingDialog,
+                      icon: const Icon(Icons.add),
+                      label: Text(
+                        "",
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.error.withOpacity(0.7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 Text(
                   "مصاريف غير قارة",
@@ -564,7 +588,11 @@ class _BudgetpageState extends State<Budgetpage> {
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: upcomingSpendingList.length,
+                    itemCount: _isUpcomingSpendingExpanded
+                        ? upcomingSpendingList.length
+                        : (upcomingSpendingList.length > 3
+                            ? 3
+                            : upcomingSpendingList.length),
                     itemBuilder: (context, index) {
                       final item = upcomingSpendingList[index];
                       final daysUntil = item.date
@@ -741,7 +769,7 @@ class _BudgetpageState extends State<Budgetpage> {
                             final DateTime? picked = await showDatePicker(
                               context: context,
                               initialDate: selectedDate,
-                              firstDate: DateTime.now(),
+                              firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
                               builder: (context, child) {
                                 return Theme(
@@ -852,7 +880,10 @@ class _BudgetpageState extends State<Budgetpage> {
   Widget _buildUnexpectedEarningsCard(BuildContext context) {
     return Card(
       elevation: 5,
-      color: cardcolor,
+      color: prefsdata.get(
+        "cardcolor",
+        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -861,22 +892,44 @@ class _BudgetpageState extends State<Budgetpage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _showAddEarningDialog,
-                  icon: const Icon(Icons.add),
-                  label: Text(
-                    "",
-                    style: darktextstyle.copyWith(fontSize: fontSize1),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.5),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+                Row(
+                  children: [
+                    if (unexpectedEarningsList.length > 3)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isUnexpectedEarningsExpanded =
+                                !_isUnexpectedEarningsExpanded;
+                          });
+                        },
+                        icon: Icon(
+                          _isUnexpectedEarningsExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          color: Colors.white70,
+                        ),
+                        tooltip: _isUnexpectedEarningsExpanded
+                            ? "عرض أقل"
+                            : "عرض المزيد",
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddEarningDialog,
+                      icon: const Icon(Icons.add),
+                      label: Text(
+                        "",
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 Text(
                   "مداخيل غير قارة",
@@ -904,7 +957,11 @@ class _BudgetpageState extends State<Budgetpage> {
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: unexpectedEarningsList.length,
+                    itemCount: _isUnexpectedEarningsExpanded
+                        ? unexpectedEarningsList.length
+                        : (unexpectedEarningsList.length > 3
+                            ? 3
+                            : unexpectedEarningsList.length),
                     itemBuilder: (context, index) {
                       final item = unexpectedEarningsList[index];
                       final daysAgo = DateTime.now()
@@ -1095,7 +1152,7 @@ class _BudgetpageState extends State<Budgetpage> {
                               context: context,
                               initialDate: selectedDate,
                               firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
+                              lastDate: DateTime(2100),
                               builder: (context, child) {
                                 return Theme(
                                   data: ThemeData.dark().copyWith(
@@ -1243,11 +1300,38 @@ class _BudgetpageState extends State<Budgetpage> {
     double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
     // Next/This month payment date calculations removed (not used).
     int daysleftInCurrentMonth() {
-      DateTime firstDayNextMonth = (today.month < 12)
-          ? DateTime(today.year, today.month + 1, 1)
-          : DateTime(today.year + 1, 1, 1);
+      int payingDay = prefsdata.get("payingDay", defaultValue: 30);
 
-      return firstDayNextMonth.subtract(Duration(days: today.day)).day - 1;
+      // Target for the current month
+      int lastDayThisMonth = DateTime(today.year, today.month + 1, 0).day;
+      int targetDayThisMonth =
+          payingDay > lastDayThisMonth ? lastDayThisMonth : payingDay;
+      DateTime targetDateThisMonth = DateTime(
+        today.year,
+        today.month,
+        targetDayThisMonth,
+      );
+
+      if (!today.isAfter(targetDateThisMonth)) {
+        return targetDateThisMonth.difference(today).inDays;
+      } else {
+        // Target for the next month
+        int nextMonth = today.month + 1;
+        int nextYear = today.year;
+        if (nextMonth > 12) {
+          nextMonth = 1;
+          nextYear++;
+        }
+        int lastDayNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+        int targetDayNextMonth =
+            payingDay > lastDayNextMonth ? lastDayNextMonth : payingDay;
+        DateTime targetDateNextMonth = DateTime(
+          nextYear,
+          nextMonth,
+          targetDayNextMonth,
+        );
+        return targetDateNextMonth.difference(today).inDays;
+      }
     }
 
     //int daysInCurrentMonth = NextMonthPaymentDate.difference(ThisMonthPaymentDate).inDays;
@@ -1444,7 +1528,10 @@ class _BudgetpageState extends State<Budgetpage> {
           Card(
             elevation: 2,
             //color: Theme.of(context).cardColor,
-            color: cardcolor,
+            color: prefsdata.get(
+              "cardcolor",
+              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1816,7 +1903,7 @@ class _BudgetpageState extends State<Budgetpage> {
                                     interval: 7,
                                     majorGridLines: const MajorGridLines(
                                       width: 1,
-                                      color: Color.fromRGBO(200, 200, 200, 0.4),
+                                      color: Color.fromRGBO(200, 200, 200, 0.1),
                                     ),
                                     edgeLabelPlacement:
                                         EdgeLabelPlacement.shift,
@@ -1915,8 +2002,8 @@ class _BudgetpageState extends State<Budgetpage> {
 
                     // Collapsible controls: moved under the chart
                     ExpansionTile(
-                      //backgroundColor: cardcolor,
-                      //collapsedBackgroundColor: cardcolor,
+                      //backgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
+                      //collapsedBackgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
                       tilePadding: const EdgeInsets.symmetric(
                         horizontal: 1.0,
                         vertical: 0,
@@ -2704,7 +2791,10 @@ class _BudgetpageState extends State<Budgetpage> {
           // Candle-like chart card: shows evolution of budget (nownetcredit)
           Card(
             elevation: 5,
-            color: cardcolor,
+            color: prefsdata.get(
+              "cardcolor",
+              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -3221,7 +3311,10 @@ class _BudgetpageState extends State<Budgetpage> {
 
           Card(
             elevation: 2,
-            color: cardcolor,
+            color: prefsdata.get(
+              "cardcolor",
+              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -3418,7 +3511,10 @@ class _BudgetpageState extends State<Budgetpage> {
           ),
           Card(
             elevation: 5,
-            color: cardcolor,
+            color: prefsdata.get(
+              "cardcolor",
+              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -3781,7 +3877,10 @@ class _BudgetpageState extends State<Budgetpage> {
           ),
           Card(
             elevation: 5,
-            color: cardcolor,
+            color: prefsdata.get(
+              "cardcolor",
+              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -4053,32 +4152,38 @@ class _BudgetpageState extends State<Budgetpage> {
 
   int count30thsPassed(DateTime startDate, DateTime endDate) {
     if (startDate.isAfter(endDate)) {
-      return 0; // Return 0 if the date range is invalid
+      return 0;
     }
 
+    int payingDay = prefsdata.get("payingDay", defaultValue: 30);
     int count = 0;
-    DateTime current = DateTime(startDate.year, startDate.month, 28);
-    if (current.month == 2) {
-      current = DateTime(startDate.year, startDate.month, 28);
-    } else {
-      current = DateTime(startDate.year, startDate.month, 30);
-    }
-    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
-      if (current.month == 2) {
-        current = DateTime(current.year, 2, 28);
-        if (current.isAfter(startDate) &&
-            (current.isBefore(endDate) || current.isAtSameMomentAs(endDate))) {
-          count++;
-        }
-      } else {
+
+    // Start checking from the current month of startDate
+    DateTime currentMonth = DateTime(startDate.year, startDate.month);
+
+    while (true) {
+      int year = currentMonth.year;
+      int month = currentMonth.month;
+
+      // Get the last day of this month (e.g., handles Feb 28/29, or 30/31)
+      int lastDay = DateTime(year, month + 1, 0).day;
+      int targetDay = payingDay > lastDay ? lastDay : payingDay;
+
+      DateTime targetDate = DateTime(year, month, targetDay);
+
+      // If targetDate is after endDate, we shouldn't count it or anything after it
+      if (targetDate.isAfter(endDate)) {
+        break;
+      }
+
+      // If targetDate is on or after startDate, it's categorized as "passed"
+      if (targetDate.isAfter(startDate) ||
+          targetDate.isAtSameMomentAs(startDate)) {
         count++;
       }
-      // Move to the next month's 30th (or closest valid date)
-      if (current.month == 1) {
-        current = DateTime(current.year, current.month + 1, 28);
-      } else {
-        current = DateTime(current.year, current.month + 1, 30);
-      }
+
+      // Move to next month
+      currentMonth = DateTime(year, month + 1);
     }
 
     return count;

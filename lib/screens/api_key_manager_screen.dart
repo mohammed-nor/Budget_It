@@ -31,7 +31,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
     if (_apiKeyController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter an API key'),
+          content: Text('يرجى إدخال مفتاح API'),
           backgroundColor: Colors.red,
         ),
       );
@@ -43,11 +43,11 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
     try {
       await GeminiService.saveApiKey(_apiKeyController.text.trim());
       setState(() {
-        _statusMessage = 'API Key saved successfully! ✓';
+        _statusMessage = 'تم حفظ مفتاح API بنجاح! ✓';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('API Key saved successfully!'),
+          content: Text('تم حفظ مفتاح API بنجاح!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -55,11 +55,8 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
         if (mounted) Navigator.pop(context, true);
       });
     } catch (e) {
-      setState(() {
-        _statusMessage = 'Error: ${e.toString()}';
-      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('خطأ: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() => _isSaving = false);
@@ -70,14 +67,14 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear API Key'),
+        title: const Text('مسح مفتاح API'),
         content: const Text(
-          'Are you sure you want to delete the stored API key?',
+          'هل أنت متأكد أنك تريد حذف مفتاح API المخزن؟',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('إلغاء'),
           ),
           TextButton(
             onPressed: () async {
@@ -85,13 +82,13 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                 await GeminiService.clearApiKey();
                 setState(() {
                   _apiKeyController.clear();
-                  _statusMessage = 'API Key cleared successfully! ✓';
+                  _statusMessage = 'تم مسح مفتاح API بنجاح! ✓';
                 });
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('API Key cleared'),
+                      content: Text('تم مسح مفتاح API'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -108,7 +105,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -121,7 +118,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Financial Advisor Setup'),
+        title: const Text('إعداد المستشار المالي الذكي'),
         backgroundColor: Colors.green.shade900,
       ),
       body: SingleChildScrollView(
@@ -146,7 +143,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'About Google Gemini API',
+                          'حول Google Gemini API',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: Colors.blue.shade900,
@@ -158,12 +155,12 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '1. Go to Google AI Studio (https://aistudio.google.com/app/apikey)\n'
-                    '2. Click "Get API Key"\n'
-                    '3. Create a new API key\n'
-                    '4. Copy the key and paste it below\n'
-                    '5. Your API key is stored securely on your device\n\n'
-                    'The free tier includes 60 requests per minute. This is perfect for getting daily financial advice!',
+                    '1. اذهب إلى Google AI Studio (https://aistudio.google.com/app/apikey)\n'
+                    '2. اضغط على "Get API Key"\n'
+                    '3. أنشئ مفتاح API جديداً\n'
+                    '4. انسخ المفتاح وألصقه أدناه\n'
+                    '5. يتم تخزين مفتاح API الخاص بك بشكل آمن على جهازك\n\n'
+                    'تتضمن الفئة المجانية 60 طلباً في الدقيقة. هذا مثالي للحصول على نصائح مالية يومية!',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.blue.shade700,
                     ),
@@ -175,7 +172,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
 
             // API Key Input
             Text(
-              'Gemini API Key',
+              'مفتاح Gemini API',
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
@@ -183,7 +180,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
               controller: _apiKeyController,
               obscureText: !_isApiKeyVisible,
               decoration: InputDecoration(
-                hintText: 'Paste your Gemini API key here',
+                hintText: 'ألصق مفتاح Gemini API الخاص بك هنا',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -251,7 +248,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                         ),
                       )
                     : Text(
-                        hasApiKey ? 'Update API Key' : 'Save API Key',
+                        hasApiKey ? 'تحديث مفتاح API' : 'حفظ مفتاح API',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -275,7 +272,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                     ),
                   ),
                   child: const Text(
-                    'Clear API Key',
+                    'مسح مفتاح API',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -302,8 +299,8 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                   const SizedBox(width: 12),
                   Text(
                     hasApiKey
-                        ? 'API Key is configured ✓'
-                        : 'No API Key configured',
+                        ? 'تم تكوين مفتاح API ✓'
+                        : 'لم يتم تكوين مفتاح API',
                     style: TextStyle(
                       color: hasApiKey
                           ? Colors.green.shade700
