@@ -26,33 +26,33 @@ class _WalletPageState extends State<WalletPage> {
 
   final List<SpendingCategory> categories = [
     SpendingCategory(
-      title: 'الإستخدام الشخصي',
-      description: 'Electricity and water bills',
+      title: 'المصاريف الشخصية',
+      description: 'shopping and personal',
       budget: 150,
     ),
     SpendingCategory(
-      title: 'الإستخدام المنزلي',
+      title: 'المصاريف المنزلية',
       description: 'Groceries and dining',
       budget: 500,
     ),
     SpendingCategory(
-      title: 'النقل',
+      title: 'تنقل',
       description: 'Gas and public transit',
       budget: 200,
     ),
     SpendingCategory(
-      title: 'الترفيه',
+      title: 'ترفيه',
       description: 'Movies and activities',
       budget: 100,
     ),
     SpendingCategory(
-      title: 'الطوارئ',
+      title: 'طوارئ',
       description: 'Other expenses',
       budget: 100,
     ),
     SpendingCategory(
-      title: 'صدقة',
-      description: 'Car maintenance and insurance',
+      title: 'مصاريف أخرى',
+      description: 'Other expenses',
       budget: 250,
     ),
   ];
@@ -61,7 +61,7 @@ class _WalletPageState extends State<WalletPage> {
   double monthlyIncrement = 3000;
 
   final Color cardColor = const Color.fromRGBO(30, 30, 30, 1.0);
-  final List<double> incrementRatios = [0.55, 0.20, 0.10, 0.05, 0.05, 0.05];
+  final List<double> incrementRatios = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 
   @override
   void initState() {
@@ -255,6 +255,7 @@ class _WalletPageState extends State<WalletPage> {
       // Calculate saved amount from budget history
       // Represents total accumulated net credit
       double savedAmount = 0;
+
       if (budgetHistoryBox.isNotEmpty) {
         final latestHistory = budgetHistoryBox.getAt(
           budgetHistoryBox.length - 1,
@@ -750,129 +751,6 @@ class _WalletPageState extends State<WalletPage> {
                   getCurrentBudget: getCurrentBudget,
                 );
               }),
-              Card(
-                color: prefsdata.get(
-                  "cardcolor",
-                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-                ),
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'الزيادة الشهرية',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: _getTextColor(),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'حدد قيمة الزيادة الشهرية، لا تتجاوز $maxIncrement درهم',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: _getSecondaryTextColor(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: TextEditingController(
-                          text: monthlyIncrement.toString(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'الزيادة الشهرية',
-                          border: const OutlineInputBorder(),
-                          suffixText: 'درهم',
-                          labelStyle: TextStyle(color: _getTextColor()),
-                        ),
-                        style: TextStyle(color: _getTextColor()),
-                        onChanged: (value) {
-                          double val = double.tryParse(value) ?? 0;
-                          if (val > maxIncrement) val = maxIncrement;
-                          setState(() {
-                            monthlyIncrement = val;
-                            budgetsBox.put(
-                              'monthlyIncrement',
-                              monthlyIncrement,
-                            );
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                monthlyIncrement = (monthlyIncrement - 10)
-                                    .clamp(0, maxIncrement);
-                                budgetsBox.put(
-                                  'monthlyIncrement',
-                                  monthlyIncrement,
-                                );
-                              });
-                            },
-                            child: const Text('-10'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                monthlyIncrement = (monthlyIncrement - 1).clamp(
-                                  0,
-                                  maxIncrement,
-                                );
-                                budgetsBox.put(
-                                  'monthlyIncrement',
-                                  monthlyIncrement,
-                                );
-                              });
-                            },
-                            child: const Text('-1'),
-                          ),
-                          const SizedBox(width: 40),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                monthlyIncrement = (monthlyIncrement + 1).clamp(
-                                  0,
-                                  maxIncrement,
-                                );
-                                budgetsBox.put(
-                                  'monthlyIncrement',
-                                  monthlyIncrement,
-                                );
-                              });
-                            },
-                            child: const Text('+1'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                monthlyIncrement = (monthlyIncrement + 10)
-                                    .clamp(0, maxIncrement);
-                                budgetsBox.put(
-                                  'monthlyIncrement',
-                                  monthlyIncrement,
-                                );
-                              });
-                            },
-                            child: const Text('+10'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'القيمة الحالية: ${monthlyIncrement.toStringAsFixed(2)} درهم',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.green.shade400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         );
@@ -943,7 +821,8 @@ class BudgetCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              //crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),

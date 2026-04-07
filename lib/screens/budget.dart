@@ -591,8 +591,8 @@ class _BudgetpageState extends State<Budgetpage> {
                     itemCount: _isUpcomingSpendingExpanded
                         ? upcomingSpendingList.length
                         : (upcomingSpendingList.length > 3
-                            ? 3
-                            : upcomingSpendingList.length),
+                              ? 3
+                              : upcomingSpendingList.length),
                     itemBuilder: (context, index) {
                       final item = upcomingSpendingList[index];
                       final daysUntil = item.date
@@ -960,8 +960,8 @@ class _BudgetpageState extends State<Budgetpage> {
                     itemCount: _isUnexpectedEarningsExpanded
                         ? unexpectedEarningsList.length
                         : (unexpectedEarningsList.length > 3
-                            ? 3
-                            : unexpectedEarningsList.length),
+                              ? 3
+                              : unexpectedEarningsList.length),
                     itemBuilder: (context, index) {
                       final item = unexpectedEarningsList[index];
                       final daysAgo = DateTime.now()
@@ -1304,8 +1304,9 @@ class _BudgetpageState extends State<Budgetpage> {
 
       // Target for the current month
       int lastDayThisMonth = DateTime(today.year, today.month + 1, 0).day;
-      int targetDayThisMonth =
-          payingDay > lastDayThisMonth ? lastDayThisMonth : payingDay;
+      int targetDayThisMonth = payingDay > lastDayThisMonth
+          ? lastDayThisMonth
+          : payingDay;
       DateTime targetDateThisMonth = DateTime(
         today.year,
         today.month,
@@ -1323,8 +1324,9 @@ class _BudgetpageState extends State<Budgetpage> {
           nextYear++;
         }
         int lastDayNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
-        int targetDayNextMonth =
-            payingDay > lastDayNextMonth ? lastDayNextMonth : payingDay;
+        int targetDayNextMonth = payingDay > lastDayNextMonth
+            ? lastDayNextMonth
+            : payingDay;
         DateTime targetDateNextMonth = DateTime(
           nextYear,
           nextMonth,
@@ -1944,6 +1946,29 @@ class _BudgetpageState extends State<Budgetpage> {
                                       closeValueMapper: (_CandleData data, _) =>
                                           data.close,
                                       enableTooltip: true,
+                                      pointColorMapper: (_CandleData data, _) {
+                                        if (isSameDay(data.x, today)) {
+                                          return const Color.fromARGB(
+                                            255,
+                                            255,
+                                            191,
+                                            0,
+                                          );
+                                        }
+                                        return data.close >= data.open
+                                            ? const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
+                                              )
+                                            : const Color.fromRGBO(
+                                                253,
+                                                95,
+                                                95,
+                                                1.0,
+                                              );
+                                      },
                                       bearColor: const Color.fromRGBO(
                                         253,
                                         95,
@@ -3024,12 +3049,21 @@ class _BudgetpageState extends State<Budgetpage> {
                                           m['day'] as String,
                                       yValueMapper: (m, _) =>
                                           m['income'] as num,
-                                      color: const Color.fromRGBO(
-                                        106,
-                                        253,
-                                        95,
-                                        1.0,
-                                      ),
+                                      pointColorMapper: (m, _) {
+                                        final isToday =
+                                            m['day'] == today.day.toString() &&
+                                            today.month ==
+                                                DateTime.now().month &&
+                                            today.year == DateTime.now().year;
+                                        return isToday
+                                            ? Colors.amber
+                                            : const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
+                                              );
+                                      },
                                     ),
                                     ColumnSeries<Map<String, dynamic>, String>(
                                       name: 'مصاريف',
@@ -3037,12 +3071,21 @@ class _BudgetpageState extends State<Budgetpage> {
                                       xValueMapper: (m, _) =>
                                           m['day'] as String,
                                       yValueMapper: (m, _) => m['spend'] as num,
-                                      color: const Color.fromRGBO(
-                                        253,
-                                        95,
-                                        95,
-                                        1.0,
-                                      ),
+                                      pointColorMapper: (m, _) {
+                                        final isToday =
+                                            m['day'] == today.day.toString() &&
+                                            today.month ==
+                                                DateTime.now().month &&
+                                            today.year == DateTime.now().year;
+                                        return isToday
+                                            ? Colors.amber.withOpacity(0.8)
+                                            : const Color.fromRGBO(
+                                                253,
+                                                95,
+                                                95,
+                                                1.0,
+                                              );
+                                      },
                                     ),
                                   ],
                             ),

@@ -159,7 +159,8 @@ class GeminiService {
     final totalBudget = categoryBudgets.values.fold(0.0, (a, b) => a + b);
     final variableExpenses = fixedmonthlyExpenses - fixedMonthlyExpenses;
     final remainingAfterFixedExpenses = monthlyIncome - fixedMonthlyExpenses;
-    final projectedAfterUpcoming = remainingAfterFixedExpenses - upcomingExpenses;
+    final projectedAfterUpcoming =
+        remainingAfterFixedExpenses - upcomingExpenses;
 
     return '''You are an experienced financial advisor. Analyze this person's monthly budget based on their actual spending history from their Budget page and provide personalized financial advice in Arabic (العربية). Focus on:
 1. Actual spending analysis and patterns from their records
@@ -169,17 +170,14 @@ class GeminiService {
 5. Actionable recommendations
 
 **Financial Overview (from Budget Page Data):**
-- المداخيل الشهرية الكلية (Total Monthly Income): ${monthlyIncome.toStringAsFixed(2)} MAD
-  - المداخيل الشهرية القارة (Fixed Monthly Income): ${monthlyIncome.toStringAsFixed(2)} MAD (الدخل المستقر)
-- المصاريف الشهرية الكلية (Total Monthly Expenses): ${(fixedMonthlyExpenses + variableExpenses).toStringAsFixed(2)} MAD
-  -  المصاريف القارة للكراء و الفواتير(Fixed Monthly Expenses - الفواتير والدائنة): ${fixedMonthlyExpenses.toStringAsFixed(2)} MAD
-  - المصاريف المتغيرة (Variable Expenses - غير القارة): ${variableExpenses.toStringAsFixed(2)} MAD
+- المداخيل الشهرية الكلية (Total Monthly Income): ${monthlyIncome.toStringAsFixed(2) + availableFunds.toStringAsFixed(2)} MAD
+-  المصاريف القارة للكراء و الفواتير(Fixed Monthly Expenses - الفواتير والدائنة): ${fixedMonthlyExpenses.toStringAsFixed(2)} MAD
+- المصاريف المتغيرة (Variable Expenses - غير القارة): ${variableExpenses.toStringAsFixed(2)} MAD
 - المتبقي بعد المصاريف القارة (Remaining After Fixed Expenses): ${remainingAfterFixedExpenses.toStringAsFixed(2)} MAD
 - المصاريف المجدولة القادمة (Upcoming Planned Expenses): ${upcomingExpenses.toStringAsFixed(2)} MAD
 - المتوقع بعد المصاريف المجدولة (Projected After Upcoming): ${projectedAfterUpcoming.toStringAsFixed(2)} MAD
 - المبلغ المرتقب إدخاره شهرياً (Expected Monthly Savings Target): ${currentSavings.toStringAsFixed(2)} MAD
 - إجمالي المبلغ المدخر (Total Accumulated Savings): ${savedAmount.toStringAsFixed(2)} MAD
-- الأموال المتاحة الحرة (Available Free Funds): ${availableFunds.toStringAsFixed(2)} MAD
 - متوسط الرصيد الصافي (Average Net Credit Balance): ${netCredit.toStringAsFixed(2)} MAD
 
 **Budget Allocation by Category (Current):**
