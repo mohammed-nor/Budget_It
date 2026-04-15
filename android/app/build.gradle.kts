@@ -61,6 +61,12 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    packaging {
+        jniLibs {
+            keepDebugSymbols.add("**/libapp.so")
+        }
+    }
     
     applicationVariants.all {
         val variant = this
@@ -76,5 +82,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

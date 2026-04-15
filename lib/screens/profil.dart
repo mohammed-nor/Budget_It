@@ -2,11 +2,14 @@ import 'package:budget_it/models/budget_history.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:budget_it/models/unexpected_earning.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:budget_it/services/notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hive/hive.dart';
+import 'dart:io';
 
 class Profilpage extends StatefulWidget {
   const Profilpage({super.key});
@@ -29,442 +32,742 @@ class _ProfilpageState extends State<Profilpage> {
     color: Colors.white,
   );
   //String selectedColorName = 'Light';
+
+  // ── Notification state ─────────────────────────
+  late bool _notifEnabled;
+  late bool _notifDailyEnabled;
+  late int  _notifDailyHour;
+  late int  _notifDailyMinute;
+  late bool _notifSalaryEnabled;
+  late bool _notifLowBudgetEnabled;
+  late double _notifLowBudgetThreshold;
+
+  bool get _notifSupported =>
+      !kIsWeb && (Platform.isAndroid || Platform.isWindows);
+
+  @override
+  void initState() {
+    super.initState();
+    final box = Hive.box('data');
+    _notifEnabled         = box.get(kNotifEnabled,            defaultValue: true)  as bool;
+    _notifDailyEnabled    = box.get(kNotifDailyEnabled,       defaultValue: true)  as bool;
+    _notifDailyHour       = box.get(kNotifDailyHour,          defaultValue: 9)     as int;
+    _notifDailyMinute     = box.get(kNotifDailyMinute,        defaultValue: 0)     as int;
+    _notifSalaryEnabled   = box.get(kNotifSalaryEnabled,      defaultValue: true)  as bool;
+    _notifLowBudgetEnabled= box.get(kNotifLowBudgetEnabled,   defaultValue: true)  as bool;
+    _notifLowBudgetThreshold =
+        (box.get(kNotifLowBudgetThreshold, defaultValue: 500) as num).toDouble();
+  }
   @override
   Widget build(BuildContext context) {
     final prefsdata = Hive.box('data');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = Theme.of(context).colorScheme.primary;
 
-    TextStyle darkteststyle2 = TextStyle(
+    TextStyle titleStyle = GoogleFonts.elMessiri(
       fontWeight: FontWeight.bold,
-      fontSize: fontSize1,
+      fontSize: fontSize2.toDouble() + 4,
       color: Colors.white,
     );
 
-    TextStyle darktextstyle = GoogleFonts.elMessiri(
-      fontWeight: FontWeight.w700,
-      fontSize: fontSize2.toDouble(),
-      color: Colors.white,
+    TextStyle bodyStyle = GoogleFonts.elMessiri(
+      fontWeight: FontWeight.w500,
+      fontSize: fontSize1,
+      color: Colors.white70,
     );
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ListView(
-        padding: const EdgeInsets.all(7),
-        children: <Widget>[
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(10),
-            color: cardcolor,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 15,
-                right: 15,
-                bottom: 5,
-                top: 5,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 10),
-                  const SizedBox(height: 10),
-                  Text(
-                    "هذا التطبيق تم تطويره من طرف المطور",
-                    style: darktextstyle.copyWith(
-                      fontSize: fontSize1,
-                      color: Colors.grey.shade500,
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 20.0),
+        children: [
+          _buildSectionCard(
+            context,
+            padding: EdgeInsets.all(6),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: accentColor, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.35),
+                        blurRadius: 15,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'images/1.png',
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.person,
+                        size: 90,
+                        color: Colors.white,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  ClipOval(
-                    child: Image.asset('images/1.png', width: 200, height: 200),
+                ),
+                const SizedBox(height: 16),
+                Text(name, style: titleStyle),
+                Text(
+                  email,
+                  style: bodyStyle.copyWith(
+                    fontSize: 14,
+                    color: Colors.white54,
                   ),
-
-                  //clipBehavior: Clip.hardEdge,clipper: ,
-                  const SizedBox(height: 10),
-                  const Text(
-                    name,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    email,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      // Define the URL explicitly (it seems 'githubUrl' might be undefined)
-                      const String githubUrl =
-                          "https://github.com/mohammed-nor";
-
-                      try {
-                        Uri url = Uri.parse(githubUrl);
-                        // Use external application to open URLs on mobile
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode
-                                .externalApplication, // Changed from inAppWebView
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Cannot open $githubUrl'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                            backgroundColor: Colors.red,
-                          ),
+                ),
+                const Divider(height: 32, color: Colors.white10),
+                Text(
+                  "هذا التطبيق تم تطويره من طرف المطور لمساعدتك على تسيير ماليتك ودعمك في الادخار.",
+                  style: bodyStyle,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                _buildSettingsAction(
+                  context,
+                  label: "GitHub Profile",
+                  icon: Icons.link,
+                  onTap: () async {
+                    const String githubUrl = "https://github.com/mohammed-nor";
+                    try {
+                      Uri url = Uri.parse(githubUrl);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
                         );
                       }
-                    },
-                    icon: const Icon(Icons.link),
-                    label: const Text("GitHub"),
+                    } catch (e) {
+                      debugPrint("Error launching URL: $e");
+                    }
+                  },
+                  color: accentColor,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildSectionCard(
+            context,
+            padding: EdgeInsets.all(6),
+            title: "المنهج التدبيري",
+            icon: Icons.auto_awesome,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "هذا التطبيق هدفه مساعدتك على تسيير ماليتك ، دعمك في الادخار و اعطائك فكرة عن تدبيرك المالي ، لكن عليك استحضار التوازن المالي و المنهج الرباني في التدبير من خلال قوله تعالى",
-                    style: darktextstyle.copyWith(
-                      fontSize: fontSize1 - 2,
-                      color: Colors.grey.shade300,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-
-                  Text(
+                  child: Text(
                     "وَلَا تَجْعَلْ يَدَكَ مَغْلُولَةً إِلَىٰ عُنُقِكَ وَلَا تَبْسُطْهَا كُلَّ ٱلْبَسْطِ فَتَقْعُدَ مَلُومًا مَّحْسُورًا",
-                    style: darktextstyle.copyWith(
+                    style: bodyStyle.copyWith(
                       fontSize: fontSize1 + 2,
-                      color: Colors.green,
+                      color: Colors.green.shade400,
+                      height: 1.6,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "صدق الله العظيم",
+                  style: bodyStyle.copyWith(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
 
-                  Text(
-                    "صدق الله العظيم",
-                    style: darktextstyle.copyWith(
-                      fontSize: fontSize1,
-                      color: Colors.grey.shade300,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+          const SizedBox(height: 16),
+          _buildSectionCard(
+            context,
+            padding: EdgeInsets.all(6),
+            child: Column(
+              children: [
+                _buildThemeSwitch(context, prefsdata),
+                const Divider(height: 1, color: Colors.white10),
+                _buildFontSizeSlider(
+                  context,
+                  label: "حجم خط المعلومات",
+                  value: fontSize1,
+                  onChanged: (val) {
+                    setState(() {
+                      fontSize1 = val;
+                      prefsdata.put("fontsize1", val);
+                    });
+                  },
+                ),
+                const Divider(height: 1, color: Colors.white10),
+                _buildFontSizeSlider(
+                  context,
+                  label: "حجم خط الإعدادات",
+                  value: fontSize2,
+                  onChanged: (val) {
+                    setState(() {
+                      fontSize2 = val;
+                      prefsdata.put("fontsize2", val);
+                    });
+                  },
+                ),
+                const Divider(height: 1, color: Colors.white10),
+                _buildPayingDayPicker(context, prefsdata),
+              ],
+            ),
+          ),
+          if (_notifSupported) ...[  
+            const SizedBox(height: 16),
+            _buildNotificationSettings(context, prefsdata),
+          ],
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () => _showResetConfirmationDialog(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.withOpacity(0.1),
+              foregroundColor: Colors.red,
+              side: BorderSide(color: Colors.red.withOpacity(0.5)),
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.delete_forever),
+            label: Text(
+              "إعادة ضبط التطبيق",
+              style: bodyStyle.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(10),
-            color: cardcolor,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 15,
-                right: 15,
-                bottom: 5,
-                top: 5,
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Text(
-                    "الإعدادات",
-                    style: darktextstyle,
-                    textAlign: TextAlign.right,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.07,
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        child: SfSlider(
-                          min: 10.0,
-                          max: 30.0,
-                          interval: 5,
-                          stepSize: 0.1,
-                          showTicks: true,
-                          showLabels: true,
-                          enableTooltip: true,
-                          thumbIcon: const Icon(
-                            Icons.percent_rounded,
-                            color: Colors.blue,
-                            size: 14.0,
-                          ),
-                          tooltipShape: const SfPaddleTooltipShape(),
-                          value: fontSize1,
-                          onChanged: (newValue) {
-                            setState(() {
-                              fontSize1 = newValue;
-                              prefsdata.put("fontsize1", newValue);
-                              ChangeNotifier();
-                            });
-                          },
-                        ),
-                      ),
-                      Text(
-                        ' حجم خط المعلومات',
-                        style: darktextstyle,
-                        textAlign: TextAlign.right,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.07,
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        child: SfSlider(
-                          min: 10.0,
-                          max: 30.0,
-                          interval: 5,
-                          showTicks: true,
-                          showLabels: true,
-                          enableTooltip: true,
-                          thumbIcon: const Icon(
-                            Icons.percent_rounded,
-                            color: Colors.blue,
-                            size: 14.0,
-                          ),
-                          tooltipShape: const SfPaddleTooltipShape(),
-                          value: fontSize2,
-                          onChanged: (newValue) {
-                            setState(() {
-                              fontSize2 = newValue;
-                              prefsdata.put("fontsize2", newValue);
-                              ChangeNotifier();
-                            });
-                          },
-                        ),
-                      ),
-                      Text(
-                        'حجم خط الإعدادات',
-                        style: darktextstyle,
-                        textAlign: TextAlign.right,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.07,
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        child: DropdownButton(
-                          focusColor: colorMap[selectedColorName],
-                          value: selectedColorName,
-                          alignment: AlignmentDirectional.centerEnd,
-                          isExpanded: true,
-                          items: colorMap.keys.map((colorName) {
-                            return DropdownMenuItem(
-                              //alignment: AlignmentDirectional.centerEnd,
-                              value: colorName,
-                              child: Text(colorName),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedColorName = newValue!;
-                              cardcolor = colorMap[newValue]!;
-                              prefsdata.put(
-                                "cardcolor",
-                                colorMap[newValue] as Color,
-                              );
-                              prefsdata.put("selectedColorName", newValue);
-                              ChangeNotifier();
-                            });
-                          },
-                        ),
-                      ),
-                      Text(
-                        'لون الخلفية',
-                        style: darktextstyle,
-                        textAlign: TextAlign.right,
-                      ),
-                     ],
-                   ),
-                   const SizedBox(height: 10),
-                   Row(
-                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                     crossAxisAlignment: CrossAxisAlignment.center,
-                     children: [
-                       SizedBox(
-                         height: MediaQuery.of(context).size.height * 0.07,
-                         width: MediaQuery.of(context).size.width * 0.4,
-                         child: DropdownButton<int>(
-                           dropdownColor: const Color.fromRGBO(30, 30, 30, 1.0),
-                           value: prefsdata.get("payingDay", defaultValue: 30),
-                           alignment: AlignmentDirectional.centerEnd,
-                           isExpanded: true,
-                           items:
-                               List.generate(31, (index) => index + 1).map((
-                                 int value,
-                               ) {
-                                 return DropdownMenuItem<int>(
-                                   value: value,
-                                   child: Text(
-                                     value.toString(),
-                                     style: darktextstyle.copyWith(
-                                       fontSize: fontSize1,
-                                     ),
-                                   ),
-                                 );
-                               }).toList(),
-                           onChanged: (int? newValue) {
-                             setState(() {
-                               prefsdata.put("payingDay", newValue);
-                             });
-                           },
-                         ),
-                       ),
-                       Text(
-                         'يوم صرف الراتب',
-                         style: darktextstyle,
-                         textAlign: TextAlign.right,
-                       ),
-                     ],
-                   ),
-                   const SizedBox(height: 10),
-                   Card(
-                    elevation: 5,
-                    //color: const Color.fromARGB(0, 183, 28, 28),
-                    //margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        _showResetConfirmationDialog(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                      ),
-                      icon: const Icon(Icons.delete_forever, size: 24),
-                      label: Text(
-                        "إعادة ضبط التطبيق",
-                        style: darktextstyle.copyWith(fontSize: fontSize1),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard(
+    BuildContext context, {
+    required Widget child,
+    String? title,
+    IconData? icon,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardcolor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (title != null) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.elMessiri(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Icon(icon, color: Colors.white70, size: 20),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                  /*Row(
-                                children: [
-                                  const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "خطر! حذف جميع البيانات",
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),*/
-                ],
+  Widget _buildSettingsAction(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.lato(
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
             ),
+            const SizedBox(width: 8),
+            Icon(icon, color: color, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFontSizeSlider(
+    BuildContext context, {
+    required String label,
+    required double value,
+    required Function(double) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.elMessiri(color: Colors.white70, fontSize: 14),
+          ),
+          SfSlider(
+            min: 10.0,
+            max: 30.0,
+            interval: 5,
+            showTicks: true,
+            showLabels: true,
+            enableTooltip: true,
+            value: value,
+            onChanged: (newValue) => onChanged(newValue as double),
           ),
         ],
       ),
     );
   }
 
-  void _showResetConfirmationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-          backgroundColor: const Color.fromRGBO(30, 30, 30, 1.0),
-          title: Text(
-            "تأكيد إعادة ضبط التطبيق",
-            style: darktextstyle.copyWith(
-              fontSize: fontSize1 * 1.2,
-              color: Colors.red.shade300,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.delete_forever, color: Colors.red, size: 60),
-              const SizedBox(height: 16),
-              Text(
-                "سيتم حذف جميع البيانات المخزنة في التطبيق بما في ذلك",
-                style: darktextstyle.copyWith(fontSize: fontSize1),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "بيانات الميزانية\nالمصاريف القادمة\nالمداخيل غير المتوقعة\nتاريخ الإدخار\nالإعدادات",
-                style: darktextstyle.copyWith(
-                  fontSize: fontSize1 - 2,
-                  color: Colors.grey[400],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "هذا الإجراء لا يمكن التراجع عنه",
-                style: darktextstyle.copyWith(
-                  fontSize: fontSize1,
-                  color: Colors.red.shade300,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
+  Widget _buildThemeSwitch(BuildContext context, Box prefsdata) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      title: Text(
+        "لون الخلفية",
+        textAlign: TextAlign.right,
+        style: GoogleFonts.elMessiri(color: Colors.white70),
+      ),
+      leading: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButton<String>(
+          value: selectedColorName,
+          underline: const SizedBox(),
+          dropdownColor: const Color(0xFF1A1A1A),
+          items: colorMap.keys.map((name) {
+            return DropdownMenuItem(
+              value: name,
+              child: Text(name, style: const TextStyle(color: Colors.white)),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                selectedColorName = val;
+                cardcolor = colorMap[val]!;
+                prefsdata.put("cardcolor", cardcolor);
+                prefsdata.put("selectedColorName", val);
+              });
+            }
+          },
+        ),
+      ),
+      trailing: Icon(Icons.palette_outlined, color: Colors.blue.shade300),
+    );
+  }
+
+  Widget _buildPayingDayPicker(BuildContext context, Box prefsdata) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      title: Text(
+        "يوم صرف الراتب",
+        textAlign: TextAlign.right,
+        style: GoogleFonts.elMessiri(color: Colors.white70),
+      ),
+      leading: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButton<int>(
+          value: prefsdata.get("payingDay", defaultValue: 30),
+          underline: const SizedBox(),
+          dropdownColor: const Color(0xFF1A1A1A),
+          items: List.generate(31, (index) => index + 1).map((val) {
+            return DropdownMenuItem(
+              value: val,
               child: Text(
-                "إلغاء",
-                style: darktextstyle.copyWith(color: Colors.grey[400]),
+                val.toString(),
+                style: const TextStyle(color: Colors.white),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                prefsdata.put("payingDay", val);
+              });
+            }
+          },
+        ),
+      ),
+      trailing: Icon(
+        Icons.calendar_month_outlined,
+        color: Colors.green.shade300,
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  NOTIFICATION SETTINGS CARD
+  // ══════════════════════════════════════════════════════════════
+  Widget _buildNotificationSettings(BuildContext context, Box prefsdata) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    void save(String key, dynamic value) {
+      prefsdata.put(key, value);
+      NotificationService.instance.rescheduleAll();
+    }
+
+    return _buildSectionCard(
+      context,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      title: "الإشعارات",
+      icon: Icons.notifications_active_outlined,
+      child: Column(
+        children: [
+          // ── Master toggle ─────────────────────────────────────
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _notifEnabled,
+            activeThumbColor: accentColor,
+            title: Text(
+              "تفعيل الإشعارات",
+              textAlign: TextAlign.right,
+              style: GoogleFonts.elMessiri(color: Colors.white, fontSize: fontSize1),
+            ),
+            secondary: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.notifications_rounded, color: accentColor, size: 20),
+            ),
+            onChanged: (val) {
+              setState(() => _notifEnabled = val);
+              save(kNotifEnabled, val);
+              if (!val) NotificationService.instance.cancelAll();
+            },
+          ),
+
+          if (_notifEnabled) ...[
+            const Divider(height: 20, color: Colors.white10),
+
+            // ── Daily reminder ───────────────────────────────────
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _notifDailyEnabled,
+              activeThumbColor: accentColor,
+              title: Text(
+                "تذكير يومي بالميزانية",
+                textAlign: TextAlign.right,
+                style: GoogleFonts.elMessiri(
+                    color: Colors.white70, fontSize: fontSize1 - 1),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.alarm_outlined, color: Colors.orange, size: 20),
+              ),
+              onChanged: (val) {
+                setState(() => _notifDailyEnabled = val);
+                save(kNotifDailyEnabled, val);
+                if (!val) NotificationService.instance.cancelDailyReminder();
               },
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade700,
-              ),
-              child: Text(
-                "نعم، أعد الضبط",
-                style: darktextstyle.copyWith(color: Colors.white),
-              ),
-              onPressed: () async {
-                await _resetAllData();
-                Navigator.of(context).pop();
 
-                // Show success message
+            if (_notifDailyEnabled) ...
+              [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 8),
+                  child: GestureDetector(
+                    onTap: () => _pickDailyTime(context, prefsdata),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.25)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(Icons.access_time_rounded,
+                              color: Colors.orange.shade300, size: 18),
+                          Text(
+                            'وقت التذكير: '
+                            '${_notifDailyHour.toString().padLeft(2, '0')}:'
+                            '${_notifDailyMinute.toString().padLeft(2, '0')}',
+                            style: GoogleFonts.elMessiri(
+                              color: Colors.orange.shade300,
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+            const Divider(height: 20, color: Colors.white10),
+
+            // ── Salary day ───────────────────────────────────────
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _notifSalaryEnabled,
+              activeThumbColor: accentColor,
+              title: Text(
+                "تنبيه يوم الراتب",
+                textAlign: TextAlign.right,
+                style: GoogleFonts.elMessiri(
+                    color: Colors.white70, fontSize: fontSize1 - 1),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.account_balance_wallet_outlined,
+                    color: Colors.green, size: 20),
+              ),
+              onChanged: (val) {
+                setState(() => _notifSalaryEnabled = val);
+                save(kNotifSalaryEnabled, val);
+                if (!val) NotificationService.instance.cancelSalaryNotification();
+              },
+            ),
+
+            const Divider(height: 20, color: Colors.white10),
+
+            // ── Low balance alert ────────────────────────────────
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _notifLowBudgetEnabled,
+              activeThumbColor: accentColor,
+              title: Text(
+                "تنبيه انخفاض الرصيد",
+                textAlign: TextAlign.right,
+                style: GoogleFonts.elMessiri(
+                    color: Colors.white70, fontSize: fontSize1 - 1),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.warning_amber_rounded,
+                    color: Colors.redAccent, size: 20),
+              ),
+              onChanged: (val) {
+                setState(() => _notifLowBudgetEnabled = val);
+                save(kNotifLowBudgetEnabled, val);
+              },
+            ),
+
+            if (_notifLowBudgetEnabled) ...
+              [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'عتبة التنبيه: '
+                        '${_notifLowBudgetThreshold.toStringAsFixed(0)} وحدة',
+                        style: GoogleFonts.elMessiri(
+                            color: Colors.redAccent, fontSize: fontSize1 - 1),
+                      ),
+                      Slider(
+                        value: _notifLowBudgetThreshold,
+                        min: 100,
+                        max: 5000,
+                        divisions: 49,
+                        activeColor: Colors.redAccent,
+                        inactiveColor: Colors.red.withValues(alpha: 0.2),
+                        label: _notifLowBudgetThreshold.toStringAsFixed(0),
+                        onChanged: (val) {
+                          setState(() => _notifLowBudgetThreshold = val);
+                        },
+                        onChangeEnd: (val) {
+                          save(kNotifLowBudgetThreshold, val);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+            const SizedBox(height: 4),
+
+            // ── Test button ──────────────────────────────────────
+            _buildSettingsAction(
+              context,
+              label: "إرسال إشعار تجريبي",
+              icon: Icons.send_outlined,
+              color: accentColor,
+              onTap: () async {
+                await NotificationService.instance.showInstant(
+                  id: 99,
+                  title: 'اختبار الإشعارات ✅',
+                  body: 'الإشعارات تعمل بشكل صحيح في تطبيق Budget It!',
+                );
+                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                      "تمت إعادة ضبط التطبيق بنجاح",
-                      style: darktextstyle.copyWith(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                    backgroundColor: Colors.green.shade800,
-                    duration: const Duration(seconds: 3),
+                    content: Text('تم إرسال إشعار تجريبي',
+                        style: GoogleFonts.elMessiri()),
+                    backgroundColor: accentColor,
                   ),
                 );
               },
             ),
           ],
-        );
-      },
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickDailyTime(BuildContext context, Box prefsdata) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+          hour: _notifDailyHour, minute: _notifDailyMinute),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: Theme.of(ctx).colorScheme.copyWith(
+            primary: Theme.of(ctx).colorScheme.primary,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        _notifDailyHour   = picked.hour;
+        _notifDailyMinute = picked.minute;
+      });
+      prefsdata.put(kNotifDailyHour,   picked.hour);
+      prefsdata.put(kNotifDailyMinute, picked.minute);
+      await NotificationService.instance.scheduleDailyReminder();
+    }
+  }
+
+  void _showResetConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "تأكيد إعادة ضبط التطبيق",
+          style: GoogleFonts.elMessiri(
+            color: Colors.red.shade300,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "سيتم حذف جميع البيانات المخزنة بشكل نهائي.",
+              style: GoogleFonts.elMessiri(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "إلغاء",
+              style: GoogleFonts.elMessiri(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final nav = Navigator.of(context);
+              await _resetAllData();
+              nav.pop();
+              messenger.showSnackBar(
+                const SnackBar(content: Text("تمت إعادة ضبط التطبيق بنجاح")),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(
+              "نعم، أعد الضبط",
+              style: GoogleFonts.elMessiri(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

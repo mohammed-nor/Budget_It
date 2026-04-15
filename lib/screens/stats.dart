@@ -1,12 +1,14 @@
 import 'dart:math';
-
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-//import 'package:google_fonts/google_fonts.dart';
-import 'package:budget_it/services/styles%20and%20constants.dart';
-//import 'package:shared_preferences/shared_preferences.dart';
-import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart' as gauge;
+import 'package:syncfusion_flutter_charts/charts.dart' as chart;
 import 'package:budget_it/models/budget_history.dart';
+import 'package:budget_it/models/unexpected_earning.dart';
+import 'package:budget_it/models/upcoming_spending.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -15,885 +17,1273 @@ class Statspage extends StatefulWidget {
   State<Statspage> createState() => _StatspageState();
 }
 
+class ChartData {
+  ChartData(this.x, this.y, [this.color]);
+  final String x;
+  final double y;
+  final Color? color;
+}
+
 class _StatspageState extends State<Statspage> {
   final prefsdata = Hive.box('data');
   Box<BudgetHistory>? historyBox;
   List<BudgetHistory> budgetHistory = [];
 
-  // Declare variables for monthly incomes
-  num mntincstb1 = 0;
-  num mntincnstb1 = 0;
-  num mntincstb2 = 0;
-  num mntincnstb2 = 0;
-  num mntincstb3 = 0;
-  num mntincnstb3 = 0;
-  num mntincstb4 = 0;
-  num mntincnstb4 = 0;
-  num mntincstb5 = 0;
-  num mntincnstb5 = 0;
+  // Dynamic list for monthly stats
+  List<Map<String, dynamic>> monthlyStats = [];
 
   @override
   void initState() {
     super.initState();
-    // Fix: Use Future.delayed to ensure proper initialization
     Future.delayed(Duration.zero, () {
-      _initHistoryBox();
+      _initBoxes();
     });
   }
 
-  Future<void> _initHistoryBox() async {
-    // Open the box and make sure to await it
+  Future<void> _initBoxes() async {
     historyBox = await Hive.openBox<BudgetHistory>('budget_history');
-
-    // Check if we actually have data in the box
+    if (!Hive.isBoxOpen('unexpected_earnings')) {
+      await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
+    }
+    if (!Hive.isBoxOpen('upcoming_spending')) {
+      await Hive.openBox<UpcomingSpending>('upcoming_spending');
+    }
     if (historyBox != null) {
-      print("History box opened with ${historyBox!.length} entries");
       _loadBudgetHistory();
-    } else {
-      print("Failed to open history box");
     }
   }
 
   void _loadBudgetHistory() {
     if (historyBox != null && historyBox!.isNotEmpty) {
       setState(() {
-        // Get all history entries
         budgetHistory = historyBox!.values.toList();
-        // Sort by date (newest first)
         budgetHistory.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-        print("Loaded ${budgetHistory.length} history entries");
-        for (var entry in budgetHistory) {
-          print("Entry date: ${entry.timestamp}, savings: ${entry.nownetcredit}");
-        }
-
-        // Populate income fields based on history
         _populateIncomeFields();
       });
     } else {
-      print("No history data available");
-      // If no history, still try to populate with defaults
       _populateIncomeFields();
     }
   }
 
   void _populateIncomeFields() {
-    // Get current values as base
-    num currentMntinc = prefsdata.get("mntinc", defaultValue: 4300);
-    num currentMntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 2000);
+    final num currentMntinc = prefsdata.get("mntinc", defaultValue: 4300);
+    final int payingDay = prefsdata.get("payingDay", defaultValue: 30);
 
-    // Create a map of months to make it easier to find data for each month
-    Map<String, BudgetHistory> monthlyData = {};
-    for (var entry in budgetHistory) {
-      String monthKey = "${entry.timestamp.year}-${entry.timestamp.month}";
-      if (!monthlyData.containsKey(monthKey)) {
-        monthlyData[monthKey] = entry;
-      }
+    final Box<UnexpectedEarning> earningsBox = Hive.box<UnexpectedEarning>(
+      'unexpected_earnings',
+    );
+    final Box<UpcomingSpending> spendingBox = Hive.box<UpcomingSpending>(
+      'upcoming_spending',
+    );
+    final List<UnexpectedEarning> allEarnings = earningsBox.values.toList();
+    final List<UpcomingSpending> allSpending = spendingBox.values.toList();
+
+    DateTime now = DateTime.now();
+    DateTime oldestDate = now;
+
+    if (allEarnings.isNotEmpty || allSpending.isNotEmpty) {
+      final List<DateTime> allDates = [
+        ...allEarnings.map((e) => e.date),
+        ...allSpending.map((s) => s.date),
+      ];
+      oldestDate = allDates.reduce((a, b) => a.isBefore(b) ? a : b);
     }
 
-    // Get distinct months, sorted newest to oldest
-    List<String> monthKeys = monthlyData.keys.toList()..sort((a, b) => b.compareTo(a));
+    // Calculate number of months back to oldest entry
+    int monthDifference =
+        ((now.year - oldestDate.year) * 12) + now.month - oldestDate.month;
+    int monthsToShow = monthDifference + 1;
 
-    // Calculate variations for the last 5 months
-    List<Map<String, num>> lastFiveMonths = [];
+    List<Map<String, dynamic>> stats = [];
 
-    // First, build whatever real data we have
-    for (int i = 0; i < monthKeys.length && i < 5; i++) {
-      BudgetHistory monthData = monthlyData[monthKeys[i]]!;
+    for (int i = 0; i < monthsToShow; i++) {
+      DateTime periodEndDate = _getPayingDateForMonth(now, -i, payingDay);
+      DateTime periodStartDate = _getPayingDateForMonth(
+        now,
+        -(i + 1),
+        payingDay,
+      );
 
-      // Generate a reasonably stable income variation based on the monthData and nownetcredit
-      // We use the nownetcredit as a hint about that month's financial situation
-      double stableVariation = 1.0 + (monthData.nownetcredit % 10) / 100; // Small variation
-      double unstableVariation = 1.0 + (monthData.nownetcredit % 20 - 10) / 100; // Larger variation
+      num unstableSum = 0;
+      for (var earning in allEarnings) {
+        if ((earning.date.isAfter(periodStartDate) ||
+                earning.date.isAtSameMomentAs(periodStartDate)) &&
+            earning.date.isBefore(periodEndDate)) {
+          unstableSum += earning.amount;
+        }
+      }
 
-      lastFiveMonths.add({'stableIncome': (currentMntinc * stableVariation).round(), 'unstableIncome': (currentMntnstblinc * unstableVariation).round()});
+      num spendingSum = 0;
+      for (var spending in allSpending) {
+        if ((spending.date.isAfter(periodStartDate) ||
+                spending.date.isAtSameMomentAs(periodStartDate)) &&
+            spending.date.isBefore(periodEndDate)) {
+          spendingSum += spending.amount;
+        }
+      }
+
+      // Use year-month unique keys for persistence
+      String keySuffix = "${periodEndDate.year}_${periodEndDate.month}";
+      num stableIncome = prefsdata.get(
+        "stb_override_$keySuffix",
+        defaultValue: currentMntinc,
+      );
+      num unstableIncome = prefsdata.get(
+        "nstb_override_$keySuffix",
+        defaultValue: unstableSum,
+      );
+      num unstableSpending = prefsdata.get(
+        "exp_override_$keySuffix",
+        defaultValue: spendingSum,
+      );
+
+      stats.add({
+        'monthName': getMonthName(i),
+        'stableIncome': stableIncome,
+        'unstableIncome': unstableIncome,
+        'unstableSpending': unstableSpending,
+        'year': periodEndDate.year,
+        'month': periodEndDate.month,
+      });
     }
 
-    // If we don't have 5 months of data, generate synthetic data based on the last real month
-    if (lastFiveMonths.isEmpty) {
-      // No data at all, use current values
-      for (int i = 0; i < 5; i++) {
-        lastFiveMonths.add({'stableIncome': currentMntinc, 'unstableIncome': currentMntnstblinc});
-      }
-    } else {
-      // Fill in missing months with variations of the oldest month we have
-      Map<String, num> oldestMonth = lastFiveMonths.last;
-
-      while (lastFiveMonths.length < 5) {
-        // Create slight variations from oldest data for synthetic history
-        double stableVariation = 0.95 + (Random().nextDouble() * 0.1); // 0.95-1.05
-        double unstableVariation = 0.9 + (Random().nextDouble() * 0.2); // 0.9-1.1
-
-        lastFiveMonths.add({'stableIncome': (oldestMonth['stableIncome']! * stableVariation).round(), 'unstableIncome': (oldestMonth['unstableIncome']! * unstableVariation).round()});
-      }
-    }
-
-    // Now update the UI values - ensure consistent key usage
     setState(() {
-      // Store values in Hive
-      prefsdata.put("mntincstb1", lastFiveMonths[0]['stableIncome']!);
-      prefsdata.put("mntincnstb1", lastFiveMonths[0]['unstableIncome']!);
-
-      prefsdata.put("mntincstb2", lastFiveMonths[1]['stableIncome']!);
-      prefsdata.put("mntincnstb2", lastFiveMonths[1]['unstableIncome']!);
-
-      prefsdata.put("mntincstb3", lastFiveMonths[2]['stableIncome']!);
-      prefsdata.put("mntincnstb3", lastFiveMonths[2]['unstableIncome']!);
-
-      prefsdata.put("mntincstb4", lastFiveMonths[3]['stableIncome']!);
-      prefsdata.put("mntincnstb4", lastFiveMonths[3]['unstableIncome']!);
-
-      prefsdata.put("mntincstb5", lastFiveMonths[4]['stableIncome']!);
-      prefsdata.put("mntincnstb5", lastFiveMonths[4]['unstableIncome']!);
-
-      // Now update local variables with these values
-      mntincstb1 = prefsdata.get("mntincstb1", defaultValue: 0);
-      mntincnstb1 = prefsdata.get("mntincnstb1", defaultValue: 0);
-      mntincstb2 = prefsdata.get("mntincstb2", defaultValue: 0);
-      mntincnstb2 = prefsdata.get("mntincnstb2", defaultValue: 0);
-      mntincstb3 = prefsdata.get("mntincstb3", defaultValue: 0);
-      mntincnstb3 = prefsdata.get("mntincnstb3", defaultValue: 0);
-      mntincstb4 = prefsdata.get("mntincstb4", defaultValue: 0);
-      mntincnstb4 = prefsdata.get("mntincnstb4", defaultValue: 0);
-      mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
-      mntincnstb5 = prefsdata.get("mntincnstb5", defaultValue: 0);
+      monthlyStats = stats;
     });
   }
 
-  String getMonthName(int index) {
-    // Arabic month names
-    final List<String> arabicMonthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'غشت', 'شتنبر', 'أكتوبر', 'نونبر', 'دجنبر'];
+  void _restoreFromHive() {
+    // Clear all overrides in prefsdata
+    final keys = prefsdata.keys
+        .where(
+          (k) =>
+              k.toString().startsWith("stb_override_") ||
+              k.toString().startsWith("nstb_override_") ||
+              k.toString().startsWith("exp_override_"),
+        )
+        .toList();
 
-    if (budgetHistory.isEmpty || index >= budgetHistory.length) {
-      // Calculate a month name based on current date
-      final now = DateTime.now();
-      final targetMonth = DateTime(now.year, now.month - index);
-      // Get month (1-12) and convert to 0-11 for array index
-      int monthIndex = targetMonth.month - 1;
-      return arabicMonthNames[monthIndex];
+    for (var key in keys) {
+      prefsdata.delete(key);
     }
 
-    // Use the actual month name from history
-    final monthData = budgetHistory[index];
-    int monthIndex = monthData.timestamp.month - 1;
-    return arabicMonthNames[monthIndex];
+    _populateIncomeFields();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "تمت استعادة المزامنة مع بيانات المصاريف والمداخيل",
+          style: GoogleFonts.elMessiri(color: Colors.white),
+          textAlign: TextAlign.right,
+        ),
+        backgroundColor: Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
-  void _generateTestData() {
-    if (historyBox != null) {
-      // Clear existing data for testing
-      historyBox!.clear();
+  DateTime _getPayingDateForMonth(
+    DateTime reference,
+    int monthOffset,
+    int payingDay,
+  ) {
+    int year = reference.year;
+    int month = reference.month + monthOffset;
 
-      // Create entries for the past 6 months
-      final now = DateTime.now();
-      for (int i = 0; i < 6; i++) {
-        final date = DateTime(now.year, now.month - i, 1);
-        final entry = BudgetHistory(
-          timestamp: date,
-          mntsaving: 1000 + (i * 100), // Varies by month
-          freemnt: 2,
-          nownetcredit: 3000 + (i * 500), // Increases each month
-        );
-        historyBox!.add(entry);
-      }
-
-      // Reload data
-      _loadBudgetHistory();
-
-      // Force UI update to show changes
-      setState(() {
-        // Re-read all values from storage to refresh UI
-        mntincstb1 = prefsdata.get("mntincstb1", defaultValue: 0);
-        mntincnstb1 = prefsdata.get("mntincnstb1", defaultValue: 0);
-        mntincstb2 = prefsdata.get("mntincstb2", defaultValue: 0);
-        mntincnstb2 = prefsdata.get("mntincnstb2", defaultValue: 0);
-        mntincstb3 = prefsdata.get("mntincstb3", defaultValue: 0);
-        mntincnstb3 = prefsdata.get("mntincnstb3", defaultValue: 0);
-        mntincstb4 = prefsdata.get("mntincstb4", defaultValue: 0);
-        mntincnstb4 = prefsdata.get("mntincnstb4", defaultValue: 0);
-        mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
-        mntincnstb5 = prefsdata.get("mntincnstb5", defaultValue: 0);
-      });
+    while (month <= 0) {
+      month += 12;
+      year -= 1;
     }
+    while (month > 12) {
+      month -= 12;
+      year += 1;
+    }
+
+    int lastDay = DateTime(year, month + 1, 0).day;
+    int actualDay = payingDay > lastDay ? lastDay : payingDay;
+
+    return DateTime(year, month, actualDay);
+  }
+
+  String getMonthName(int index) {
+    final List<String> arabicMonthNames = [
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'غشت',
+      'شتنبر',
+      'أكتوبر',
+      'نونبر',
+      'دجنبر',
+    ];
+
+    final now = DateTime.now();
+    // Use day 1 to avoid overflow (e.g., Feb 30th shifting to March)
+    final targetDate = DateTime(now.year, now.month - index, 1);
+    int monthIndex = targetDate.month - 1;
+
+    return arabicMonthNames[monthIndex];
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    //print(box.read('quote'));
-    double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
-    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
-    num mntincstb1 = prefsdata.get("mntincstb1", defaultValue: 5100);
-    num mntincnstb1 = prefsdata.get("mntincnstb1", defaultValue: 2000);
-    num mntincstb2 = prefsdata.get("mntincstb2", defaultValue: 5100);
-    num mntincnstb2 = prefsdata.get("mntincnstb2", defaultValue: 2000);
-    num mntincstb3 = prefsdata.get("mntincstb3", defaultValue: 5100);
-    num mntincnstb3 = prefsdata.get("mntincnstb3", defaultValue: 2000);
-    num mntincstb4 = prefsdata.get("mntincstb4", defaultValue: 5100);
-    num mntincnstb4 = prefsdata.get("mntincnstb4", defaultValue: 2000);
-    num mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 5100);
-    num mntincnstb5 = prefsdata.get("mntincnstb5", defaultValue: 2000);
+    if (monthlyStats.isEmpty) return const SizedBox();
 
-    //num totsaving = prefsdata.get("totsaving", defaultValue: 50000);
-    //num nownetcredit = prefsdata.get("nownetcredit", defaultValue: 2000);
-    //num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
-    num freemnt = prefsdata.get("freemnt", defaultValue: 5);
-    num mntexp = prefsdata.get("mntexp", defaultValue: 2000);
-    num annexp = prefsdata.get("annexp", defaultValue: 10000);
-    //num mntperexp = prefsdata.get("mntperexp", defaultValue: 10);
-    num mntinc = prefsdata.get("mntinc", defaultValue: 5300);
-    num mntnstblinc = prefsdata.get("mntnstblinc", defaultValue: 3000);
-    num mntperinc = prefsdata.get("mntperinc", defaultValue: 5);
+    num avgStable =
+        monthlyStats
+            .map((e) => e['stableIncome'] as num)
+            .reduce((a, b) => a + b) /
+        monthlyStats.length;
+    num avgUnstable =
+        monthlyStats
+            .map((e) => e['unstableIncome'] as num)
+            .reduce((a, b) => a + b) /
+        monthlyStats.length;
+    num avgSpending =
+        monthlyStats
+            .map((e) => e['unstableSpending'] as num)
+            .reduce((a, b) => a + b) /
+        monthlyStats.length;
+    num totalAvg = avgStable + avgUnstable;
+    num netAvg = totalAvg - avgSpending;
 
-    return Scaffold(
-      backgroundColor: prefsdata.get("cardcolor", defaultValue: const Color.fromRGBO(20, 20, 20, 1.0)) == Color.fromRGBO(50, 50, 50, 1) ? Color.fromRGBO(227, 227, 227, 1) : Colors.black,
-      body: ListView(
-        padding: const EdgeInsets.all(7),
-        children: <Widget>[
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(20),
-            color: cardcolor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text("مداخيل الأشهر الخمسة الماضية", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb1.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb1", 0);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb1".toString(), v);
-                              mntincnstb1 = prefsdata.get(mntincnstb1.toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb1.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb1", 0);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb1", v);
-                              mntincstb1 = prefsdata.get("mntincstb1".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(0), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb2.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb2", 0);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb2".toString(), v);
-                              mntincnstb2 = prefsdata.get("mntincnstb2".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb2.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb2", 0);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb2".toString(), v);
-                              mntincstb2 = prefsdata.get("mntincstb2".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(1), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
+    final dispersionIncome =
+        (monthlyStats
+                .map(
+                  (e) =>
+                      (e['stableIncome'] as num) + (e['unstableIncome'] as num),
+                )
+                .reduce(max) -
+            monthlyStats
+                .map(
+                  (e) =>
+                      (e['stableIncome'] as num) + (e['unstableIncome'] as num),
+                )
+                .reduce(min)) /
+        (totalAvg > 0 ? totalAvg : 1);
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb3.toString(),
-                        decoration: InputDecoration(label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb3", 0);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb3".toString(), v);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb3.toString(),
-                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb3", 0);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb3".toString(), v);
-                              mntincnstb3 = prefsdata.get("mntincnstb3".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(2), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
+    final dispersionNet =
+        (monthlyStats
+                .map(
+                  (e) =>
+                      (e['stableIncome'] as num) +
+                      (e['unstableIncome'] as num) -
+                      (e['unstableSpending'] as num),
+                )
+                .reduce(max) -
+            monthlyStats
+                .map(
+                  (e) =>
+                      (e['stableIncome'] as num) +
+                      (e['unstableIncome'] as num) -
+                      (e['unstableSpending'] as num),
+                )
+                .reduce(min)) /
+        (netAvg.abs() > 1 ? netAvg.abs() : 1);
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb4.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb4", 0);
-                              mntincnstb4 = prefsdata.get("mntincnstb4".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincnstb4".toString(), v);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb4.toString(),
-                        decoration: InputDecoration(
-                          label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb4", 0);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb4".toString(), v);
-                              mntincstb4 = prefsdata.get("mntincstb4".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(3), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincnstb5.toString(),
-                        decoration: InputDecoration(
-                          label: Text("غير قارة", style: darktextstyle.copyWith(fontSize: fontSize2)),
-                          //prefixIcon: Icon(Icons.currency_bitcoin_rounded),
-                        ),
-                        onChanged: (newval) {
-                          //box.write('quote', 2);
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincnstb5", 0);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
-                              //nownetcredit = 0;
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb5".toString(), v);
-                              mntincstb5 = prefsdata.get("mntincstb5".toString());
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.09,
-                      width: size.width * 0.20,
-                      child: TextFormField(
-                        initialValue: mntincstb5.toString(),
-                        decoration: InputDecoration(label: Text("قارة", style: darktextstyle.copyWith(fontSize: fontSize2))),
-                        onChanged: (newval) {
-                          final v = double.tryParse(newval);
-                          if (v == null) {
-                            setState(() {
-                              prefsdata.put("mntincstb5", 0);
-                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: 0);
-                            });
-                          } else {
-                            setState(() {
-                              prefsdata.put("mntincstb5", v);
-                              mntincstb5 = prefsdata.get("mntincstb5", defaultValue: v);
-                            });
-                          }
-                        },
-                        keyboardType: TextInputType.number,
-                        maxLength: 10,
-                      ),
-                    ),
-                    Text(getMonthName(4), style: darktextstyle.copyWith(fontSize: fontSize2)),
-                  ],
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+    final List<ChartData> lineChartData = monthlyStats.reversed
+        .take(max(5, monthlyStats.length))
+        .toList()
+        .map(
+          (e) => ChartData(
+            e['monthName'],
+            (e['stableIncome'] as num).toDouble() +
+                (e['unstableIncome'] as num).toDouble(),
           ),
+        )
+        .toList();
 
-          Card(
-            elevation: 5,
-            //margin: const EdgeInsets.all(20),
-            color: cardcolor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+    final pieData = [
+      ChartData('قارة', avgStable.toDouble(), const Color(0xFF6BFF5F)),
+      ChartData('غير قارة', avgUnstable.toDouble(), const Color(0xFFFD5F5F)),
+    ];
+
+    return ValueListenableBuilder(
+      valueListenable: prefsdata.listenable(
+        keys: ['cardcolor', 'fontsize1', 'fontsize2'],
+      ),
+      builder: (context, box, child) {
+        double fontSize1 = box.get("fontsize1", defaultValue: 15.toDouble());
+        double fontSize2 = box.get("fontsize2", defaultValue: 15.toDouble());
+        final dynamic currentCardColor = box.get(
+          "cardcolor",
+          defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+        );
+        final Color effectiveCardColor = currentCardColor is Color
+            ? currentCardColor
+            : const Color.fromRGBO(20, 20, 20, 1.0);
+        final bool isCurrentDark = effectiveCardColor.computeLuminance() < 0.5;
+        final Color currentTextColor = isCurrentDark
+            ? Colors.white
+            : Colors.black87;
+        final Color currentSecondaryTextColor = isCurrentDark
+            ? Colors.white70
+            : Colors.black54;
+
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              _buildSummaryRow(
+                totalAvg,
+                dispersionIncome,
+                effectiveCardColor,
+                isCurrentDark,
+                currentTextColor,
+                currentSecondaryTextColor,
+              ),
+              const SizedBox(height: 6),
+
+              // Income Section
+              _buildSectionHeader(
+                "تحليلات الدخل",
+                Icons.trending_up,
+                Colors.green,
+                currentTextColor,
+              ),
+              _buildMainTrendChart(
+                lineChartData,
+                effectiveCardColor,
+                isCurrentDark,
+                currentTextColor,
+                currentSecondaryTextColor,
+              ),
+              IntrinsicHeight(
+                child: Column(
+                  //crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildPieChart(
+                            pieData,
+                            effectiveCardColor,
+                            isCurrentDark,
+                            currentTextColor,
+                            currentSecondaryTextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildTopExpensesPie(
+                            effectiveCardColor,
+                            isCurrentDark,
+                            currentTextColor,
+                            currentSecondaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    _buildStabilityGauges(
+                      dispersionIncome,
+                      dispersionNet,
+                      effectiveCardColor,
+                      isCurrentDark,
+                      currentTextColor,
+                      currentSecondaryTextColor,
+                    ),
+                  ],
+                ),
+              ),
+
+              _buildExpensesTrendChart(
+                monthlyStats,
+                effectiveCardColor,
+                isCurrentDark,
+                currentTextColor,
+                currentSecondaryTextColor,
+              ),
+
+              const SizedBox(height: 6),
+              _buildSectionHeader(
+                "ملخص إحصائي",
+                Icons.analytics_rounded,
+                Colors.blueAccent,
+                currentTextColor,
+              ),
+              _buildStatisticalDescriptors(
+                avgStable,
+                avgUnstable,
+                avgSpending,
+                totalAvg,
+                effectiveCardColor,
+                isCurrentDark,
+                currentTextColor,
+                currentSecondaryTextColor,
+              ),
+              const SizedBox(height: 6),
+              _buildHistoryInputsCard(
+                effectiveCardColor,
+                isCurrentDark,
+                currentTextColor,
+                currentSecondaryTextColor,
+                size,
+                fontSize2,
+              ),
+              const SizedBox(height: 6),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSummaryRow(
+    num totalAvg,
+    num dispersion,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildProjectCard(
+            title: "المعدل الشهري",
+            value: "${totalAvg.toStringAsFixed(0)} درهم",
+            icon: Icons.account_balance_wallet_rounded,
+            accentColor: const Color(0xFF00C9FF),
+            cardColor: cardColor,
+            isDark: isDark,
+            textColor: textColor,
+            secondaryTextColor: secondaryTextColor,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: _buildProjectCard(
+            title: "حالة الاستقرار",
+            value: dispersion < 0.2
+                ? "ممتاز"
+                : dispersion < 0.5
+                ? "جيد"
+                : "متقلب",
+            icon: Icons.trending_up_rounded,
+            accentColor: const Color(0xFF6BFF5F),
+            cardColor: cardColor,
+            isDark: isDark,
+            textColor: textColor,
+            secondaryTextColor: secondaryTextColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProjectCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color accentColor,
+    required Color cardColor,
+    required bool isDark,
+    required Color textColor,
+    required Color secondaryTextColor,
+  }) {
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: accentColor, size: 22),
+            ),
+            const SizedBox(width: 6),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(((mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5).roundToDouble().toString(), style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(" + ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(((mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5) / 5).roundToDouble().toString(), style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(" = ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      ((mntincstb1 + mntincstb2 + mntincstb3 + mntincstb4 + mntincstb5 + mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5).roundToDouble().toString(),
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("معدل الدخل الشهري", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      "${[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) - (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("أقصى زيادة عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${-[mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min) + (mntincnstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text(
-                      "${-[mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + (mntincstb1 + mntincnstb2 + mntincnstb3 + mntincnstb4 + mntincnstb5) / 5}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("أقصى إنخفاص عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("${(0.5 * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12))) / 30.5}", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("مجموع التشتت عن المتوسط", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "${([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) - [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) - [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) / ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) + [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) + [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min))}",
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    Text("  ", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                    Text("معدل التشتت", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Padding(
-                  padding: const EdgeInsets.all(19.0),
-                  child: SfLinearGauge(
-                    showTicks: false,
-                    axisTrackStyle: const LinearAxisTrackStyle(
-                      thickness: 20,
-                      edgeStyle: LinearEdgeStyle.bothCurve,
-                      gradient: LinearGradient(
-                        colors: [Color.fromARGB(255, 157, 0, 185), Color.fromARGB(255, 0, 136, 247)],
-                        begin: Alignment.centerRight,
-                        end: Alignment.centerLeft,
-                        stops: [0.01, 0.05],
-                        tileMode: TileMode.decal,
-                      ),
-                    ),
-                    animateRange: true,
-                    animationDuration: 3000,
-                    markerPointers: [
-                      LinearShapePointer(
-                        value:
-                            ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) -
-                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(min) -
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) /
-                            ([mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincstb5].reduce(max) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(max) +
-                                [mntincstb1, mntincstb2, mntincstb3, mntincstb4, mntincnstb5].reduce(min) +
-                                [mntincnstb1, mntincnstb2, mntincnstb3, mntincnstb4, mntincnstb5].reduce(min)) *
-                            100,
-                        height: 15,
-                        width: 15,
-                      ),
-                    ],
-                    ranges: const [LinearGaugeRange(startValue: 0, endValue: 100)],
-                    labelFormatterCallback: (label) {
-                      if (label == '0') {
-                        return 'ممتاز';
-                      }
-                      if (label == '10') {
-                        return '';
-                      }
-                      if (label == '20') {
-                        return '';
-                      }
-                      if (label == '30') {
-                        return '';
-                      }
-                      if (label == '40') {
-                        return '';
-                      }
-                      if (label == '60') {
-                        return '';
-                      }
-                      if (label == '70') {
-                        return '';
-                      }
-                      if (label == '80') {
-                        return '';
-                      }
-                      if (label == '90') {
-                        return '';
-                      }
-
-                      if (label == '50') {
-                        return 'جيد';
-                      }
-
-                      if (label == '100') {
-                        return 'عشوائي';
-                      }
-
-                      return label;
-                    },
+                Text(
+                  title,
+                  style: GoogleFonts.elMessiri(
+                    color: secondaryTextColor,
+                    fontSize: fontSize1,
                   ),
                 ),
-                const SizedBox(height: 20),
-                /* RichText(
-                        text: TextSpan(style: darkteststyle, children: [
-                      TextSpan(text: "مجموع"),
-                      TextSpan(text: "  "),
-                      TextSpan(
-                          text:
-                              "${(0.5 * ((mntinc! + mntnstblinc! * (1 - 0.01 * mntperinc!)) * (1 - freemnt! / 12) - (mntexp! + annexp! / 12))) / 30.5}"),
-                    ])) */
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: GoogleFonts.elMessiri(
+                    color: textColor,
+                    fontSize: fontSize1,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainTrendChart(
+    List<ChartData> data,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        height: 250,
+        padding: const EdgeInsets.all(6),
+        child: chart.SfCartesianChart(
+          key: const ValueKey('trendChartStats'),
+          plotAreaBorderWidth: 0,
+          margin: EdgeInsets.zero,
+          title: chart.ChartTitle(
+            text: 'منحنى الدخل الإجمالي',
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1,
+              fontWeight: FontWeight.bold,
+            ),
+            alignment: chart.ChartAlignment.far,
           ),
-          /*Card(
-            elevation: 5,
-            color: cardcolor,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Debug Values:", style: darktextstyle.copyWith(fontSize: fontSize1)),
-                  const SizedBox(height: 10),
-                  Text("History Count: ${budgetHistory.length}", style: darktextstyle),
-                  Text("mntincstb1 in Hive: ${prefsdata.get("mntincstb1", defaultValue: 0)}", style: darktextstyle),
-                  Text("mntincnstb1 in Hive: ${prefsdata.get("mntincnstb1", defaultValue: 0)}", style: darktextstyle),
-                  Text("mntincstb1 in UI: $mntincstb1", style: darktextstyle),
-                  Text("mntincnstb1 in UI: $mntincnstb1", style: darktextstyle),
+          primaryXAxis: chart.CategoryAxis(
+            majorGridLines: const chart.MajorGridLines(width: 0),
+            labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
+          ),
+          primaryYAxis: chart.NumericAxis(
+            majorGridLines: chart.MajorGridLines(
+              width: 1,
+              color: isDark ? Colors.white10 : Colors.black12,
+              dashArray: const [5, 5],
+            ),
+            axisLine: const chart.AxisLine(width: 0),
+            labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
+          ),
+          series: <chart.CartesianSeries<ChartData, String>>[
+            chart.SplineAreaSeries<ChartData, String>(
+              dataSource: data,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF00C9FF).withValues(alpha: 0.5),
+                  const Color(0xFF00C9FF).withValues(alpha: 0.0),
                 ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
+              borderColor: const Color(0xFF00C9FF),
+              borderWidth: 3,
+              markerSettings: const chart.MarkerSettings(
+                isVisible: true,
+                color: Color(0xFF00C9FF),
+              ),
+              animationDuration: 0,
+            ),
+          ],
+          tooltipBehavior: chart.TooltipBehavior(
+            enable: true,
+            textStyle: GoogleFonts.elMessiri(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPieChart(
+    List<ChartData> data,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        height: 250,
+        child: chart.SfCircularChart(
+          key: const ValueKey('incomePipeStats'),
+          title: chart.ChartTitle(
+            text: 'توزيع الدخل',
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1 - 4,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          ElevatedButton(onPressed: _generateTestData, child: Text("توليد بيانات اختبار")),*/
+          legend: chart.Legend(
+            isVisible: true,
+            position: chart.LegendPosition.bottom,
+            textStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: 8,
+            ),
+          ),
+          series: <chart.CircularSeries<ChartData, String>>[
+            chart.DoughnutSeries<ChartData, String>(
+              dataSource: data,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              pointColorMapper: (ChartData data, _) => data.color,
+              dataLabelSettings: chart.DataLabelSettings(
+                isVisible: true,
+                textStyle: GoogleFonts.elMessiri(
+                  fontSize: 10,
+                  color: textColor,
+                ),
+              ),
+              innerRadius: '60%',
+              animationDuration: 0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStabilityGauges(
+    num dispersionInc,
+    num dispersionNet,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSingleGauge(
+            title: "استقرار الدخل",
+            dispersion: dispersionInc,
+            cardColor: cardColor,
+            textColor: textColor,
+            secondaryTextColor: secondaryTextColor,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: _buildSingleGauge(
+            title: "استقرار الدخل الصافي",
+            dispersion: dispersionNet,
+            cardColor: cardColor,
+            textColor: textColor,
+            secondaryTextColor: secondaryTextColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSingleGauge({
+    required String title,
+    required num dispersion,
+    required Color cardColor,
+    required Color textColor,
+    required Color secondaryTextColor,
+  }) {
+    double gaugeValue = (dispersion * 100).clamp(0, 100).toDouble();
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        height: 180,
+        child: gauge.SfRadialGauge(
+          key: ValueKey('stabilityGauge_$title'),
+          title: gauge.GaugeTitle(
+            text: title,
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1 - 4,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          axes: <gauge.RadialAxis>[
+            gauge.RadialAxis(
+              minimum: 0,
+              maximum: 100,
+              showLabels: false,
+              showTicks: false,
+              axisLineStyle: const gauge.AxisLineStyle(
+                thickness: 0.15,
+                cornerStyle: gauge.CornerStyle.bothCurve,
+                color: Color.fromRGBO(200, 200, 200, 0.1),
+                thicknessUnit: gauge.GaugeSizeUnit.factor,
+              ),
+              pointers: <gauge.GaugePointer>[
+                gauge.RangePointer(
+                  value: gaugeValue,
+                  width: 0.15,
+                  sizeUnit: gauge.GaugeSizeUnit.factor,
+                  cornerStyle: gauge.CornerStyle.bothCurve,
+                  gradient: const SweepGradient(
+                    colors: <Color>[Color(0xFF00C9FF), Color(0xFF6BFF5F)],
+                    stops: <double>[0.25, 0.75],
+                  ),
+                  enableAnimation: false,
+                ),
+                gauge.MarkerPointer(
+                  value: gaugeValue,
+                  markerType: gauge.MarkerType.circle,
+                  markerHeight: 10,
+                  markerWidth: 10,
+                  color: textColor,
+                ),
+              ],
+              annotations: <gauge.GaugeAnnotation>[
+                gauge.GaugeAnnotation(
+                  positionFactor: 0.1,
+                  angle: 90,
+                  widget: Text(
+                    '${gaugeValue.toStringAsFixed(0)}%',
+                    style: GoogleFonts.elMessiri(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpensesTrendChart(
+    List<Map<String, dynamic>> stats,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    final expenseData = stats.reversed
+        .toList()
+        .map(
+          (e) => ChartData(
+            e['monthName'],
+            (e['unstableSpending'] as num).toDouble(),
+          ),
+        )
+        .toList();
+
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        height: 230,
+        padding: const EdgeInsets.all(6),
+        child: chart.SfCartesianChart(
+          key: const ValueKey('expenseTrendChart'),
+          plotAreaBorderWidth: 0,
+          margin: EdgeInsets.zero,
+          title: chart.ChartTitle(
+            text: 'منحنى المصاريف الطارئة',
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1,
+              fontWeight: FontWeight.bold,
+            ),
+            alignment: chart.ChartAlignment.far,
+          ),
+          primaryXAxis: chart.CategoryAxis(
+            majorGridLines: const chart.MajorGridLines(width: 0),
+            labelStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: 10,
+            ),
+          ),
+          primaryYAxis: chart.NumericAxis(
+            majorGridLines: chart.MajorGridLines(
+              width: 1,
+              color: isDark ? Colors.white10 : Colors.black12,
+              dashArray: const [5, 5],
+            ),
+            axisLine: const chart.AxisLine(width: 0),
+            labelStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: 10,
+            ),
+          ),
+          series: <chart.CartesianSeries<ChartData, String>>[
+            chart.SplineAreaSeries<ChartData, String>(
+              dataSource: expenseData,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              gradient: LinearGradient(
+                colors: [
+                  Colors.redAccent.withValues(alpha: 0.4),
+                  Colors.redAccent.withValues(alpha: 0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderColor: Colors.redAccent,
+              borderWidth: 2,
+              animationDuration: 0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopExpensesPie(
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    final Box<UpcomingSpending> spendingBox = Hive.box<UpcomingSpending>(
+      'upcoming_spending',
+    );
+    final Map<String, double> grouped = {};
+    for (var s in spendingBox.values) {
+      grouped[s.title] = (grouped[s.title] ?? 0) + s.amount.toDouble();
+    }
+
+    final sortedEntries = grouped.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final chartData = sortedEntries
+        .take(5)
+        .map((e) => ChartData(e.key, e.value))
+        .toList();
+
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        height: 250,
+        child: chart.SfCircularChart(
+          key: const ValueKey('topSpendingPie'),
+          title: chart.ChartTitle(
+            text: 'أكبر المصاريف',
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1 - 4,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          legend: chart.Legend(
+            isVisible: true,
+            position: chart.LegendPosition.bottom,
+            textStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: 8,
+            ),
+            overflowMode: chart.LegendItemOverflowMode.wrap,
+          ),
+          series: <chart.CircularSeries<ChartData, String>>[
+            chart.PieSeries<ChartData, String>(
+              dataSource: chartData,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              dataLabelSettings: chart.DataLabelSettings(
+                isVisible: true,
+                textStyle: GoogleFonts.elMessiri(fontSize: 8, color: textColor),
+              ),
+              explode: true,
+              animationDuration: 0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon,
+    Color accentColor,
+    Color textColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(icon, color: accentColor, size: 24),
         ],
       ),
     );
+  }
 
-    /* double  tt = ([
-              mntincstb1,
-              mntincstb2,
-              mntincstb3,
-              mntincstb4,
-              mntincstb5,
-            ].reduce(max) +
-            [
-              mntincnstb1,
-              mntincnstb2,
-              mntincnstb3,
-              mntincnstb4,
-              mntincnstb5,
-            ].reduce(max) -
-            [
-              mntincstb1,
-              mntincstb2,
-              mntincstb3,
-              mntincstb4,
-              mntincstb5,
-            ].reduce(min) -
-            [
-              mntincnstb1,
-              mntincnstb2,
-              mntincnstb3,
-              mntincnstb4,
-              mntincnstb5,
-            ].reduce(min)) /
-        ([
-              mntincstb1,
-              mntincstb2,
-              mntincstb3,
-              mntincstb4,
-              mntincstb5,
-            ].reduce(max) +
-            [
-              mntincnstb1,
-              mntincnstb2,
-              mntincnstb3,
-              mntincnstb4,
-              mntincnstb5,
-            ].reduce(max) +
-            [
-              mntincstb1,
-              mntincstb2,
-              mntincstb3,
-              mntincstb4,
-              mntincstb5,
-            ].reduce(min) +
-            [
-              mntincnstb1,
-              mntincnstb2,
-              mntincnstb3,
-              mntincnstb4,
-              mntincnstb5,
-            ].reduce(min));
-    double ttt(
-      double mntincstb1,
-      double mntincstb2,
-      double mntincstb3,
-      double mntincstb4,
-      double mntincstb5,
-      double mntincnstb1,
-      double mntincnstb2,
-      double mntincnstb3,
-      double mntincnstb4,
-      double mntincnstb5,
-    ) {
-      return ([
-                mntincstb1,
-                mntincstb2,
-                mntincstb3,
-                mntincstb4,
-                mntincstb5,
-              ].reduce(max) +
-              [
-                mntincnstb1,
-                mntincnstb2,
-                mntincnstb3,
-                mntincnstb4,
-                mntincnstb5,
-              ].reduce(max) -
-              [
-                mntincstb1,
-                mntincstb2,
-                mntincstb3,
-                mntincstb4,
-                mntincstb5,
-              ].reduce(min) -
-              [
-                mntincnstb1,
-                mntincnstb2,
-                mntincnstb3,
-                mntincnstb4,
-                mntincnstb5,
-              ].reduce(min)) /
-          ([
-                mntincstb1,
-                mntincstb2,
-                mntincstb3,
-                mntincstb4,
-                mntincstb5,
-              ].reduce(max) +
-              [
-                mntincnstb1,
-                mntincnstb2,
-                mntincnstb3,
-                mntincnstb4,
-                mntincnstb5,
-              ].reduce(max) +
-              [
-                mntincstb1,
-                mntincstb2,
-                mntincstb3,
-                mntincstb4,
-                mntincstb5,
-              ].reduce(min) +
-              [
-                mntincnstb1,
-                mntincnstb2,
-                mntincnstb3,
-                mntincnstb4,
-                mntincnstb5,
-              ].reduce(min));
-    }
-*/
+  Widget _buildStatisticalDescriptors(
+    num avgStable,
+    num avgUnstable,
+    num avgSpending,
+    num totalAvg,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    num maxInc = monthlyStats
+        .map((e) => (e['stableIncome'] as num) + (e['unstableIncome'] as num))
+        .reduce(max);
+    num maxExp = monthlyStats
+        .map((e) => e['unstableSpending'] as num)
+        .reduce(max);
+    num minInc = monthlyStats
+        .map((e) => (e['stableIncome'] as num) + (e['unstableIncome'] as num))
+        .reduce(min);
+
+    return Column(
+      children: [
+        _buildDetailRow(
+          "أعلى دخل كلي",
+          "${maxInc.toStringAsFixed(0)} درهم",
+          Icons.keyboard_double_arrow_up_rounded,
+          const Color(0xFF6BFF5F),
+          cardColor,
+          isDark,
+          textColor,
+          secondaryTextColor,
+        ),
+        const SizedBox(height: 6),
+        _buildDetailRow(
+          "أدنى دخل كلي",
+          "${minInc.toStringAsFixed(0)} درهم",
+          Icons.keyboard_double_arrow_down_rounded,
+          const Color(0xFFFD5F5F),
+          cardColor,
+          isDark,
+          textColor,
+          secondaryTextColor,
+        ),
+        const SizedBox(height: 6),
+        _buildDetailRow(
+          "أعلى مصاريف طارئة",
+          "${maxExp.toStringAsFixed(0)} درهم",
+          Icons.warning_amber_rounded,
+          Colors.redAccent,
+          cardColor,
+          isDark,
+          textColor,
+          secondaryTextColor,
+        ),
+        const SizedBox(height: 6),
+        _buildDetailRow(
+          "متوسط المصاريف الطارئة",
+          "${avgSpending.toStringAsFixed(0)} درهم",
+          Icons.payment_rounded,
+          Colors.orangeAccent,
+          cardColor,
+          isDark,
+          textColor,
+          secondaryTextColor,
+        ),
+        const SizedBox(height: 6),
+        _buildDetailRow(
+          "متوسط الدخل القار",
+          "${avgStable.toStringAsFixed(0)} درهم",
+          Icons.security_rounded,
+          const Color(0xFF00C9FF),
+          cardColor,
+          isDark,
+          textColor,
+          secondaryTextColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon,
+    Color accentColor,
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    return Card(
+      elevation: 2,
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: fontSize1,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.elMessiri(
+                    color: secondaryTextColor,
+                    fontSize: fontSize1,
+                  ),
+                ),
+                const SizedBox(width: 6),
+
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: accentColor, size: 20),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryInputsCard(
+    Color cardColor,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+    Size size,
+    double fontSize2,
+  ) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: cardColor,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.sync_rounded, size: 20),
+                  onPressed: _restoreFromHive,
+                  tooltip: "استعادة القيم الأصلية",
+                  color: secondaryTextColor,
+                ),
+                Text(
+                  "إحصائيات الأشهر الماضية",
+                  style: GoogleFonts.elMessiri(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(width: 6), // Balance the icon button
+              ],
+            ),
+            const SizedBox(height: 6),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(1.2), // Month
+                1: FlexColumnWidth(1), // Stable
+                2: FlexColumnWidth(1.1), // Unstable Inc
+                3: FlexColumnWidth(1), // Expenses
+                4: FlexColumnWidth(1.1), // Net
+              },
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                // Header Row
+                TableRow(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: secondaryTextColor.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ),
+                  children: [
+                    _buildTableHeader("الشهر", secondaryTextColor),
+                    _buildTableHeader("دخل قار", Colors.blue),
+                    _buildTableHeader("دخل طارئ", Colors.green),
+                    _buildTableHeader("مصروف طارئ", Colors.red),
+                    _buildTableHeader("دخل صافي", Colors.greenAccent),
+                  ],
+                ),
+                // Data Rows
+                ...monthlyStats.asMap().entries.map(
+                  (entry) => _buildMonthTableRow(
+                    entry.key,
+                    isDark,
+                    textColor,
+                    secondaryTextColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableHeader(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        text,
+        style: GoogleFonts.elMessiri(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  TableRow _buildMonthTableRow(
+    int index,
+    bool isDark,
+    Color textColor,
+    Color secondaryTextColor,
+  ) {
+    final stat = monthlyStats[index];
+    num mntincstb = stat['stableIncome'];
+    num mntincnstb = stat['unstableIncome'];
+    num spending = stat['unstableSpending'];
+    num net = mntincstb + mntincnstb - spending;
+    String keySuffix = "${stat['year']}_${stat['month']}";
+
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            stat['monthName'],
+            style: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        _buildTableInputCell(
+          initialValue: mntincstb.toString(),
+          onChanged: (val) {
+            final v = num.tryParse(val) ?? 0;
+            setState(() {
+              prefsdata.put("stb_override_$keySuffix", v);
+              _populateIncomeFields();
+            });
+          },
+          isDark: isDark,
+          textColor: textColor,
+          secondaryTextColor: secondaryTextColor,
+        ),
+        _buildTableInputCell(
+          initialValue: mntincnstb.toString(),
+          onChanged: (val) {
+            final v = num.tryParse(val) ?? 0;
+            setState(() {
+              prefsdata.put("nstb_override_$keySuffix", v);
+              _populateIncomeFields();
+            });
+          },
+          isDark: isDark,
+          textColor: textColor,
+          secondaryTextColor: secondaryTextColor,
+        ),
+        _buildTableInputCell(
+          initialValue: spending.toString(),
+          onChanged: (val) {
+            final v = num.tryParse(val) ?? 0;
+            setState(() {
+              prefsdata.put("exp_override_$keySuffix", v);
+              _populateIncomeFields();
+            });
+          },
+          isDark: isDark,
+          textColor: textColor,
+          secondaryTextColor: secondaryTextColor,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            "${net.toStringAsFixed(0)}",
+            style: GoogleFonts.elMessiri(
+              color: net >= 0 ? textColor : Colors.redAccent,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableInputCell({
+    required String initialValue,
+    required Function(String) onChanged,
+    required bool isDark,
+    required Color textColor,
+    required Color secondaryTextColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: TextFormField(
+        initialValue: initialValue,
+        onChanged: onChanged,
+        keyboardType: TextInputType.number,
+        style: GoogleFonts.elMessiri(color: textColor, fontSize: 10),
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 8,
+          ),
+          filled: true,
+          fillColor: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
   }
 }

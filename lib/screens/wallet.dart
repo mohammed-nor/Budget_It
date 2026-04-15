@@ -5,7 +5,6 @@ import 'package:budget_it/models/budget_history.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class WalletPage extends StatefulWidget {
@@ -309,8 +308,10 @@ class _WalletPageState extends State<WalletPage> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: prefsdata.listenable(keys: ['cardcolor']),
+      valueListenable: prefsdata.listenable(keys: ['cardcolor', 'fontsize1', 'fontsize2']),
       builder: (context, box, child) {
+        double fontSize1 = box.get("fontsize1", defaultValue: 15.toDouble());
+        double fontSize2 = box.get("fontsize2", defaultValue: 15.toDouble());
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: ListView(

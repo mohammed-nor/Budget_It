@@ -11,7 +11,6 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:budget_it/models/budget_history.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:budget_it/models/unexpected_earning.dart';
-import 'package:budget_it/widgets/insights_card/insights_card.dart';
 import 'package:get/get.dart';
 import 'package:budget_it/utils/theme_controller.dart';
 import 'package:budget_it/utils/color_theme.dart';
@@ -22,13 +21,6 @@ class Budgetpage extends StatefulWidget {
 
   @override
   State<Budgetpage> createState() => _BudgetpageState();
-}
-
-void initState() {
-  Color cardcolor = prefsdata.get(
-    "cardcolor",
-    defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
-  );
 }
 
 // Simple private model for candle chart data
@@ -353,7 +345,8 @@ class _BudgetpageState extends State<Budgetpage> {
     if (upcomingSpendingBox != null && upcomingSpendingBox!.isNotEmpty) {
       setState(() {
         upcomingSpendingList = upcomingSpendingBox!.values.toList();
-        upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+        // Sort by newest date first
+        upcomingSpendingList.sort((a, b) => b.date.compareTo(a.date));
         // regenerate chart data after loading spendings
         _generateCandleData();
       });
@@ -371,8 +364,8 @@ class _BudgetpageState extends State<Budgetpage> {
     if (unexpectedEarningsBox != null && unexpectedEarningsBox!.isNotEmpty) {
       setState(() {
         unexpectedEarningsList = unexpectedEarningsBox!.values.toList();
-        // Sort by date (closest first)
-        unexpectedEarningsList.sort((a, b) => a.date.compareTo(b.date));
+        // Sort by newest date first
+        unexpectedEarningsList.sort((a, b) => b.date.compareTo(a.date));
         // regenerate chart data after loading earnings
         _generateCandleData();
       });
@@ -464,7 +457,7 @@ class _BudgetpageState extends State<Budgetpage> {
 
   Widget moneyinput(size, boxvariable, boxvariablename, String textlabel) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
+      padding: const EdgeInsets.only(left: 5, right: 5, bottom: 7, top: 7),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -585,120 +578,127 @@ class _BudgetpageState extends State<Budgetpage> {
                       style: themedTextStyle(fontSize: fontSize1),
                     ),
                   )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _isUpcomingSpendingExpanded
-                        ? upcomingSpendingList.length
-                        : (upcomingSpendingList.length > 3
-                              ? 3
-                              : upcomingSpendingList.length),
-                    itemBuilder: (context, index) {
-                      final item = upcomingSpendingList[index];
-                      final daysUntil = item.date
-                          .difference(DateTime.now())
-                          .inDays;
+                : (() {
+                    final sortedList = upcomingSpendingList.toList()
+                      ..sort((a, b) => b.date.compareTo(a.date));
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _isUpcomingSpendingExpanded
+                          ? sortedList.length
+                          : (sortedList.length > 3 ? 3 : sortedList.length),
+                      itemBuilder: (context, index) {
+                        final item = sortedList[index];
+                        final daysUntil = item.date
+                            .difference(DateTime.now())
+                            .inDays;
 
-                      return Card(
-                        color: const Color.fromRGBO(40, 40, 40, 0.1),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => _deleteUpcomingSpending(item.id),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
+                        return Card(
+                          color: const Color.fromRGBO(40, 40, 40, 0.1),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _deleteUpcomingSpending(item.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        200,
+                                        50,
+                                        50,
+                                        0.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.85,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${daysUntil < 0 ? 'متأخر بـ ${-daysUntil}' : 'متبقي $daysUntil'} يوم",
+                                            style: themedTextStyle(
+                                              fontSize: fontSize1 * 0.85,
+                                              color: daysUntil < 0
+                                                  ? Colors.red[300]
+                                                  : daysUntil < 7
+                                                  ? Colors.orange[300]
+                                                  : Colors.green[300],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color.fromRGBO(
-                                      200,
-                                      50,
-                                      50,
-                                      0.5,
+                                      30,
+                                      30,
+                                      30,
+                                      1.0,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: darktextstyle.copyWith(
-                                        fontSize: fontSize1,
-                                        fontWeight: FontWeight.bold,
+                                  child: Text(
+                                    "${item.amount} درهم",
+                                    style: themedTextStyle(
+                                      fontSize: fontSize1,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color.fromRGBO(
+                                        253,
+                                        95,
+                                        95,
+                                        1.0,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.85,
-                                          ),
-                                        ),
-                                        Text(
-                                          "${daysUntil < 0 ? 'متأخر بـ ${-daysUntil}' : 'متبقي $daysUntil'} يوم",
-                                          style: themedTextStyle(
-                                            fontSize: fontSize1 * 0.85,
-                                            color: daysUntil < 0
-                                                ? Colors.red[300]
-                                                : daysUntil < 7
-                                                ? Colors.orange[300]
-                                                : Colors.green[300],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(30, 30, 30, 1.0),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "${item.amount} درهم",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      253,
-                                      95,
-                                      95,
-                                      1.0,
-                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    );
+                  })(),
           ],
         ),
       ),
@@ -851,7 +851,7 @@ class _BudgetpageState extends State<Budgetpage> {
 
       setState(() {
         upcomingSpendingList = upcomingSpendingBox!.values.toList();
-        upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+        upcomingSpendingList.sort((a, b) => b.date.compareTo(a.date));
         // refresh chart to reflect the newly added spending
         _generateCandleData();
       });
@@ -869,7 +869,7 @@ class _BudgetpageState extends State<Budgetpage> {
 
         setState(() {
           upcomingSpendingList = upcomingSpendingBox!.values.toList();
-          upcomingSpendingList.sort((a, b) => a.date.compareTo(b.date));
+          upcomingSpendingList.sort((a, b) => b.date.compareTo(a.date));
           // refresh chart after deleting a spending
           _generateCandleData();
         });
@@ -954,125 +954,133 @@ class _BudgetpageState extends State<Budgetpage> {
                       style: themedTextStyle(fontSize: fontSize1),
                     ),
                   )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _isUnexpectedEarningsExpanded
-                        ? unexpectedEarningsList.length
-                        : (unexpectedEarningsList.length > 3
-                              ? 3
-                              : unexpectedEarningsList.length),
-                    itemBuilder: (context, index) {
-                      final item = unexpectedEarningsList[index];
-                      final daysAgo = DateTime.now()
-                          .difference(item.date)
-                          .inDays;
+                : (() {
+                    final sortedList = unexpectedEarningsList.toList()
+                      ..sort((a, b) => b.date.compareTo(a.date));
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _isUnexpectedEarningsExpanded
+                          ? sortedList.length
+                          : (sortedList.length > 3 ? 3 : sortedList.length),
+                      itemBuilder: (context, index) {
+                        final item = sortedList[index];
+                        final daysAgo = DateTime.now()
+                            .difference(item.date)
+                            .inDays;
 
-                      return Card(
-                        color: const Color.fromRGBO(40, 50, 40, 0.2),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              // Delete button
-                              GestureDetector(
-                                onTap: () => _deleteUnexpectedEarning(item.id),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
+                        return Card(
+                          color: const Color.fromRGBO(40, 50, 40, 0.2),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // Delete button
+                                GestureDetector(
+                                  onTap: () =>
+                                      _deleteUnexpectedEarning(item.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        200,
+                                        50,
+                                        50,
+                                        0.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                // Item details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: themedTextStyle(
+                                          fontSize: fontSize1,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                            style: themedTextStyle(
+                                              fontSize: fontSize1 * 0.85,
+                                            ),
+                                          ),
+                                          Text(
+                                            daysAgo == 0
+                                                ? "اليوم"
+                                                : daysAgo == 1
+                                                ? "بالأمس"
+                                                : "منذ $daysAgo يوم",
+                                            style: themedTextStyle(
+                                              fontSize: fontSize1 * 0.85,
+                                              color: daysAgo < 3
+                                                  ? Colors.green[300]
+                                                  : Colors.grey[400],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                // Amount
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color.fromRGBO(
-                                      200,
+                                      30,
                                       50,
-                                      50,
-                                      0.5,
+                                      30,
+                                      1.0,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Item details
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: themedTextStyle(
-                                        fontSize: fontSize1,
-                                        fontWeight: FontWeight.bold,
+                                  child: Text(
+                                    "${item.amount} درهم",
+                                    style: themedTextStyle(
+                                      fontSize: fontSize1,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color.fromRGBO(
+                                        106,
+                                        253,
+                                        95,
+                                        1.0,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                          style: themedTextStyle(
-                                            fontSize: fontSize1 * 0.85,
-                                          ),
-                                        ),
-                                        Text(
-                                          daysAgo == 0
-                                              ? "اليوم"
-                                              : daysAgo == 1
-                                              ? "بالأمس"
-                                              : "منذ $daysAgo يوم",
-                                          style: themedTextStyle(
-                                            fontSize: fontSize1 * 0.85,
-                                            color: daysAgo < 3
-                                                ? Colors.green[300]
-                                                : Colors.grey[400],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Amount
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(30, 50, 30, 1.0),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "${item.amount} درهم",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      106,
-                                      253,
-                                      95,
-                                      1.0,
-                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    );
+                  })(),
           ],
         ),
       ),
@@ -3976,7 +3984,7 @@ class _BudgetpageState extends State<Budgetpage> {
 
   Widget moneyinput2(size, boxvariable, boxvariablename, String textlabel) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15, right: 15, bottom: 7, top: 7),
+      padding: const EdgeInsets.only(left: 5, right: 5, bottom: 7, top: 7),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,

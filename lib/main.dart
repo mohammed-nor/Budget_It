@@ -8,6 +8,7 @@ import 'models/unexpected_earning.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/theme_controller.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,10 @@ void main() async {
 
   // Initialize ThemeController
   Get.put(ThemeController());
+
+  // Initialize notifications
+  await NotificationService.instance.init();
+  await NotificationService.instance.rescheduleAll();
 
   runApp(const MyApp());
 }
