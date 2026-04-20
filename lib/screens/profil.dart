@@ -435,7 +435,7 @@ class _ProfilpageState extends State<Profilpage> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       title: Text(
-        "language".tr,
+        "lang".tr,
         textAlign: Get.locale?.languageCode == 'ar'
             ? TextAlign.right
             : TextAlign.left,

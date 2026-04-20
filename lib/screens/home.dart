@@ -32,6 +32,7 @@ class _MyhomeState extends State<Myhome> {
       }
     });
   }
+
   @override
   /// The function returns a Scaffold widget with a SafeArea widget as its child. The Scaffold widget
   /// has a body, a bottomNavigationBar, and a floatingActionButton. The floatingActionButton has an
@@ -101,7 +102,9 @@ class _MyhomeState extends State<Myhome> {
                 icon: ExcludeSemantics(
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
+                    padding: EdgeInsets.only(
+                      bottom: pageindex == index ? 4 : 0,
+                    ),
                     child: Icon(listactions[index]),
                   ),
                 ),
