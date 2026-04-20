@@ -9,6 +9,7 @@ import 'package:budget_it/models/unexpected_earning.dart';
 import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:get/get.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -172,9 +173,9 @@ class _StatspageState extends State<Statspage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          "تمت استعادة المزامنة مع بيانات المصاريف والمداخيل",
+          "restored_sync".tr,
           style: GoogleFonts.elMessiri(color: Colors.white),
-          textAlign: TextAlign.right,
+          textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
         ),
         backgroundColor: Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
@@ -207,27 +208,16 @@ class _StatspageState extends State<Statspage> {
   }
 
   String getMonthName(int index) {
-    final List<String> arabicMonthNames = [
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'غشت',
-      'شتنبر',
-      'أكتوبر',
-      'نونبر',
-      'دجنبر',
+    final List<String> monthKeys = [
+      'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+      'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
     ];
 
     final now = DateTime.now();
-    // Use day 1 to avoid overflow (e.g., Feb 30th shifting to March)
     final targetDate = DateTime(now.year, now.month - index, 1);
     int monthIndex = targetDate.month - 1;
 
-    return arabicMonthNames[monthIndex];
+    return monthKeys[monthIndex].tr;
   }
 
   @override
@@ -300,8 +290,8 @@ class _StatspageState extends State<Statspage> {
         .toList();
 
     final pieData = [
-      ChartData('قارة', avgStable.toDouble(), const Color(0xFF6BFF5F)),
-      ChartData('غير قارة', avgUnstable.toDouble(), const Color(0xFFFD5F5F)),
+      ChartData('stable_income'.tr, avgStable.toDouble(), const Color(0xFF15803D)),
+      ChartData('unstable_income'.tr, avgUnstable.toDouble(), const Color(0xFFB91C1C)),
     ];
 
     return ValueListenableBuilder(
@@ -345,7 +335,7 @@ class _StatspageState extends State<Statspage> {
 
               // Income Section
               _buildSectionHeader(
-                "تحليلات الدخل",
+                "income_analysis".tr,
                 Icons.trending_up,
                 Colors.green,
                 currentTextColor,
@@ -406,7 +396,7 @@ class _StatspageState extends State<Statspage> {
 
               const SizedBox(height: 6),
               _buildSectionHeader(
-                "ملخص إحصائي",
+                "statistical_summary".tr,
                 Icons.analytics_rounded,
                 Colors.blueAccent,
                 currentTextColor,
@@ -450,8 +440,8 @@ class _StatspageState extends State<Statspage> {
       children: [
         Expanded(
           child: _buildProjectCard(
-            title: "المعدل الشهري",
-            value: "${totalAvg.toStringAsFixed(0)} درهم",
+            title: "monthly_average".tr,
+            value: "${totalAvg.toStringAsFixed(0)} ${'currency'.tr}",
             icon: Icons.account_balance_wallet_rounded,
             accentColor: const Color(0xFF00C9FF),
             cardColor: cardColor,
@@ -463,14 +453,14 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(width: 6),
         Expanded(
           child: _buildProjectCard(
-            title: "حالة الاستقرار",
+            title: "stability_status".tr,
             value: dispersion < 0.2
-                ? "ممتاز"
+                ? "excellent".tr
                 : dispersion < 0.5
-                ? "جيد"
-                : "متقلب",
+                ? "good".tr
+                : "volatile".tr,
             icon: Icons.trending_up_rounded,
-            accentColor: const Color(0xFF6BFF5F),
+            accentColor: const Color(0xFF15803D),
             cardColor: cardColor,
             isDark: isDark,
             textColor: textColor,
@@ -517,6 +507,9 @@ class _StatspageState extends State<Statspage> {
               children: [
                 Text(
                   title,
+                  textAlign: Get.locale?.languageCode == 'ar'
+                      ? TextAlign.right
+                      : TextAlign.left,
                   style: GoogleFonts.elMessiri(
                     color: secondaryTextColor,
                     fontSize: fontSize1,
@@ -525,6 +518,7 @@ class _StatspageState extends State<Statspage> {
                 const SizedBox(height: 6),
                 Text(
                   value,
+                  textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                   style: GoogleFonts.elMessiri(
                     color: textColor,
                     fontSize: fontSize1,
@@ -553,12 +547,13 @@ class _StatspageState extends State<Statspage> {
       child: Container(
         height: 250,
         padding: const EdgeInsets.all(6),
-        child: chart.SfCartesianChart(
+        child: ExcludeSemantics(
+          child: chart.SfCartesianChart(
           key: const ValueKey('trendChartStats'),
           plotAreaBorderWidth: 0,
           margin: EdgeInsets.zero,
           title: chart.ChartTitle(
-            text: 'منحنى الدخل الإجمالي',
+            text: 'total_income_curve'.tr,
             textStyle: GoogleFonts.elMessiri(
               color: textColor,
               fontSize: fontSize1,
@@ -607,6 +602,7 @@ class _StatspageState extends State<Statspage> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -623,10 +619,15 @@ class _StatspageState extends State<Statspage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
         height: 250,
-        child: chart.SfCircularChart(
+        child: ExcludeSemantics(
+          child: chart.SfCircularChart(
+          palette: [
+            const Color.fromARGB(255, 191, 124, 0),
+            const Color.fromARGB(255, 109, 33, 180),
+          ],
           key: const ValueKey('incomePipeStats'),
           title: chart.ChartTitle(
-            text: 'توزيع الدخل',
+            text: 'income_distribution'.tr,
             textStyle: GoogleFonts.elMessiri(
               color: textColor,
               fontSize: fontSize1 - 4,
@@ -650,8 +651,8 @@ class _StatspageState extends State<Statspage> {
               dataLabelSettings: chart.DataLabelSettings(
                 isVisible: true,
                 textStyle: GoogleFonts.elMessiri(
-                  fontSize: 10,
-                  color: textColor,
+                  fontSize: 12,
+                  color: Color.fromARGB(255, 255, 255, 255),
                 ),
               ),
               innerRadius: '60%',
@@ -660,6 +661,7 @@ class _StatspageState extends State<Statspage> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -675,7 +677,7 @@ class _StatspageState extends State<Statspage> {
       children: [
         Expanded(
           child: _buildSingleGauge(
-            title: "استقرار الدخل",
+            title: "income_stability".tr,
             dispersion: dispersionInc,
             cardColor: cardColor,
             textColor: textColor,
@@ -685,7 +687,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(width: 6),
         Expanded(
           child: _buildSingleGauge(
-            title: "استقرار الدخل الصافي",
+            title: "net_income_stability".tr,
             dispersion: dispersionNet,
             cardColor: cardColor,
             textColor: textColor,
@@ -710,7 +712,8 @@ class _StatspageState extends State<Statspage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
         height: 180,
-        child: gauge.SfRadialGauge(
+        child: ExcludeSemantics(
+          child: gauge.SfRadialGauge(
           key: ValueKey('stabilityGauge_$title'),
           title: gauge.GaugeTitle(
             text: title,
@@ -739,7 +742,7 @@ class _StatspageState extends State<Statspage> {
                   sizeUnit: gauge.GaugeSizeUnit.factor,
                   cornerStyle: gauge.CornerStyle.bothCurve,
                   gradient: const SweepGradient(
-                    colors: <Color>[Color(0xFF00C9FF), Color(0xFF6BFF5F)],
+                    colors: <Color>[Color(0xFF00C9FF), Color(0xFF15803D)],
                     stops: <double>[0.25, 0.75],
                   ),
                   enableAnimation: false,
@@ -750,6 +753,7 @@ class _StatspageState extends State<Statspage> {
                   markerHeight: 10,
                   markerWidth: 10,
                   color: textColor,
+                  enableAnimation: false,
                 ),
               ],
               annotations: <gauge.GaugeAnnotation>[
@@ -770,6 +774,7 @@ class _StatspageState extends State<Statspage> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -797,12 +802,13 @@ class _StatspageState extends State<Statspage> {
       child: Container(
         height: 230,
         padding: const EdgeInsets.all(6),
-        child: chart.SfCartesianChart(
+        child: ExcludeSemantics(
+          child: chart.SfCartesianChart(
           key: const ValueKey('expenseTrendChart'),
           plotAreaBorderWidth: 0,
           margin: EdgeInsets.zero,
           title: chart.ChartTitle(
-            text: 'منحنى المصاريف الطارئة',
+            text: 'expense_trend_unstable'.tr,
             textStyle: GoogleFonts.elMessiri(
               color: textColor,
               fontSize: fontSize1,
@@ -849,6 +855,7 @@ class _StatspageState extends State<Statspage> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -879,10 +886,18 @@ class _StatspageState extends State<Statspage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SizedBox(
         height: 250,
-        child: chart.SfCircularChart(
+        child: ExcludeSemantics(
+          child: chart.SfCircularChart(
+          palette: [
+            const Color.fromARGB(255, 191, 124, 0),
+            const Color.fromARGB(255, 109, 33, 180),
+            const Color.fromARGB(255, 172, 15, 47),
+            const Color.fromARGB(255, 184, 0, 184),
+            const Color.fromARGB(255, 0, 0, 182),
+          ],
           key: const ValueKey('topSpendingPie'),
           title: chart.ChartTitle(
-            text: 'أكبر المصاريف',
+            text: 'top_spending'.tr,
             textStyle: GoogleFonts.elMessiri(
               color: textColor,
               fontSize: fontSize1 - 4,
@@ -905,7 +920,10 @@ class _StatspageState extends State<Statspage> {
               yValueMapper: (ChartData data, _) => data.y,
               dataLabelSettings: chart.DataLabelSettings(
                 isVisible: true,
-                textStyle: GoogleFonts.elMessiri(fontSize: 8, color: textColor),
+                textStyle: GoogleFonts.elMessiri(
+                  fontSize: 12,
+                  color: textColor,
+                ),
               ),
               explode: true,
               animationDuration: 0,
@@ -913,6 +931,7 @@ class _StatspageState extends State<Statspage> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -925,8 +944,12 @@ class _StatspageState extends State<Statspage> {
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, bottom: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: Get.locale?.languageCode == 'ar' ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
+          if (Get.locale?.languageCode != 'ar') ...[
+            Icon(icon, color: accentColor, size: 24),
+            const SizedBox(width: 6),
+          ],
           Text(
             title,
             style: GoogleFonts.elMessiri(
@@ -935,8 +958,10 @@ class _StatspageState extends State<Statspage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 6),
-          Icon(icon, color: accentColor, size: 24),
+          if (Get.locale?.languageCode == 'ar') ...[
+            const SizedBox(width: 6),
+            Icon(icon, color: accentColor, size: 24),
+          ],
         ],
       ),
     );
@@ -965,10 +990,10 @@ class _StatspageState extends State<Statspage> {
     return Column(
       children: [
         _buildDetailRow(
-          "أعلى دخل كلي",
-          "${maxInc.toStringAsFixed(0)} درهم",
+          "highest_total_income".tr,
+          "${maxInc.toStringAsFixed(0)} ${'currency'.tr}",
           Icons.keyboard_double_arrow_up_rounded,
-          const Color(0xFF6BFF5F),
+          const Color(0xFF15803D),
           cardColor,
           isDark,
           textColor,
@@ -976,10 +1001,10 @@ class _StatspageState extends State<Statspage> {
         ),
         const SizedBox(height: 6),
         _buildDetailRow(
-          "أدنى دخل كلي",
-          "${minInc.toStringAsFixed(0)} درهم",
+          "lowest_total_income".tr,
+          "${minInc.toStringAsFixed(0)} ${'currency'.tr}",
           Icons.keyboard_double_arrow_down_rounded,
-          const Color(0xFFFD5F5F),
+          const Color(0xFFB91C1C),
           cardColor,
           isDark,
           textColor,
@@ -987,8 +1012,8 @@ class _StatspageState extends State<Statspage> {
         ),
         const SizedBox(height: 6),
         _buildDetailRow(
-          "أعلى مصاريف طارئة",
-          "${maxExp.toStringAsFixed(0)} درهم",
+          "highest_unstable_expense".tr,
+          "${maxExp.toStringAsFixed(0)} ${'currency'.tr}",
           Icons.warning_amber_rounded,
           Colors.redAccent,
           cardColor,
@@ -998,8 +1023,8 @@ class _StatspageState extends State<Statspage> {
         ),
         const SizedBox(height: 6),
         _buildDetailRow(
-          "متوسط المصاريف الطارئة",
-          "${avgSpending.toStringAsFixed(0)} درهم",
+          "average_unstable_expense".tr,
+          "${avgSpending.toStringAsFixed(0)} ${'currency'.tr}",
           Icons.payment_rounded,
           Colors.orangeAccent,
           cardColor,
@@ -1009,8 +1034,8 @@ class _StatspageState extends State<Statspage> {
         ),
         const SizedBox(height: 6),
         _buildDetailRow(
-          "متوسط الدخل القار",
-          "${avgStable.toStringAsFixed(0)} درهم",
+          "average_stable_income".tr,
+          "${avgStable.toStringAsFixed(0)} ${'currency'.tr}",
           Icons.security_rounded,
           const Color(0xFF00C9FF),
           cardColor,
@@ -1041,6 +1066,25 @@ class _StatspageState extends State<Statspage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            if (Get.locale?.languageCode != 'ar') ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.elMessiri(
+                  color: secondaryTextColor,
+                  fontSize: fontSize1,
+                ),
+              ),
+            ],
+            const Spacer(),
             Text(
               value,
               style: GoogleFonts.elMessiri(
@@ -1049,27 +1093,26 @@ class _StatspageState extends State<Statspage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Row(
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.elMessiri(
-                    color: secondaryTextColor,
-                    fontSize: fontSize1,
-                  ),
+            const Spacer(),
+            if (Get.locale?.languageCode == 'ar') ...[
+              Text(
+                label,
+                style: GoogleFonts.elMessiri(
+                  color: secondaryTextColor,
+                  fontSize: fontSize1,
                 ),
-                const SizedBox(width: 6),
+              ),
+              const SizedBox(width: 6),
 
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: accentColor, size: 20),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+            ],
           ],
         ),
       ),
@@ -1098,11 +1141,11 @@ class _StatspageState extends State<Statspage> {
                 IconButton(
                   icon: const Icon(Icons.sync_rounded, size: 20),
                   onPressed: _restoreFromHive,
-                  tooltip: "استعادة القيم الأصلية",
+                  tooltip: "restore_original_values".tr,
                   color: secondaryTextColor,
                 ),
                 Text(
-                  "إحصائيات الأشهر الماضية",
+                  "stats_past_months".tr,
                   style: GoogleFonts.elMessiri(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1133,11 +1176,11 @@ class _StatspageState extends State<Statspage> {
                     ),
                   ),
                   children: [
-                    _buildTableHeader("الشهر", secondaryTextColor),
-                    _buildTableHeader("دخل قار", Colors.blue),
-                    _buildTableHeader("دخل طارئ", Colors.green),
-                    _buildTableHeader("مصروف طارئ", Colors.red),
-                    _buildTableHeader("دخل صافي", Colors.greenAccent),
+                    _buildTableHeader("month_header".tr, secondaryTextColor),
+                    _buildTableHeader("stable_income_header".tr, Colors.blue),
+                    _buildTableHeader("unstable_income_header".tr, Colors.green),
+                    _buildTableHeader("unstable_expense_header".tr, Colors.red),
+                    _buildTableHeader("net_income_header".tr, Colors.greenAccent),
                   ],
                 ),
                 // Data Rows

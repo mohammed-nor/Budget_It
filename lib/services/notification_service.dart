@@ -4,14 +4,15 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive/hive.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:get/get.dart';
 
 // ─── Hive keys (imported in profil.dart too) ────────────────────────────────
-const String kNotifEnabled            = 'notif_enabled';
-const String kNotifDailyEnabled       = 'notif_daily_enabled';
-const String kNotifDailyHour          = 'notif_daily_hour';
-const String kNotifDailyMinute        = 'notif_daily_minute';
-const String kNotifSalaryEnabled      = 'notif_salary_enabled';
-const String kNotifLowBudgetEnabled   = 'notif_low_budget_enabled';
+const String kNotifEnabled = 'notif_enabled';
+const String kNotifDailyEnabled = 'notif_daily_enabled';
+const String kNotifDailyHour = 'notif_daily_hour';
+const String kNotifDailyMinute = 'notif_daily_minute';
+const String kNotifSalaryEnabled = 'notif_salary_enabled';
+const String kNotifLowBudgetEnabled = 'notif_low_budget_enabled';
 const String kNotifLowBudgetThreshold = 'notif_low_budget_threshold';
 
 class NotificationService {
@@ -35,7 +36,7 @@ class NotificationService {
     // Windows: v19 uses WindowsInitializationSettings with appName only
     final windowsInit = WindowsInitializationSettings(
       appName: 'Budget It',
-      appUserModelId: 'com.norit.budget_it',
+      appUserModelId: 'com.example.budget_it',
       guid: 'd6b68c3e-4d3e-4a3e-8b3e-1e2d3f4a5b6c',
     );
 
@@ -51,17 +52,34 @@ class NotificationService {
       },
     );
 
-    // Request permissions on Android 13+
-    if (Platform.isAndroid) {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      await android?.requestNotificationsPermission();
-      await android?.requestExactAlarmsPermission();
-    }
-
     _initialized = true;
     debugPrint('NotificationService initialized');
+    
+    // Request permissions on first init
+    await requestPermissions();
   }
+
+  /// Explicitly request notification permissions from the user.
+  /// Returns true if granted, false otherwise.
+  Future<bool> requestPermissions() async {
+    if (!Platform.isAndroid) return true;
+
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    
+    if (android == null) return false;
+
+    // Request POST_NOTIFICATIONS (Android 13+)
+    final bool? notifGranted = await android.requestNotificationsPermission();
+    // Request SCHEDULE_EXACT_ALARM (Android 12+)
+    final bool? exactGranted = await android.requestExactAlarmsPermission();
+
+    debugPrint('Permissions - Notif: $notifGranted, Exact: $exactGranted');
+    return (notifGranted ?? false);
+  }
+
 
   // ──────────────────────────── Build platform-specific details ────────────
   NotificationDetails _buildDetails() {
@@ -101,17 +119,17 @@ class NotificationService {
   Future<void> scheduleDailyReminder() async {
     if (!_isSupported()) return;
     final box = Hive.box('data');
-    if (!(box.get(kNotifEnabled,      defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifEnabled, defaultValue: true) as bool)) return;
     if (!(box.get(kNotifDailyEnabled, defaultValue: true) as bool)) return;
 
-    final hour   = box.get(kNotifDailyHour,   defaultValue: 9) as int;
+    final hour = box.get(kNotifDailyHour, defaultValue: 9) as int;
     final minute = box.get(kNotifDailyMinute, defaultValue: 0) as int;
 
     await _plugin.cancel(1);
     await _plugin.zonedSchedule(
       1,
-      'تذكير ميزانيتك اليومي 💰',
-      'لا تنسَ مراجعة إنفاقك اليوم والتحقق من ميزانيتك.',
+      'daily_reminder_title'.tr,
+      'daily_reminder_body'.tr,
       _nextInstanceOfTime(hour, minute),
       _buildDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -125,11 +143,11 @@ class NotificationService {
   Future<void> scheduleSalaryDayNotification() async {
     if (!_isSupported()) return;
     final box = Hive.box('data');
-    if (!(box.get(kNotifEnabled,        defaultValue: true) as bool)) return;
-    if (!(box.get(kNotifSalaryEnabled,  defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifEnabled, defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifSalaryEnabled, defaultValue: true) as bool)) return;
 
     final payDay = box.get('payingDay', defaultValue: 30) as int;
-    final now    = tz.TZDateTime.now(tz.local);
+    final now = tz.TZDateTime.now(tz.local);
 
     var scheduled = tz.TZDateTime(tz.local, now.year, now.month, payDay, 8, 0);
     if (scheduled.isBefore(now)) {
@@ -146,8 +164,8 @@ class NotificationService {
     await _plugin.cancel(2);
     await _plugin.zonedSchedule(
       2,
-      'يوم الراتب 🎉',
-      'تهانينا! لقد حل يوم صرف الراتب. لا تنسَ مراجعة خطتك المالية.',
+      'salary_day_title'.tr,
+      'salary_day_body'.tr,
       scheduled,
       _buildDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -160,8 +178,8 @@ class NotificationService {
   Future<void> checkAndNotifyLowBudget(double currentBalance) async {
     if (!_isSupported()) return;
     final box = Hive.box('data');
-    if (!(box.get(kNotifEnabled,           defaultValue: true) as bool)) return;
-    if (!(box.get(kNotifLowBudgetEnabled,  defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifEnabled, defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifLowBudgetEnabled, defaultValue: true) as bool)) return;
 
     final threshold =
         (box.get(kNotifLowBudgetThreshold, defaultValue: 500) as num)
@@ -170,19 +188,20 @@ class NotificationService {
     if (currentBalance <= threshold) {
       await showInstant(
         id: 3,
-        title: 'تحذير: رصيدك منخفض ⚠️',
-        body:
-            'رصيدك الحالي (${currentBalance.toStringAsFixed(0)}) أقل من الحد '
-            'التنبيهي (${threshold.toStringAsFixed(0)}). راجع إنفاقك الآن!',
+        title: 'low_balance_title'.tr,
+        body: 'low_balance_body'.trArgs([
+          currentBalance.toStringAsFixed(0),
+          threshold.toStringAsFixed(0)
+        ]),
         payload: 'low_budget',
       );
     }
   }
 
   // ─────────────────────────────────────────────────── cancel helpers ───────
-  Future<void> cancelAll()                 async => _plugin.cancelAll();
-  Future<void> cancelDailyReminder()       async => _plugin.cancel(1);
-  Future<void> cancelSalaryNotification()  async => _plugin.cancel(2);
+  Future<void> cancelAll() async => _plugin.cancelAll();
+  Future<void> cancelDailyReminder() async => _plugin.cancel(1);
+  Future<void> cancelSalaryNotification() async => _plugin.cancel(2);
 
   // ──────────────────────────────────────────────────── reschedule all ──────
   /// Call whenever settings change.
@@ -199,8 +218,7 @@ class NotificationService {
     return t;
   }
 
-  bool _isSupported() =>
-      !kIsWeb && (Platform.isAndroid || Platform.isWindows);
+  bool _isSupported() => !kIsWeb && (Platform.isAndroid || Platform.isWindows);
 
   bool _notificationsEnabled() {
     final box = Hive.box('data');

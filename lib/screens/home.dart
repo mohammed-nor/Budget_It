@@ -4,6 +4,8 @@ import 'package:budget_it/screens/profil.dart';
 import 'package:budget_it/screens/stats.dart';
 import 'package:budget_it/screens/wallet.dart';
 import 'package:hive/hive.dart';
+import 'package:budget_it/services/notification_service.dart';
+import 'package:get/get.dart';
 
 final prefsdata = Hive.box('data');
 
@@ -14,12 +16,22 @@ class Myhome extends StatefulWidget {
   State<Myhome> createState() => _MyhomeState();
 }
 
-void initState() async {}
-
-int pageindex = 0;
-
 class _MyhomeState extends State<Myhome> {
   final prefsdata = Hive.box('data');
+  int pageindex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Request permissions after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final box = Hive.box('data');
+      final notifEnabled = box.get(kNotifEnabled, defaultValue: true) as bool;
+      if (notifEnabled) {
+        await NotificationService.instance.requestPermissions();
+      }
+    });
+  }
   @override
   /// The function returns a Scaffold widget with a SafeArea widget as its child. The Scaffold widget
   /// has a body, a bottomNavigationBar, and a floatingActionButton. The floatingActionButton has an
@@ -38,7 +50,7 @@ class _MyhomeState extends State<Myhome> {
       Icons.calendar_month,
       Icons.settings_outlined,
     ];
-    List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
+    List<String> labels = ["budget".tr, "wallet".tr, "stats".tr, "settings".tr];
     return SafeArea(
       child: Scaffold(
         //backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
@@ -86,10 +98,12 @@ class _MyhomeState extends State<Myhome> {
             unselectedFontSize: 10,
             items: List.generate(listactions.length, (index) {
               return BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-                  child: Icon(listactions[index]),
+                icon: ExcludeSemantics(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
+                    child: Icon(listactions[index]),
+                  ),
                 ),
                 label: labels[index],
               );
@@ -106,7 +120,12 @@ class _MyhomeState extends State<Myhome> {
   Widget getbody() {
     return IndexedStack(
       index: pageindex,
-      children: [Budgetpage(), WalletPage(), Statspage(), Profilpage()],
+      children: [
+        ExcludeSemantics(excluding: pageindex != 0, child: Budgetpage()),
+        ExcludeSemantics(excluding: pageindex != 1, child: WalletPage()),
+        ExcludeSemantics(excluding: pageindex != 2, child: Statspage()),
+        ExcludeSemantics(excluding: pageindex != 3, child: Profilpage()),
+      ],
     );
   }
 
@@ -122,7 +141,7 @@ class _MyhomeState extends State<Myhome> {
       Icons.calendar_month,
       Icons.settings_outlined,
     ];
-    List<String> labels = ["الميزانية", "المحفظة", "الإحصائيات", "الإعدادات"];
+    List<String> labels = ["budget".tr, "wallet".tr, "stats".tr, "settings".tr];
     return Theme(
       data: ThemeData(
         splashColor: Colors.transparent,
@@ -152,10 +171,12 @@ class _MyhomeState extends State<Myhome> {
         unselectedFontSize: 10,
         items: List.generate(listactions.length, (index) {
           return BottomNavigationBarItem(
-            icon: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-              child: Icon(listactions[index]),
+            icon: ExcludeSemantics(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
+                child: Icon(listactions[index]),
+              ),
             ),
             label: labels[index],
           );

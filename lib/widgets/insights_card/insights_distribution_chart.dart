@@ -37,7 +37,8 @@ class InsightsDistributionChart extends StatelessWidget {
       ),
       child: SizedBox(
         height: 145,
-        child: SfCartesianChart(
+        child: ExcludeSemantics(
+          child: SfCartesianChart(
           primaryXAxis: CategoryAxis(
             labelRotation: 0,
             interval: (daysInMonth / 4).ceilToDouble(),
@@ -56,18 +57,21 @@ class InsightsDistributionChart extends StatelessWidget {
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['income'] as num,
-              color: const Color.fromRGBO(106, 253, 95, 1.0),
+              color: const Color(0xFF15803D),
+              animationDuration: 0,
             ),
             ColumnSeries<Map<String, dynamic>, String>(
               name: 'مصاريف',
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['spend'] as num,
-              color: const Color.fromRGBO(253, 95, 95, 1.0),
+              color: const Color(0xFFB91C1C),
+              animationDuration: 0,
             ),
           ],
         ),
       ),
+    ),
     );
   }
 }

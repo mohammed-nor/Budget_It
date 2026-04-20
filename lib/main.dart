@@ -8,7 +8,10 @@ import 'models/unexpected_earning.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/theme_controller.dart';
+import 'utils/language_controller.dart';
+import 'utils/messages.dart';
 import 'services/notification_service.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +28,9 @@ void main() async {
   await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
   await Hive.openBox('budgets');
 
-  // Initialize ThemeController
+  // Initialize Controllers
   Get.put(ThemeController());
+  Get.put(LanguageController());
 
   // Initialize notifications
   await NotificationService.instance.init();
@@ -42,6 +46,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<ThemeController>(
       builder: (themeController) {
+        final languageController = Get.find<LanguageController>();
         return Obx(
           () => GetMaterialApp(
             debugShowCheckedModeBanner: false,
@@ -55,6 +60,18 @@ class MyApp extends StatelessWidget {
               accentColor: themeController.accentColor.value,
             ),
             themeMode: themeController.themeMode,
+            translations: Messages(),
+            locale: languageController.getLocale,
+            fallbackLocale: const Locale('ar'),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('ar'),
+            ],
           ),
         );
       },

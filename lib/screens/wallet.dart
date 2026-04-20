@@ -6,6 +6,7 @@ import 'package:budget_it/models/upcoming_spending.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:get/get.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -25,33 +26,33 @@ class _WalletPageState extends State<WalletPage> {
 
   final List<SpendingCategory> categories = [
     SpendingCategory(
-      title: 'المصاريف الشخصية',
-      description: 'shopping and personal',
+      title: 'personal_expenses'.tr,
+      description: 'personal_expenses_desc'.tr,
       budget: 150,
     ),
     SpendingCategory(
-      title: 'المصاريف المنزلية',
-      description: 'Groceries and dining',
+      title: 'home_expenses'.tr,
+      description: 'home_expenses_desc'.tr,
       budget: 500,
     ),
     SpendingCategory(
-      title: 'تنقل',
-      description: 'Gas and public transit',
+      title: 'transport'.tr,
+      description: 'transport_desc'.tr,
       budget: 200,
     ),
     SpendingCategory(
-      title: 'ترفيه',
-      description: 'Movies and activities',
+      title: 'entertainment'.tr,
+      description: 'entertainment_desc'.tr,
       budget: 100,
     ),
     SpendingCategory(
-      title: 'طوارئ',
-      description: 'Other expenses',
+      title: 'emergency'.tr,
+      description: 'emergency_desc'.tr,
       budget: 100,
     ),
     SpendingCategory(
-      title: 'مصاريف أخرى',
-      description: 'Other expenses',
+      title: 'other_expenses'.tr,
+      description: 'other_expenses_desc'.tr,
       budget: 250,
     ),
   ];
@@ -166,9 +167,9 @@ class _WalletPageState extends State<WalletPage> {
     if (!GeminiService.hasApiKey()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please configure your Gemini API key first'),
+          content: Text('configure_api_key_msg'.tr),
           action: SnackBarAction(
-            label: 'Setup',
+            label: 'setup'.tr,
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -274,6 +275,7 @@ class _WalletPageState extends State<WalletPage> {
         upcomingExpenses: upcomingExpenses,
         availableFunds: mntSpending.toDouble(),
         savedAmount: savedAmount,
+        language: Get.locale?.languageCode ?? 'ar',
       );
 
       if (mounted) {
@@ -335,13 +337,13 @@ class _WalletPageState extends State<WalletPage> {
                           IconButton(
                             icon: const Icon(Icons.key, color: Colors.green),
                             onPressed: _openApiKeyManager,
-                            tooltip: 'Configure API Key',
+                            tooltip: 'configure_api_key_tooltip'.tr,
                           ),
                           Row(
                             children: [
                               const SizedBox(width: 8),
                               Text(
-                                'مستشار مالي ذكي',
+                                'smart_advisor'.tr,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: _getTextColor(),
@@ -355,7 +357,8 @@ class _WalletPageState extends State<WalletPage> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'احصل على نصائح مالية مخصصة بناءً على عادات إنفاقك',
+                        'get_advice_msg'.tr,
+                        textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: _getSecondaryTextColor(),
                           fontSize: 14,
@@ -405,7 +408,7 @@ class _WalletPageState extends State<WalletPage> {
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
-                                  'جاري تحليل بيانات الإنفاق...',
+                                  'analyzing_data'.tr,
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: Colors.blue.shade300,
@@ -415,7 +418,7 @@ class _WalletPageState extends State<WalletPage> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'يرجى الانتظار قليلاً',
+                                  'please_wait'.tr,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Colors.blue.shade400,
@@ -471,7 +474,7 @@ class _WalletPageState extends State<WalletPage> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
-                                      'خطأ في جلب النصائح',
+                                      'error_fetching_advice'.tr,
                                       style: TextStyle(
                                         color: Colors.red.shade300,
                                         fontWeight: FontWeight.bold,
@@ -540,7 +543,7 @@ class _WalletPageState extends State<WalletPage> {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'نصائح شخصية',
+                                    'personalized_advice'.tr,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -555,7 +558,7 @@ class _WalletPageState extends State<WalletPage> {
                               const SizedBox(height: 16),
                               // Advice Content with Markdown Rendering (RTL for Arabic)
                               Directionality(
-                                textDirection: TextDirection.rtl,
+                                textDirection: Get.locale?.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
                                 child: MarkdownBody(
                                   data: _aiAdvice!,
                                   selectable: true,
@@ -651,7 +654,7 @@ class _WalletPageState extends State<WalletPage> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          'آخر تحديث',
+                                          'last_updated'.tr,
                                           style: Theme.of(context)
                                               .textTheme
                                               .labelSmall
@@ -683,7 +686,8 @@ class _WalletPageState extends State<WalletPage> {
                         )
                       else
                         Text(
-                          'اضغط الزر أدناه للحصول على نصائح مالية مخصصة',
+                          'press_for_advice'.tr,
+                          textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: _getSecondaryTextColor(),
@@ -707,8 +711,8 @@ class _WalletPageState extends State<WalletPage> {
                           ),
                           label: Text(
                             _aiAdvice != null
-                                ? 'تحديث النصائح'
-                                : 'احصل على نصائح',
+                                ? 'update_advice'.tr
+                                : 'get_advice_btn'.tr,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -819,7 +823,7 @@ class BudgetCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: Get.locale?.languageCode == 'ar' ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -839,20 +843,22 @@ class BudgetCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    category.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: getTextColor(),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                    child: Text(
+                      category.title,
+                      textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: getTextColor(),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
-                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               category.description,
+              textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: getSecondaryTextColor(),
                 fontSize: 15,
@@ -860,7 +866,8 @@ class BudgetCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'نسبة الزيادة الشهرية: ${(incrementRatios[index] * 100).toStringAsFixed(0)}% (${getCategoryIncrement(index).toStringAsFixed(2)} درهم)',
+              'monthly_increment_ratio'.tr + ': ${(incrementRatios[index] * 100).toStringAsFixed(0)}% (${getCategoryIncrement(index).toStringAsFixed(2)} ${'currency'.tr})',
+              textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.green.shade400,
                 fontSize: 14,
@@ -873,14 +880,14 @@ class BudgetCard extends StatelessWidget {
               ),
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'الباقي',
+                labelText: 'remaining'.tr,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Colors.green, width: 1.2),
                 ),
                 labelStyle: const TextStyle(color: Colors.white),
                 floatingLabelAlignment: FloatingLabelAlignment.center,
-                suffixText: 'درهم',
+                suffixText: 'currency'.tr,
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.15),
               ),

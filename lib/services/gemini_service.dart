@@ -64,6 +64,7 @@ class GeminiService {
     double availableFunds = 0,
     double fixedMonthlyExpenses = 0,
     double savedAmount = 0,
+    String language = 'ar',
   }) async {
     if (!hasApiKey()) {
       throw Exception(
@@ -82,6 +83,7 @@ class GeminiService {
       availableFunds: availableFunds,
       fixedMonthlyExpenses: fixedMonthlyExpenses,
       savedAmount: savedAmount,
+      language: language,
     );
 
     try {
@@ -141,6 +143,7 @@ class GeminiService {
     double availableFunds = 0,
     double fixedMonthlyExpenses = 0,
     double savedAmount = 0,
+    String language = 'ar',
   }) {
     final budgetBreakdown = categoryBudgets.entries
         .toList()
