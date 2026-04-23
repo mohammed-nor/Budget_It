@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 import 'home.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -97,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 40),
                       // App Name
                       Text(
-                        'Budget It',
+                        'app_name'.tr,
                         style: GoogleFonts.lato(
                           fontSize: 40,
                           fontWeight: FontWeight.w900,
@@ -120,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 30),
                         child: Text(
-                          'سبيلك للتوازن المالي',
+                          'app_slogan'.tr,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.elMessiri(
                             fontSize: 16,
@@ -151,7 +152,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 children: [
                   Text(
-                    'مطور من طرف محمد نور',
+                    'developed_by_simple'.tr,
                     style: GoogleFonts.elMessiri(
                       fontSize: 13,
                       color: Colors.white54,
@@ -159,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '© 2026 جميع الحقوق محفوظة',
+                    'all_rights_reserved'.tr,
                     style: GoogleFonts.elMessiri(
                       fontSize: 12,
                       color: Colors.white38,

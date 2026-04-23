@@ -69,51 +69,54 @@ class _MyhomeState extends State<Myhome> {
           child: const Icon(Icons.query_stats, size: 25),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.miniEndDocked,*/
-        bottomNavigationBar: Theme(
-          data: ThemeData(
-            splashColor: Colors.black,
-            highlightColor: Colors.transparent,
-          ),
-          child: BottomNavigationBar(
-            currentIndex: pageindex,
-            type: BottomNavigationBarType.fixed,
-            // backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
-            backgroundColor: Colors.black,
-            selectedItemColor: Color.fromARGB(
-              255,
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-                  .clamp(0, 255),
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).green +
-                      50)
-                  .clamp(0, 255),
-              (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-                  .clamp(0, 255),
+        bottomNavigationBar: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Theme(
+            data: ThemeData(
+              splashColor: Colors.black,
+              highlightColor: Colors.transparent,
             ),
-            unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            elevation: 0,
-            iconSize: 26,
-            selectedIconTheme: const IconThemeData(size: 30),
-            selectedFontSize: 12,
-            unselectedFontSize: 10,
-            items: List.generate(listactions.length, (index) {
-              return BottomNavigationBarItem(
-                icon: ExcludeSemantics(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.only(
-                      bottom: pageindex == index ? 4 : 0,
+            child: BottomNavigationBar(
+              currentIndex: pageindex,
+              type: BottomNavigationBarType.fixed,
+              // backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
+              backgroundColor: Colors.black,
+              selectedItemColor: Color.fromARGB(
+                255,
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
+                    .clamp(0, 255),
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).green +
+                        50)
+                    .clamp(0, 255),
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
+                    .clamp(0, 255),
+              ),
+              unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              elevation: 0,
+              iconSize: 26,
+              selectedIconTheme: const IconThemeData(size: 30),
+              selectedFontSize: 12,
+              unselectedFontSize: 10,
+              items: List.generate(listactions.length, (index) {
+                return BottomNavigationBarItem(
+                  icon: ExcludeSemantics(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.only(
+                        bottom: pageindex == index ? 4 : 0,
+                      ),
+                      child: Icon(listactions[index]),
                     ),
-                    child: Icon(listactions[index]),
                   ),
-                ),
-                label: labels[index],
-              );
-            }),
-            onTap: (index) {
-              setTabs(index);
-            },
+                  label: labels[index],
+                );
+              }),
+              onTap: (index) {
+                setTabs(index);
+              },
+            ),
           ),
         ),
       ),
@@ -145,48 +148,51 @@ class _MyhomeState extends State<Myhome> {
       Icons.settings_outlined,
     ];
     List<String> labels = ["budget".tr, "wallet".tr, "stats".tr, "settings".tr];
-    return Theme(
-      data: ThemeData(
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
-      child: BottomNavigationBar(
-        currentIndex: pageindex,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-
-        selectedItemColor: Color.fromARGB(
-          255,
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-              .clamp(0, 255),
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50)
-              .clamp(0, 255),
-          (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-              .clamp(0, 255),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Theme(
+        data: ThemeData(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
-        unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        elevation: 0,
-        iconSize: 26,
-        selectedIconTheme: const IconThemeData(size: 30),
-        selectedFontSize: 12,
-        unselectedFontSize: 10,
-        items: List.generate(listactions.length, (index) {
-          return BottomNavigationBarItem(
-            icon: ExcludeSemantics(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-                child: Icon(listactions[index]),
+        child: BottomNavigationBar(
+          currentIndex: pageindex,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.transparent,
+
+          selectedItemColor: Color.fromARGB(
+            255,
+            (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
+                .clamp(0, 255),
+            (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50)
+                .clamp(0, 255),
+            (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
+                .clamp(0, 255),
+          ),
+          unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          elevation: 0,
+          iconSize: 26,
+          selectedIconTheme: const IconThemeData(size: 30),
+          selectedFontSize: 12,
+          unselectedFontSize: 10,
+          items: List.generate(listactions.length, (index) {
+            return BottomNavigationBarItem(
+              icon: ExcludeSemantics(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
+                  child: Icon(listactions[index]),
+                ),
               ),
-            ),
-            label: labels[index],
-          );
-        }),
-        onTap: (index) {
-          setTabs(index);
-        },
+              label: labels[index],
+            );
+          }),
+          onTap: (index) {
+            setTabs(index);
+          },
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
+import 'package:budget_it/utils/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:get/get.dart';
 
 class InsightsTotalsRow extends StatelessWidget {
   final num totalSpendingMonth;
@@ -38,7 +40,7 @@ class InsightsTotalsRow extends StatelessWidget {
           // Spending Card
           Expanded(
             child: _StatCard(
-              title: 'مجموع المصاريف',
+              title: 'total_expenses'.tr,
               value: totalSpendingMonth.toString(),
               icon: Icons.trending_down,
               colors: [
@@ -55,7 +57,7 @@ class InsightsTotalsRow extends StatelessWidget {
           // Net Card
           Expanded(
             child: _StatCard(
-              title: 'الرصيد الصافي',
+              title: 'net_balance'.tr,
               value: netMonth.toString(),
               icon: netMonth >= 0 ? Icons.trending_up : Icons.trending_down,
               colors: [
@@ -80,7 +82,7 @@ class InsightsTotalsRow extends StatelessWidget {
           // Income Card
           Expanded(
             child: _StatCard(
-              title: 'مجموع المداخيل',
+              title: 'total_earnings'.tr,
               value: totalIncomeMonth.toString(),
               icon: Icons.trending_up,
               colors: [
@@ -148,12 +150,14 @@ class _StatCard extends StatelessWidget {
                 child: Icon(icon, size: 14, color: iconColor),
               ),
               const SizedBox(width: 5),
-              Text(
-                '$value درهم',
-                style: darktextstyle.copyWith(
-                  fontSize: fontSize1 * 1.05,
-                  fontWeight: FontWeight.bold,
-                  color: valueColor,
+              Obx(
+                () => Text(
+                  '$value ${LanguageController.to.currency.value}',
+                  style: darktextstyle.copyWith(
+                    fontSize: fontSize1 * 1.05,
+                    fontWeight: FontWeight.bold,
+                    color: valueColor,
+                  ),
                 ),
               ),
             ],

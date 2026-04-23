@@ -31,8 +31,6 @@ class AppTheme {
         onSecondary: isDark ? Colors.black : Colors.white,
         error: ColorTheme.errorColor,
         onError: Colors.white,
-        background: colors['background']!,
-        onBackground: colors['textPrimary']!,
         surface: colors['card']!,
         onSurface: colors['textPrimary']!,
       ),
@@ -177,9 +175,6 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-
-      // Dialog theme
-      dialogBackgroundColor: colors['card']!,
       dialogTheme: DialogThemeData(
         backgroundColor: colors['card']!,
         titleTextStyle: textTheme.titleLarge?.copyWith(
@@ -210,14 +205,14 @@ class AppTheme {
 
       // Switch theme
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return accentColor;
           }
           return colors['textSecondary']!.withOpacity(0.5);
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return accentColor.withOpacity(0.5);
           }
           return colors['textSecondary']!.withOpacity(0.2);

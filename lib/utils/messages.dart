@@ -30,7 +30,6 @@ class Messages extends Translations {
       'salary_day_alert': 'Salary Day Alert',
       'low_balance_alert': 'Low Balance Alert',
       'alert_threshold': 'Alert Threshold',
-      'send_test_notification': 'Send Test Notification',
       'reset_app': 'Reset App',
       'reset_confirmation_title': 'Reset Confirmation',
       'reset_confirmation_msg': 'All stored data will be permanently deleted.',
@@ -41,9 +40,6 @@ class Messages extends Translations {
       'github_profile_btn': 'GitHub Profile',
       'notif_permission_msg':
           'Please enable notifications from system settings to receive alerts.',
-      'test_notif_title': 'Notification Test ✅',
-      'test_notif_body': 'Notifications are working correctly in Budget It!',
-      'test_notif_sent': 'Test notification sent',
       // Wallet
       'smart_advisor': 'Smart Financial Advisor',
       'get_advice_msg':
@@ -139,7 +135,7 @@ class Messages extends Translations {
       'remaining': 'Remaining',
       // Budget Screen
       'spending_title': 'Spending Title',
-      'amount_currency': 'Amount (DH)',
+      'amount_currency': 'Amount',
       'date': 'Date',
       'choose_date': 'Choose Date',
       'variable_expenses': 'Variable Expenses',
@@ -190,7 +186,7 @@ class Messages extends Translations {
       'top_3_earnings': 'Top 3 Earnings',
       'manage_your_resources': 'Manage Your Resources',
       'total_amount_to_save': 'Total Amount to Save',
-      'amount_available_on': 'Amount available on',
+      'amount_available_on': 'Amount available',
       'expected_monthly_savings': 'Expected Monthly Savings',
       'annual_rest_months': 'Annual Rest Months',
       'personal_expenses_structure': 'Personal Expenses Structure',
@@ -226,15 +222,16 @@ class Messages extends Translations {
       'november': 'November',
       'december': 'December',
       // Notifications
-      'daily_reminder_title': 'Daily Budget Reminder 💰',
+      'daily_reminder_title': 'Financial Checkpoint 📊',
       'daily_reminder_body':
-          'Dont forget to review your spending today and check your budget.',
-      'salary_day_title': 'Salary Day 🎉',
+          'A quick review of today\'s spending keeps your financial goals within reach. Stay disciplined!',
+      'salary_day_title': 'New Cycle, New Opportunities ✨',
       'salary_day_body':
-          'Congratulations! It is salary day. Dont forget to review your financial plan.',
-      'low_balance_title': 'Warning: Low Balance ⚠️',
+          'Your funds have arrived! Set your priorities early and make this month your best one yet.',
+      'low_balance_title': 'Action Required: Budget Alert ⚠️',
       'low_balance_body':
-          'Your current balance (%s) is below the alert threshold (%s). Review your spending now!',
+          'You\'ve reached your lower limit (%s). It\'s time to pause and prioritize essential spending only.',
+      'select_currency': 'Select Currency',
       // Common
       'currency': 'DH',
       'unit': 'Unit',
@@ -257,6 +254,41 @@ class Messages extends Translations {
       'min_annual_saving': 'Min Annual Saving',
       'target_achieved': 'Target Achieved!',
       'days_left_for_salary': 'Days left for salary',
+      // API Key Manager
+      'please_enter_api_key': 'Please enter an API key',
+      'api_key_saved_success': 'API key saved successfully!',
+      'api_key_saved_success_check': 'API key saved successfully! ✓',
+      'error_prefix': 'Error: %s',
+      'clear_api_key': 'Clear API Key',
+      'clear_api_key_confirmation':
+          'Are you sure you want to delete the stored API key?',
+      'api_key_cleared_success': 'API key cleared successfully',
+      'api_key_cleared_success_check': 'API key cleared successfully! ✓',
+      'delete': 'Delete',
+      'smart_advisor_setup': 'Smart Financial Advisor Setup',
+      'about_gemini_api': 'About Google Gemini API',
+      'gemini_api_instructions':
+          '1. Go to Google AI Studio (https://aistudio.google.com/app/apikey)\n2. Click "Get API Key"\n3. Create a new API key\n4. Copy the key and paste it below\n5. Your API key is stored securely on your device',
+      'gemini_api_usage_info':
+          'The free tier includes 60 requests per minute. This is perfect for daily financial advice!',
+      'gemini_api_key': 'Gemini API Key',
+      'paste_gemini_api_key_hint': 'Paste your Gemini API key here',
+      'update_api_key': 'Update API Key',
+      'save_api_key': 'Save API Key',
+      'api_key_configured': 'API Key Configured ✓',
+      'api_key_not_configured': 'API Key Not Configured',
+      // Splash Screen
+      'app_slogan': 'Your path to financial balance',
+      'developed_by_simple': 'Developed by Mohammed Nor',
+      'all_rights_reserved': '© 2026 All Rights Reserved',
+      // Insights Card
+      'expense_income_analysis': 'Expense & Income Analysis',
+      'variable_label': 'Variable',
+      'fixed_expenses_label': 'Fixed Expenses',
+      'variable_earnings_label': 'Variable Earnings',
+      'average_label': 'Average',
+      'monthly_label': 'Monthly',
+      'currency_per_month': 'Unit/Month',
     },
     'ar': {
       'app_name': 'Budget It',
@@ -285,7 +317,6 @@ class Messages extends Translations {
       'salary_day_alert': 'تنبيه يوم الراتب',
       'low_balance_alert': 'تنبيه انخفاض الرصيد',
       'alert_threshold': 'عتبة التنبيه',
-      'send_test_notification': 'إرسال إشعار تجريبي',
       'reset_app': 'إعادة ضبط التطبيق',
       'reset_confirmation_title': 'تأكيد إعادة ضبط التطبيق',
       'reset_confirmation_msg': 'سيتم حذف جميع البيانات المخزنة بشكل نهائي.',
@@ -298,9 +329,6 @@ class Messages extends Translations {
       'github_profile_btn': 'الملف الشخصي على GitHub',
       'notif_permission_msg':
           'يرجى تفعيل الإشعارات من إعدادات النظام لتلقي التنبيهات.',
-      'test_notif_title': 'اختبار الإشعارات ✅',
-      'test_notif_body': 'الإشعارات تعمل بشكل صحيح في تطبيق Budget It!',
-      'test_notif_sent': 'تم إرسال إشعار تجريبي',
       // Wallet
       'smart_advisor': 'مستشار مالي ذكي',
       'get_advice_msg': 'احصل على نصائح مالية مخصصة بناءً على عادات إنفاقك',
@@ -392,7 +420,7 @@ class Messages extends Translations {
       'remaining': 'الباقي',
       // Budget Screen
       'spending_title': 'عنوان المصروف',
-      'amount_currency': 'المبلغ (درهم)',
+      'amount_currency': 'المبلغ',
       'date': 'التاريخ',
       'choose_date': 'اختر التاريخ',
       'variable_expenses': 'مصاريف غير قارة',
@@ -443,7 +471,7 @@ class Messages extends Translations {
       'top_3_earnings': 'أكبر 3 مداخل',
       'manage_your_resources': 'تدبير الموارد الخاصة بك',
       'total_amount_to_save': 'المبلغ الإجمالي المراد توفيره',
-      'amount_available_on': 'المبلغ المتوفر يوم',
+      'amount_available_on': 'المبلغ المتوفر',
       'expected_monthly_savings': 'المبلغ الشهري المرتقب إدخاره',
       'annual_rest_months': 'عدد أشهر الراحة السنوية',
       'personal_expenses_structure': 'هيكلة المصاريف الشخصية',
@@ -479,14 +507,16 @@ class Messages extends Translations {
       'november': 'نونبر',
       'december': 'دجنبر',
       // Notifications
-      'daily_reminder_title': 'تذكير ميزانيتك اليومي 💰',
-      'daily_reminder_body': 'لا تنسَ مراجعة إنفاقك اليوم والتحقق من ميزانيتك.',
-      'salary_day_title': 'يوم الراتب 🎉',
+      'daily_reminder_title': 'وقفة مالية 📊',
+      'daily_reminder_body':
+          'مراجعة مصاريفك اليومية تقربك من أهدافك المالية. استمر في الانضباط!',
+      'salary_day_title': 'بداية دورة جديدة ✨',
       'salary_day_body':
-          'تهانينا! لقد حل يوم صرف الراتب. لا تنسَ مراجعة خطتك المالية.',
-      'low_balance_title': 'تحذير: رصيدك منخفض ⚠️',
+          'وصلت ميزانيتك! حدد أولوياتك مبكراً واجعل هذا الشهر الأفضل ماليًا.',
+      'low_balance_title': 'تنبيه: ميزانيتك في خطر ⚠️',
       'low_balance_body':
-          'رصيدك الحالي (%s) أقل من الحد التنبيهي (%s). راجع إنفاقك الآن!',
+          'لقد وصلت إلى الحد الأدنى (%s). حان الوقت لإعادة النظر في مصاريفك وتحديد الأساسيات فقط.',
+      'select_currency': 'اختر العملة',
       // Common
       'currency': 'درهم',
       'unit': 'وحدة',
@@ -508,6 +538,41 @@ class Messages extends Translations {
       'max_annual_saving': 'أقصى ما يمكن إدخاره سنويا',
       'min_annual_saving': 'أقل ما يمكن إدخاره سنويا',
       'target_achieved': 'تم تحقيق الهدف!',
+      // API Key Manager
+      'please_enter_api_key': 'يرجى إدخال مفتاح API',
+      'api_key_saved_success': 'تم حفظ مفتاح API بنجاح!',
+      'api_key_saved_success_check': 'تم حفظ مفتاح API بنجاح! ✓',
+      'error_prefix': 'خطأ: %s',
+      'clear_api_key': 'مسح مفتاح API',
+      'clear_api_key_confirmation':
+          'هل أنت متأكد أنك تريد حذف مفتاح API المخزن؟',
+      'api_key_cleared_success': 'تم مسح مفتاح API بنجاح!',
+      'api_key_cleared_success_check': 'تم مسح مفتاح API بنجاح! ✓',
+      'delete': 'حذف',
+      'smart_advisor_setup': 'إعداد المستشار المالي الذكي',
+      'about_gemini_api': 'حول Google Gemini API',
+      'gemini_api_instructions':
+          '1. اذهب إلى Google AI Studio (https://aistudio.google.com/app/apikey)\n2. اضغط على "Get API Key"\n3. أنشئ مفتاح API جديداً\n4. انسخ المفتاح وألصقه أدناه\n5. يتم تخزين مفتاح API الخاص بك بشكل آمن على جهازك',
+      'gemini_api_usage_info':
+          'تتضمن الفئة المجانية 60 طلباً في الدقيقة. هذا مثالي للحصول على نصائح مالية يومية!',
+      'gemini_api_key': 'مفتاح Gemini API',
+      'paste_gemini_api_key_hint': 'ألصق مفتاح Gemini API الخاص بك هنا',
+      'update_api_key': 'تحديث مفتاح API',
+      'save_api_key': 'حفظ مفتاح API',
+      'api_key_configured': 'تم تكوين مفتاح API ✓',
+      'api_key_not_configured': 'لم يتم تكوين مفتاح API',
+      // Splash Screen
+      'app_slogan': 'سبيلك للتوازن المالي',
+      'developed_by_simple': 'مطور من طرف محمد نور',
+      'all_rights_reserved': '© 2026 جميع الحقوق محفوظة',
+      // Insights Card
+      'expense_income_analysis': 'تحليل المصاريف والمداخيل',
+      'variable_label': 'غير القارة',
+      'fixed_expenses_label': 'المصاريف القارة',
+      'variable_earnings_label': 'المداخيل المتغيرة',
+      'average_label': 'المتوسط',
+      'monthly_label': 'شهري',
+      'currency_per_month': 'وحدة/شهر',
     },
   };
 }

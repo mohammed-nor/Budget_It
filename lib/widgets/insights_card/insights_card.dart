@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
-import 'insights_header.dart';
+import 'package:get/get.dart';
 import 'insights_totals_row.dart';
 import 'insights_distribution_chart.dart';
 import 'insights_expenses_income_summary.dart';
@@ -130,7 +130,7 @@ class InsightsCard extends StatelessWidget {
                         }
                         if (allDates.isEmpty) {
                           return Text(
-                            'لا توجد بيانات كافية للإحصائيات',
+                            'not_enough_stats_data'.tr,
                             style: darktextstyle.copyWith(fontSize: fontSize1),
                           );
                         }

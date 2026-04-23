@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:budget_it/utils/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart' as gauge;
@@ -175,7 +176,9 @@ class _StatspageState extends State<Statspage> {
         content: Text(
           "restored_sync".tr,
           style: GoogleFonts.elMessiri(color: Colors.white),
-          textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+          textAlign: Get.locale?.languageCode == 'ar'
+              ? TextAlign.right
+              : TextAlign.left,
         ),
         backgroundColor: Colors.green.shade700,
         behavior: SnackBarBehavior.floating,
@@ -209,8 +212,18 @@ class _StatspageState extends State<Statspage> {
 
   String getMonthName(int index) {
     final List<String> monthKeys = [
-      'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-      'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec',
     ];
 
     final now = DateTime.now();
@@ -290,8 +303,16 @@ class _StatspageState extends State<Statspage> {
         .toList();
 
     final pieData = [
-      ChartData('stable_income'.tr, avgStable.toDouble(), const Color(0xFF15803D)),
-      ChartData('unstable_income'.tr, avgUnstable.toDouble(), const Color(0xFFB91C1C)),
+      ChartData(
+        'stable_income'.tr,
+        avgStable.toDouble(),
+        const Color(0xFF15803D),
+      ),
+      ChartData(
+        'unstable_income'.tr,
+        avgUnstable.toDouble(),
+        const Color(0xFFB91C1C),
+      ),
     ];
 
     return ValueListenableBuilder(
@@ -441,7 +462,7 @@ class _StatspageState extends State<Statspage> {
         Expanded(
           child: _buildProjectCard(
             title: "monthly_average".tr,
-            value: "${totalAvg.toStringAsFixed(0)} ${'currency'.tr}",
+            value: "${totalAvg.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
             icon: Icons.account_balance_wallet_rounded,
             accentColor: const Color(0xFF00C9FF),
             cardColor: cardColor,
@@ -481,6 +502,7 @@ class _StatspageState extends State<Statspage> {
     required Color textColor,
     required Color secondaryTextColor,
   }) {
+    bool isAr = Get.locale?.languageCode == 'ar';
     return Card(
       elevation: 2,
       color: cardColor,
@@ -491,43 +513,84 @@ class _StatspageState extends State<Statspage> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: accentColor, size: 22),
-            ),
-            const SizedBox(width: 6),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  title,
-                  textAlign: Get.locale?.languageCode == 'ar'
-                      ? TextAlign.right
-                      : TextAlign.left,
-                  style: GoogleFonts.elMessiri(
-                    color: secondaryTextColor,
-                    fontSize: fontSize1,
+          children: !isAr
+              ? [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: Get.locale?.languageCode == 'ar'
+                            ? TextAlign.right
+                            : TextAlign.left,
+                        style: GoogleFonts.elMessiri(
+                          color: secondaryTextColor,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        value,
+                        textAlign: Get.locale?.languageCode == 'ar'
+                            ? TextAlign.right
+                            : TextAlign.left,
+                        style: GoogleFonts.elMessiri(
+                          color: textColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                  style: GoogleFonts.elMessiri(
-                    color: textColor,
-                    fontSize: fontSize1,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: accentColor, size: 22),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ]
+              : [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: accentColor, size: 22),
+                  ),
+                  const SizedBox(width: 6),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: Get.locale?.languageCode == 'ar'
+                            ? TextAlign.right
+                            : TextAlign.left,
+                        style: GoogleFonts.elMessiri(
+                          color: secondaryTextColor,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        value,
+                        textAlign: Get.locale?.languageCode == 'ar'
+                            ? TextAlign.right
+                            : TextAlign.left,
+                        style: GoogleFonts.elMessiri(
+                          color: textColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
         ),
       ),
     );
@@ -549,59 +612,59 @@ class _StatspageState extends State<Statspage> {
         padding: const EdgeInsets.all(6),
         child: ExcludeSemantics(
           child: chart.SfCartesianChart(
-          key: const ValueKey('trendChartStats'),
-          plotAreaBorderWidth: 0,
-          margin: EdgeInsets.zero,
-          title: chart.ChartTitle(
-            text: 'total_income_curve'.tr,
-            textStyle: GoogleFonts.elMessiri(
-              color: textColor,
-              fontSize: fontSize1,
-              fontWeight: FontWeight.bold,
-            ),
-            alignment: chart.ChartAlignment.far,
-          ),
-          primaryXAxis: chart.CategoryAxis(
-            majorGridLines: const chart.MajorGridLines(width: 0),
-            labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
-          ),
-          primaryYAxis: chart.NumericAxis(
-            majorGridLines: chart.MajorGridLines(
-              width: 1,
-              color: isDark ? Colors.white10 : Colors.black12,
-              dashArray: const [5, 5],
-            ),
-            axisLine: const chart.AxisLine(width: 0),
-            labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
-          ),
-          series: <chart.CartesianSeries<ChartData, String>>[
-            chart.SplineAreaSeries<ChartData, String>(
-              dataSource: data,
-              xValueMapper: (ChartData data, _) => data.x,
-              yValueMapper: (ChartData data, _) => data.y,
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF00C9FF).withValues(alpha: 0.5),
-                  const Color(0xFF00C9FF).withValues(alpha: 0.0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+            key: const ValueKey('trendChartStats'),
+            plotAreaBorderWidth: 0,
+            margin: EdgeInsets.zero,
+            title: chart.ChartTitle(
+              text: 'total_income_curve'.tr,
+              textStyle: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
               ),
-              borderColor: const Color(0xFF00C9FF),
-              borderWidth: 3,
-              markerSettings: const chart.MarkerSettings(
-                isVisible: true,
-                color: Color(0xFF00C9FF),
-              ),
-              animationDuration: 0,
+              alignment: chart.ChartAlignment.center,
             ),
-          ],
-          tooltipBehavior: chart.TooltipBehavior(
-            enable: true,
-            textStyle: GoogleFonts.elMessiri(),
+            primaryXAxis: chart.CategoryAxis(
+              majorGridLines: const chart.MajorGridLines(width: 0),
+              labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
+            ),
+            primaryYAxis: chart.NumericAxis(
+              majorGridLines: chart.MajorGridLines(
+                width: 1,
+                color: isDark ? Colors.white10 : Colors.black12,
+                dashArray: const [5, 5],
+              ),
+              axisLine: const chart.AxisLine(width: 0),
+              labelStyle: GoogleFonts.elMessiri(color: secondaryTextColor),
+            ),
+            series: <chart.CartesianSeries<ChartData, String>>[
+              chart.SplineAreaSeries<ChartData, String>(
+                dataSource: data,
+                xValueMapper: (ChartData data, _) => data.x,
+                yValueMapper: (ChartData data, _) => data.y,
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF00C9FF).withValues(alpha: 0.5),
+                    const Color(0xFF00C9FF).withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderColor: const Color(0xFF00C9FF),
+                borderWidth: 3,
+                markerSettings: const chart.MarkerSettings(
+                  isVisible: true,
+                  color: Color(0xFF00C9FF),
+                ),
+                animationDuration: 0,
+              ),
+            ],
+            tooltipBehavior: chart.TooltipBehavior(
+              enable: true,
+              textStyle: GoogleFonts.elMessiri(),
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -621,47 +684,47 @@ class _StatspageState extends State<Statspage> {
         height: 250,
         child: ExcludeSemantics(
           child: chart.SfCircularChart(
-          palette: [
-            const Color.fromARGB(255, 191, 124, 0),
-            const Color.fromARGB(255, 109, 33, 180),
-          ],
-          key: const ValueKey('incomePipeStats'),
-          title: chart.ChartTitle(
-            text: 'income_distribution'.tr,
-            textStyle: GoogleFonts.elMessiri(
-              color: textColor,
-              fontSize: fontSize1 - 4,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          legend: chart.Legend(
-            isVisible: true,
-            position: chart.LegendPosition.bottom,
-            textStyle: GoogleFonts.elMessiri(
-              color: secondaryTextColor,
-              fontSize: 8,
-            ),
-          ),
-          series: <chart.CircularSeries<ChartData, String>>[
-            chart.DoughnutSeries<ChartData, String>(
-              dataSource: data,
-              xValueMapper: (ChartData data, _) => data.x,
-              yValueMapper: (ChartData data, _) => data.y,
-              pointColorMapper: (ChartData data, _) => data.color,
-              dataLabelSettings: chart.DataLabelSettings(
-                isVisible: true,
-                textStyle: GoogleFonts.elMessiri(
-                  fontSize: 12,
-                  color: Color.fromARGB(255, 255, 255, 255),
-                ),
+            palette: [
+              const Color.fromARGB(255, 191, 124, 0),
+              const Color.fromARGB(255, 109, 33, 180),
+            ],
+            key: const ValueKey('incomePipeStats'),
+            title: chart.ChartTitle(
+              text: 'income_distribution'.tr,
+              textStyle: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
               ),
-              innerRadius: '60%',
-              animationDuration: 0,
             ),
-          ],
+            legend: chart.Legend(
+              isVisible: true,
+              position: chart.LegendPosition.bottom,
+              textStyle: GoogleFonts.elMessiri(
+                color: secondaryTextColor,
+                fontSize: 8,
+              ),
+            ),
+            series: <chart.CircularSeries<ChartData, String>>[
+              chart.DoughnutSeries<ChartData, String>(
+                dataSource: data,
+                xValueMapper: (ChartData data, _) => data.x,
+                yValueMapper: (ChartData data, _) => data.y,
+                pointColorMapper: (ChartData data, _) => data.color,
+                dataLabelSettings: chart.DataLabelSettings(
+                  isVisible: true,
+                  textStyle: GoogleFonts.elMessiri(
+                    fontSize: 12,
+                    color: Color.fromARGB(255, 255, 255, 255),
+                  ),
+                ),
+                innerRadius: '60%',
+                animationDuration: 0,
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -714,67 +777,67 @@ class _StatspageState extends State<Statspage> {
         height: 180,
         child: ExcludeSemantics(
           child: gauge.SfRadialGauge(
-          key: ValueKey('stabilityGauge_$title'),
-          title: gauge.GaugeTitle(
-            text: title,
-            textStyle: GoogleFonts.elMessiri(
-              color: textColor,
-              fontSize: fontSize1 - 4,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          axes: <gauge.RadialAxis>[
-            gauge.RadialAxis(
-              minimum: 0,
-              maximum: 100,
-              showLabels: false,
-              showTicks: false,
-              axisLineStyle: const gauge.AxisLineStyle(
-                thickness: 0.15,
-                cornerStyle: gauge.CornerStyle.bothCurve,
-                color: Color.fromRGBO(200, 200, 200, 0.1),
-                thicknessUnit: gauge.GaugeSizeUnit.factor,
+            key: ValueKey('stabilityGauge_$title'),
+            title: gauge.GaugeTitle(
+              text: title,
+              textStyle: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
               ),
-              pointers: <gauge.GaugePointer>[
-                gauge.RangePointer(
-                  value: gaugeValue,
-                  width: 0.15,
-                  sizeUnit: gauge.GaugeSizeUnit.factor,
+            ),
+            axes: <gauge.RadialAxis>[
+              gauge.RadialAxis(
+                minimum: 0,
+                maximum: 100,
+                showLabels: false,
+                showTicks: false,
+                axisLineStyle: const gauge.AxisLineStyle(
+                  thickness: 0.15,
                   cornerStyle: gauge.CornerStyle.bothCurve,
-                  gradient: const SweepGradient(
-                    colors: <Color>[Color(0xFF00C9FF), Color(0xFF15803D)],
-                    stops: <double>[0.25, 0.75],
+                  color: Color.fromRGBO(200, 200, 200, 0.1),
+                  thicknessUnit: gauge.GaugeSizeUnit.factor,
+                ),
+                pointers: <gauge.GaugePointer>[
+                  gauge.RangePointer(
+                    value: gaugeValue,
+                    width: 0.15,
+                    sizeUnit: gauge.GaugeSizeUnit.factor,
+                    cornerStyle: gauge.CornerStyle.bothCurve,
+                    gradient: const SweepGradient(
+                      colors: <Color>[Color(0xFF00C9FF), Color(0xFF15803D)],
+                      stops: <double>[0.25, 0.75],
+                    ),
+                    enableAnimation: false,
                   ),
-                  enableAnimation: false,
-                ),
-                gauge.MarkerPointer(
-                  value: gaugeValue,
-                  markerType: gauge.MarkerType.circle,
-                  markerHeight: 10,
-                  markerWidth: 10,
-                  color: textColor,
-                  enableAnimation: false,
-                ),
-              ],
-              annotations: <gauge.GaugeAnnotation>[
-                gauge.GaugeAnnotation(
-                  positionFactor: 0.1,
-                  angle: 90,
-                  widget: Text(
-                    '${gaugeValue.toStringAsFixed(0)}%',
-                    style: GoogleFonts.elMessiri(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+                  gauge.MarkerPointer(
+                    value: gaugeValue,
+                    markerType: gauge.MarkerType.circle,
+                    markerHeight: 10,
+                    markerWidth: 10,
+                    color: textColor,
+                    enableAnimation: false,
+                  ),
+                ],
+                annotations: <gauge.GaugeAnnotation>[
+                  gauge.GaugeAnnotation(
+                    positionFactor: 0.1,
+                    angle: 90,
+                    widget: Text(
+                      '${gaugeValue.toStringAsFixed(0)}%',
+                      style: GoogleFonts.elMessiri(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -804,58 +867,58 @@ class _StatspageState extends State<Statspage> {
         padding: const EdgeInsets.all(6),
         child: ExcludeSemantics(
           child: chart.SfCartesianChart(
-          key: const ValueKey('expenseTrendChart'),
-          plotAreaBorderWidth: 0,
-          margin: EdgeInsets.zero,
-          title: chart.ChartTitle(
-            text: 'expense_trend_unstable'.tr,
-            textStyle: GoogleFonts.elMessiri(
-              color: textColor,
-              fontSize: fontSize1,
-              fontWeight: FontWeight.bold,
-            ),
-            alignment: chart.ChartAlignment.far,
-          ),
-          primaryXAxis: chart.CategoryAxis(
-            majorGridLines: const chart.MajorGridLines(width: 0),
-            labelStyle: GoogleFonts.elMessiri(
-              color: secondaryTextColor,
-              fontSize: 10,
-            ),
-          ),
-          primaryYAxis: chart.NumericAxis(
-            majorGridLines: chart.MajorGridLines(
-              width: 1,
-              color: isDark ? Colors.white10 : Colors.black12,
-              dashArray: const [5, 5],
-            ),
-            axisLine: const chart.AxisLine(width: 0),
-            labelStyle: GoogleFonts.elMessiri(
-              color: secondaryTextColor,
-              fontSize: 10,
-            ),
-          ),
-          series: <chart.CartesianSeries<ChartData, String>>[
-            chart.SplineAreaSeries<ChartData, String>(
-              dataSource: expenseData,
-              xValueMapper: (ChartData data, _) => data.x,
-              yValueMapper: (ChartData data, _) => data.y,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.redAccent.withValues(alpha: 0.4),
-                  Colors.redAccent.withValues(alpha: 0.0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+            key: const ValueKey('expenseTrendChart'),
+            plotAreaBorderWidth: 0,
+            margin: EdgeInsets.zero,
+            title: chart.ChartTitle(
+              text: 'expense_trend_unstable'.tr,
+              textStyle: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
               ),
-              borderColor: Colors.redAccent,
-              borderWidth: 2,
-              animationDuration: 0,
+              alignment: chart.ChartAlignment.center,
             ),
-          ],
+            primaryXAxis: chart.CategoryAxis(
+              majorGridLines: const chart.MajorGridLines(width: 0),
+              labelStyle: GoogleFonts.elMessiri(
+                color: secondaryTextColor,
+                fontSize: 10,
+              ),
+            ),
+            primaryYAxis: chart.NumericAxis(
+              majorGridLines: chart.MajorGridLines(
+                width: 1,
+                color: isDark ? Colors.white10 : Colors.black12,
+                dashArray: const [5, 5],
+              ),
+              axisLine: const chart.AxisLine(width: 0),
+              labelStyle: GoogleFonts.elMessiri(
+                color: secondaryTextColor,
+                fontSize: 10,
+              ),
+            ),
+            series: <chart.CartesianSeries<ChartData, String>>[
+              chart.SplineAreaSeries<ChartData, String>(
+                dataSource: expenseData,
+                xValueMapper: (ChartData data, _) => data.x,
+                yValueMapper: (ChartData data, _) => data.y,
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.redAccent.withValues(alpha: 0.4),
+                    Colors.redAccent.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderColor: Colors.redAccent,
+                borderWidth: 2,
+                animationDuration: 0,
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -888,50 +951,50 @@ class _StatspageState extends State<Statspage> {
         height: 250,
         child: ExcludeSemantics(
           child: chart.SfCircularChart(
-          palette: [
-            const Color.fromARGB(255, 191, 124, 0),
-            const Color.fromARGB(255, 109, 33, 180),
-            const Color.fromARGB(255, 172, 15, 47),
-            const Color.fromARGB(255, 184, 0, 184),
-            const Color.fromARGB(255, 0, 0, 182),
-          ],
-          key: const ValueKey('topSpendingPie'),
-          title: chart.ChartTitle(
-            text: 'top_spending'.tr,
-            textStyle: GoogleFonts.elMessiri(
-              color: textColor,
-              fontSize: fontSize1 - 4,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          legend: chart.Legend(
-            isVisible: true,
-            position: chart.LegendPosition.bottom,
-            textStyle: GoogleFonts.elMessiri(
-              color: secondaryTextColor,
-              fontSize: 8,
-            ),
-            overflowMode: chart.LegendItemOverflowMode.wrap,
-          ),
-          series: <chart.CircularSeries<ChartData, String>>[
-            chart.PieSeries<ChartData, String>(
-              dataSource: chartData,
-              xValueMapper: (ChartData data, _) => data.x,
-              yValueMapper: (ChartData data, _) => data.y,
-              dataLabelSettings: chart.DataLabelSettings(
-                isVisible: true,
-                textStyle: GoogleFonts.elMessiri(
-                  fontSize: 12,
-                  color: textColor,
-                ),
+            palette: [
+              const Color.fromARGB(255, 191, 124, 0),
+              const Color.fromARGB(255, 109, 33, 180),
+              const Color.fromARGB(255, 172, 15, 47),
+              const Color.fromARGB(255, 184, 0, 184),
+              const Color.fromARGB(255, 0, 0, 182),
+            ],
+            key: const ValueKey('topSpendingPie'),
+            title: chart.ChartTitle(
+              text: 'top_spending'.tr,
+              textStyle: GoogleFonts.elMessiri(
+                color: textColor,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
               ),
-              explode: true,
-              animationDuration: 0,
             ),
-          ],
+            legend: chart.Legend(
+              isVisible: true,
+              position: chart.LegendPosition.bottom,
+              textStyle: GoogleFonts.elMessiri(
+                color: secondaryTextColor,
+                fontSize: 8,
+              ),
+              overflowMode: chart.LegendItemOverflowMode.wrap,
+            ),
+            series: <chart.CircularSeries<ChartData, String>>[
+              chart.PieSeries<ChartData, String>(
+                dataSource: chartData,
+                xValueMapper: (ChartData data, _) => data.x,
+                yValueMapper: (ChartData data, _) => data.y,
+                dataLabelSettings: chart.DataLabelSettings(
+                  isVisible: true,
+                  textStyle: GoogleFonts.elMessiri(
+                    fontSize: 12,
+                    color: textColor,
+                  ),
+                ),
+                explode: true,
+                animationDuration: 0,
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -944,7 +1007,7 @@ class _StatspageState extends State<Statspage> {
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, bottom: 12),
       child: Row(
-        mainAxisAlignment: Get.locale?.languageCode == 'ar' ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (Get.locale?.languageCode != 'ar') ...[
             Icon(icon, color: accentColor, size: 24),
@@ -954,7 +1017,7 @@ class _StatspageState extends State<Statspage> {
             title,
             style: GoogleFonts.elMessiri(
               color: textColor,
-              fontSize: fontSize1,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -991,7 +1054,7 @@ class _StatspageState extends State<Statspage> {
       children: [
         _buildDetailRow(
           "highest_total_income".tr,
-          "${maxInc.toStringAsFixed(0)} ${'currency'.tr}",
+          "${maxInc.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
           Icons.keyboard_double_arrow_up_rounded,
           const Color(0xFF15803D),
           cardColor,
@@ -1002,7 +1065,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(height: 6),
         _buildDetailRow(
           "lowest_total_income".tr,
-          "${minInc.toStringAsFixed(0)} ${'currency'.tr}",
+          "${minInc.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
           Icons.keyboard_double_arrow_down_rounded,
           const Color(0xFFB91C1C),
           cardColor,
@@ -1013,7 +1076,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(height: 6),
         _buildDetailRow(
           "highest_unstable_expense".tr,
-          "${maxExp.toStringAsFixed(0)} ${'currency'.tr}",
+          "${maxExp.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
           Icons.warning_amber_rounded,
           Colors.redAccent,
           cardColor,
@@ -1024,7 +1087,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(height: 6),
         _buildDetailRow(
           "average_unstable_expense".tr,
-          "${avgSpending.toStringAsFixed(0)} ${'currency'.tr}",
+          "${avgSpending.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
           Icons.payment_rounded,
           Colors.orangeAccent,
           cardColor,
@@ -1035,7 +1098,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(height: 6),
         _buildDetailRow(
           "average_stable_income".tr,
-          "${avgStable.toStringAsFixed(0)} ${'currency'.tr}",
+          "${avgStable.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
           Icons.security_rounded,
           const Color(0xFF00C9FF),
           cardColor,
@@ -1057,6 +1120,7 @@ class _StatspageState extends State<Statspage> {
     Color textColor,
     Color secondaryTextColor,
   ) {
+    bool isAr = Get.locale?.languageCode == 'ar';
     return Card(
       elevation: 2,
       color: cardColor,
@@ -1065,55 +1129,65 @@ class _StatspageState extends State<Statspage> {
         padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (Get.locale?.languageCode != 'ar') ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: accentColor, size: 20),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.elMessiri(
-                  color: secondaryTextColor,
-                  fontSize: fontSize1,
-                ),
-              ),
-            ],
-            const Spacer(),
-            Text(
-              value,
-              style: GoogleFonts.elMessiri(
-                color: textColor,
-                fontSize: fontSize1,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            if (Get.locale?.languageCode == 'ar') ...[
-              Text(
-                label,
-                style: GoogleFonts.elMessiri(
-                  color: secondaryTextColor,
-                  fontSize: fontSize1,
-                ),
-              ),
-              const SizedBox(width: 6),
+          children: isAr
+              ? [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: accentColor, size: 20),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.elMessiri(
+                        color: secondaryTextColor,
+                        fontSize: fontSize1,
+                      ),
+                    ),
+                  ),
 
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: accentColor, size: 20),
-              ),
-            ],
-          ],
+                  Text(
+                    value,
+                    style: GoogleFonts.elMessiri(
+                      color: textColor,
+                      fontSize: fontSize1,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ]
+              : [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: accentColor, size: 20),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.elMessiri(
+                        color: secondaryTextColor,
+                        fontSize: fontSize1,
+                      ),
+                    ),
+                  ),
+
+                  Text(
+                    value,
+                    style: GoogleFonts.elMessiri(
+                      color: textColor,
+                      fontSize: fontSize1,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
         ),
       ),
     );
@@ -1178,9 +1252,15 @@ class _StatspageState extends State<Statspage> {
                   children: [
                     _buildTableHeader("month_header".tr, secondaryTextColor),
                     _buildTableHeader("stable_income_header".tr, Colors.blue),
-                    _buildTableHeader("unstable_income_header".tr, Colors.green),
+                    _buildTableHeader(
+                      "unstable_income_header".tr,
+                      Colors.green,
+                    ),
                     _buildTableHeader("unstable_expense_header".tr, Colors.red),
-                    _buildTableHeader("net_income_header".tr, Colors.greenAccent),
+                    _buildTableHeader(
+                      "net_income_header".tr,
+                      Colors.greenAccent,
+                    ),
                   ],
                 ),
                 // Data Rows
@@ -1284,7 +1364,7 @@ class _StatspageState extends State<Statspage> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
-            "${net.toStringAsFixed(0)}",
+            net.toStringAsFixed(0),
             style: GoogleFonts.elMessiri(
               color: net >= 0 ? textColor : Colors.redAccent,
               fontSize: 11,

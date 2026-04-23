@@ -90,7 +90,7 @@ class _ProfilpageState extends State<Profilpage> {
         children: [
           _buildSectionCard(
             context,
-            padding: EdgeInsets.all(6),
+            padding: EdgeInsets.all(12),
             child: Column(
               children: [
                 Container(
@@ -225,6 +225,8 @@ class _ProfilpageState extends State<Profilpage> {
                 ),
                 const Divider(height: 1, color: Colors.white10),
                 _buildPayingDayPicker(context, prefsdata),
+                const Divider(height: 1, color: Colors.white10),
+                _buildCurrencyPicker(context),
               ],
             ),
           ),
@@ -282,7 +284,7 @@ class _ProfilpageState extends State<Profilpage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: padding ?? const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -358,7 +360,7 @@ class _ProfilpageState extends State<Profilpage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -389,12 +391,8 @@ class _ProfilpageState extends State<Profilpage> {
             : TextAlign.left,
         style: GoogleFonts.elMessiri(color: Colors.white70),
       ),
-      leading: Get.locale?.languageCode == 'ar'
-          ? _buildColorDropdown(prefsdata)
-          : null,
-      trailing: Get.locale?.languageCode == 'ar'
-          ? Icon(Icons.palette_outlined, color: Colors.blue.shade300)
-          : _buildColorDropdown(prefsdata),
+      leading: Icon(Icons.palette_outlined, color: Colors.blue.shade300),
+      trailing: _buildColorDropdown(prefsdata),
       subtitle: Get.locale?.languageCode == 'en' ? null : null, // Keep it clean
     );
   }
@@ -441,12 +439,8 @@ class _ProfilpageState extends State<Profilpage> {
             : TextAlign.left,
         style: GoogleFonts.elMessiri(color: Colors.white70),
       ),
-      leading: Get.locale?.languageCode == 'ar'
-          ? _buildLanguageDropdown(languageController)
-          : null,
-      trailing: Get.locale?.languageCode == 'ar'
-          ? Icon(Icons.language, color: Colors.purple.shade300)
-          : _buildLanguageDropdown(languageController),
+      trailing: _buildLanguageDropdown(languageController),
+      leading: Icon(Icons.language, color: Colors.purple.shade300),
     );
   }
 
@@ -497,12 +491,11 @@ class _ProfilpageState extends State<Profilpage> {
             : TextAlign.left,
         style: GoogleFonts.elMessiri(color: Colors.white70),
       ),
-      leading: Get.locale?.languageCode == 'ar'
-          ? _buildPayingDayDropdown(prefsdata)
-          : null,
-      trailing: Get.locale?.languageCode == 'ar'
-          ? Icon(Icons.calendar_month_outlined, color: Colors.green.shade300)
-          : _buildPayingDayDropdown(prefsdata),
+      leading: Icon(
+        Icons.calendar_month_outlined,
+        color: Colors.green.shade300,
+      ),
+      trailing: _buildPayingDayDropdown(prefsdata),
     );
   }
 
@@ -530,9 +523,59 @@ class _ProfilpageState extends State<Profilpage> {
           if (val != null) {
             setState(() {
               prefsdata.put("payingDay", val);
+              NotificationService.instance.rescheduleAll();
             });
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildCurrencyPicker(BuildContext context) {
+    final controller = Get.find<LanguageController>();
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      title: Text(
+        "select_currency".tr,
+        textAlign: Get.locale?.languageCode == 'ar'
+            ? TextAlign.right
+            : TextAlign.left,
+        style: GoogleFonts.elMessiri(color: Colors.white70),
+      ),
+      leading: Icon(
+        Icons.monetization_on_outlined,
+        color: Colors.amber.shade300,
+      ),
+      trailing: _buildCurrencyDropdown(controller),
+    );
+  }
+
+  Widget _buildCurrencyDropdown(LanguageController controller) {
+    final currencies = ['DH', 'USD', 'EUR', 'SAR', 'AED', 'GBP', 'KWD', 'DZD'];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Obx(
+        () => DropdownButton<String>(
+          value: controller.currency.value,
+          underline: const SizedBox(),
+          dropdownColor: const Color(0xFF1A1A1A),
+          items: currencies.map((val) {
+            return DropdownMenuItem(
+              value: val,
+              child: Text(val, style: const TextStyle(color: Colors.white)),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              controller.changeCurrency(val);
+              setState(() {});
+            }
+          },
+        ),
       ),
     );
   }
@@ -663,21 +706,18 @@ class _ProfilpageState extends State<Profilpage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          color: Colors.orange.shade300,
-                          size: 18,
-                        ),
                         Text(
-                          'reminder_time'.tr +
-                              ': '
-                                  '${_notifDailyHour.toString().padLeft(2, '0')}:'
-                                  '${_notifDailyMinute.toString().padLeft(2, '0')}',
+                          '${'reminder_time'.tr}: ${_notifDailyHour.toString().padLeft(2, '0')}:${_notifDailyMinute.toString().padLeft(2, '0')}',
                           style: GoogleFonts.elMessiri(
                             color: Colors.orange.shade300,
                             fontSize: fontSize1,
                             fontWeight: FontWeight.bold,
                           ),
+                        ),
+                        Icon(
+                          Icons.access_time_rounded,
+                          color: Colors.orange.shade300,
+                          size: 18,
                         ),
                       ],
                     ),
@@ -718,8 +758,9 @@ class _ProfilpageState extends State<Profilpage> {
               onChanged: (val) {
                 setState(() => _notifSalaryEnabled = val);
                 save(kNotifSalaryEnabled, val);
-                if (!val)
+                if (!val) {
                   NotificationService.instance.cancelSalaryNotification();
+                }
               },
             ),
 
@@ -762,13 +803,10 @@ class _ProfilpageState extends State<Profilpage> {
               Padding(
                 padding: const EdgeInsets.only(top: 4, bottom: 4),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'alert_threshold'.tr +
-                          ': '
-                              '${_notifLowBudgetThreshold.toStringAsFixed(0)} ' +
-                          'unit'.tr,
+                      '${'alert_threshold'.tr}: ${_notifLowBudgetThreshold.toStringAsFixed(0)} ${LanguageController.to.currency.value}',
                       style: GoogleFonts.elMessiri(
                         color: Colors.redAccent,
                         fontSize: fontSize1 - 1,
@@ -793,34 +831,6 @@ class _ProfilpageState extends State<Profilpage> {
                 ),
               ),
             ],
-
-            const SizedBox(height: 4),
-
-            // ── Test button ──────────────────────────────────────
-            _buildSettingsAction(
-              context,
-              label: "send_test_notification".tr,
-              icon: Icons.send_outlined,
-              color: accentColor,
-              onTap: () async {
-                await NotificationService.instance.showInstant(
-                  id: 99,
-                  title: 'test_notif_title'.tr,
-                  body: 'test_notif_body'.tr,
-                );
-                // ignore: use_build_context_synchronously
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'test_notif_sent'.tr,
-                      style: GoogleFonts.elMessiri(),
-                    ),
-                    backgroundColor: accentColor,
-                  ),
-                );
-              },
-            ),
           ],
         ],
       ),

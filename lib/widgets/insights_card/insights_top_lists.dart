@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:get/get.dart';
 
 class InsightsTopLists extends StatelessWidget {
   final List<dynamic> top3Spending;
@@ -25,7 +26,7 @@ class InsightsTopLists extends StatelessWidget {
             children: [
               const SizedBox(height: 12),
               Text(
-                'أكبر 3 مصاريف',
+                'top_3_expenses'.tr,
                 style: darktextstyle.copyWith(fontSize: fontSize1 * 0.8),
               ),
               const SizedBox(height: 8),
@@ -66,7 +67,7 @@ class InsightsTopLists extends StatelessWidget {
             children: [
               const SizedBox(height: 12),
               Text(
-                'أكبر 3 مداخل',
+                'top_3_earnings'.tr,
                 style: darktextstyle.copyWith(fontSize: fontSize1 * 0.85),
               ),
               const SizedBox(height: 8),

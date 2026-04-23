@@ -34,7 +34,11 @@ void main() async {
 
   // Initialize notifications
   await NotificationService.instance.init();
-  await NotificationService.instance.rescheduleAll();
+  
+  // Reschedule notifications after GetX is fully ready (after first frame)
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await NotificationService.instance.rescheduleAll();
+  });
 
   runApp(const MyApp());
 }
@@ -62,16 +66,13 @@ class MyApp extends StatelessWidget {
             themeMode: themeController.themeMode,
             translations: Messages(),
             locale: languageController.getLocale,
-            fallbackLocale: const Locale('ar'),
+            fallbackLocale: const Locale('en'),
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: const [
-              Locale('en'),
-              Locale('ar'),
-            ],
+            supportedLocales: const [Locale('en'), Locale('ar')],
           ),
         );
       },

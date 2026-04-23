@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive/hive.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:budget_it/utils/messages.dart';
 import 'package:get/get.dart';
 
 // ─── Hive keys (imported in profil.dart too) ────────────────────────────────
@@ -36,7 +37,7 @@ class NotificationService {
     // Windows: v19 uses WindowsInitializationSettings with appName only
     final windowsInit = WindowsInitializationSettings(
       appName: 'Budget It',
-      appUserModelId: 'com.example.budget_it',
+      appUserModelId: 'com.norit.budget_it',
       guid: 'd6b68c3e-4d3e-4a3e-8b3e-1e2d3f4a5b6c',
     );
 
@@ -54,9 +55,28 @@ class NotificationService {
 
     _initialized = true;
     debugPrint('NotificationService initialized');
-    
+
     // Request permissions on first init
     await requestPermissions();
+
+    // Create notification channel for Android
+    if (Platform.isAndroid) {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlugin != null) {
+        const channel = AndroidNotificationChannel(
+          'budget_it_channel',
+          'Budget It Alerts',
+          description: 'Daily budget reminders and financial alerts',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        );
+        await androidPlugin.createNotificationChannel(channel);
+      }
+    }
   }
 
   /// Explicitly request notification permissions from the user.
@@ -68,18 +88,15 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    
+
     if (android == null) return false;
 
     // Request POST_NOTIFICATIONS (Android 13+)
     final bool? notifGranted = await android.requestNotificationsPermission();
-    // Request SCHEDULE_EXACT_ALARM (Android 12+)
-    final bool? exactGranted = await android.requestExactAlarmsPermission();
 
-    debugPrint('Permissions - Notif: $notifGranted, Exact: $exactGranted');
+    debugPrint('Permissions - Notif: $notifGranted');
     return (notifGranted ?? false);
   }
-
 
   // ──────────────────────────── Build platform-specific details ────────────
   NotificationDetails _buildDetails() {
@@ -126,13 +143,16 @@ class NotificationService {
     final minute = box.get(kNotifDailyMinute, defaultValue: 0) as int;
 
     await _plugin.cancel(1);
+    // Safety delay to ensure the OS has cleared the previous notification
+    await Future.delayed(const Duration(milliseconds: 100));
+
     await _plugin.zonedSchedule(
       1,
-      'daily_reminder_title'.tr,
-      'daily_reminder_body'.tr,
+      _tr('daily_reminder_title'),
+      _tr('daily_reminder_body'),
       _nextInstanceOfTime(hour, minute),
       _buildDetails(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'daily_reminder',
     );
@@ -162,13 +182,15 @@ class NotificationService {
     }
 
     await _plugin.cancel(2);
+    await Future.delayed(const Duration(milliseconds: 100));
+
     await _plugin.zonedSchedule(
       2,
-      'salary_day_title'.tr,
-      'salary_day_body'.tr,
+      _tr('salary_day_title'),
+      _tr('salary_day_body'),
       scheduled,
       _buildDetails(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'salary_day',
     );
     debugPrint('Salary day notification scheduled for $scheduled');
@@ -188,11 +210,10 @@ class NotificationService {
     if (currentBalance <= threshold) {
       await showInstant(
         id: 3,
-        title: 'low_balance_title'.tr,
-        body: 'low_balance_body'.trArgs([
-          currentBalance.toStringAsFixed(0),
-          threshold.toStringAsFixed(0)
-        ]),
+        title: _tr('low_balance_title'),
+        body: _tr(
+          'low_balance_body',
+        ).replaceFirst('%s', currentBalance.toStringAsFixed(0)),
         payload: 'low_budget',
       );
     }
@@ -223,5 +244,20 @@ class NotificationService {
   bool _notificationsEnabled() {
     final box = Hive.box('data');
     return box.get(kNotifEnabled, defaultValue: true) as bool;
+  }
+
+  String _tr(String key) {
+    try {
+      // 1. Try standard GetX translation
+      final res = key.tr;
+      if (res != key) return res;
+
+      // 2. Fallback: manual lookup if GetX isn't ready
+      final lang = Get.locale?.languageCode ?? 'en';
+      final messages = Messages().keys;
+      return messages[lang]?[key] ?? messages['en']?[key] ?? key;
+    } catch (_) {
+      return key;
+    }
   }
 }

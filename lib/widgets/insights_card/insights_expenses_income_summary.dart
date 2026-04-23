@@ -1,5 +1,7 @@
+import 'package:budget_it/utils/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:get/get.dart';
 
 class InsightsExpensesIncomeSummary extends StatelessWidget {
   final num fixedExpenses;
@@ -15,76 +17,81 @@ class InsightsExpensesIncomeSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 12),
-        // Variable Expenses & Income Row - Enhanced
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Variable Expenses
-            Expanded(
-              child: _ExpenseIncomeCard(
-                title: 'غير القارة',
-                label: 'المتوسط',
-                value: '${avgSpendingsPerMonth.toStringAsFixed(0)}',
-                unit: 'درهم/شهر',
-                icon: Icons.trending_down,
-                colors: [
-                  const Color.fromRGBO(253, 95, 95, 0.08),
-                  const Color.fromRGBO(253, 95, 95, 0.02),
-                ],
-                borderColor: const Color.fromRGBO(253, 95, 95, 0.25),
-                titleColor: const Color.fromRGBO(253, 95, 95, 1.0),
-                valueColor: const Color.fromRGBO(253, 95, 95, 1.0),
-                iconColor: const Color.fromRGBO(253, 95, 95, 1.0),
-                iconBgColor: const Color.fromRGBO(253, 95, 95, 0.2),
+    return Obx(
+      () => Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 12),
+          // Variable Expenses & Income Row - Enhanced
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Variable Expenses
+              Expanded(
+                child: _ExpenseIncomeCard(
+                  title: 'variable_label'.tr,
+                  label: 'average_label'.tr,
+                  value: avgSpendingsPerMonth.toStringAsFixed(0),
+                  unit:
+                      "${LanguageController.to.currency.value}/${'month_header'.tr}",
+                  icon: Icons.trending_down,
+                  colors: [
+                    const Color.fromRGBO(253, 95, 95, 0.08),
+                    const Color.fromRGBO(253, 95, 95, 0.02),
+                  ],
+                  borderColor: const Color.fromRGBO(253, 95, 95, 0.25),
+                  titleColor: const Color.fromRGBO(253, 95, 95, 1.0),
+                  valueColor: const Color.fromRGBO(253, 95, 95, 1.0),
+                  iconColor: const Color.fromRGBO(253, 95, 95, 1.0),
+                  iconBgColor: const Color.fromRGBO(253, 95, 95, 0.2),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            // Fixed Expenses (represented as a locked icon)
-            Expanded(
-              child: _ExpenseIncomeCard(
-                title: 'المصاريف القارة',
-                label: 'شهري',
-                value: '${fixedExpenses.toStringAsFixed(0)}',
-                unit: 'درهم/شهر',
-                icon: Icons.lock,
-                colors: [
-                  const Color.fromRGBO(253, 150, 95, 0.08),
-                  const Color.fromRGBO(253, 150, 95, 0.02),
-                ],
-                borderColor: const Color.fromRGBO(253, 150, 95, 0.25),
-                titleColor: const Color.fromRGBO(253, 150, 95, 1.0),
-                valueColor: const Color.fromRGBO(253, 150, 95, 1.0),
-                iconColor: const Color.fromRGBO(253, 150, 95, 1.0),
-                iconBgColor: const Color.fromRGBO(253, 150, 95, 0.2),
+              const SizedBox(width: 8),
+              // Fixed Expenses (represented as a locked icon)
+              Expanded(
+                child: _ExpenseIncomeCard(
+                  title: 'fixed_expenses_label'.tr,
+                  label: 'monthly_label'.tr,
+                  value: fixedExpenses.toStringAsFixed(0),
+                  unit:
+                      "${LanguageController.to.currency.value}/${'month_header'.tr}",
+                  icon: Icons.lock,
+                  colors: [
+                    const Color.fromRGBO(253, 150, 95, 0.08),
+                    const Color.fromRGBO(253, 150, 95, 0.02),
+                  ],
+                  borderColor: const Color.fromRGBO(253, 150, 95, 0.25),
+                  titleColor: const Color.fromRGBO(253, 150, 95, 1.0),
+                  valueColor: const Color.fromRGBO(253, 150, 95, 1.0),
+                  iconColor: const Color.fromRGBO(253, 150, 95, 1.0),
+                  iconBgColor: const Color.fromRGBO(253, 150, 95, 0.2),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            // Variable Income
-            Expanded(
-              child: _ExpenseIncomeCard(
-                title: 'المداخيل المتغيرة',
-                label: 'المتوسط',
-                value: '${avgEarningsPerMonth.toStringAsFixed(0)}',
-                unit: 'درهم/شهر',
-                icon: Icons.trending_up,
-                colors: [
-                  const Color.fromRGBO(106, 253, 95, 0.08),
-                  const Color.fromRGBO(106, 253, 95, 0.02),
-                ],
-                borderColor: const Color.fromRGBO(106, 253, 95, 0.25),
-                titleColor: const Color.fromRGBO(106, 253, 95, 1.0),
-                valueColor: const Color.fromRGBO(106, 253, 95, 1.0),
-                iconColor: const Color.fromRGBO(106, 253, 95, 1.0),
-                iconBgColor: const Color.fromRGBO(106, 253, 95, 0.2),
+              const SizedBox(width: 8),
+              // Variable Income
+              Expanded(
+                child: _ExpenseIncomeCard(
+                  title: 'variable_earnings_label'.tr,
+                  label: 'average_label'.tr,
+                  value: avgEarningsPerMonth.toStringAsFixed(0),
+                  unit:
+                      "${LanguageController.to.currency.value}/${'month_header'.tr}",
+                  icon: Icons.trending_up,
+                  colors: [
+                    const Color.fromRGBO(106, 253, 95, 0.08),
+                    const Color.fromRGBO(106, 253, 95, 0.02),
+                  ],
+                  borderColor: const Color.fromRGBO(106, 253, 95, 0.25),
+                  titleColor: const Color.fromRGBO(106, 253, 95, 1.0),
+                  valueColor: const Color.fromRGBO(106, 253, 95, 1.0),
+                  iconColor: const Color.fromRGBO(106, 253, 95, 1.0),
+                  iconBgColor: const Color.fromRGBO(106, 253, 95, 0.2),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -183,11 +190,13 @@ class _ExpenseIncomeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            unit,
-            style: darktextstyle.copyWith(
-              fontSize: fontSize1 * 0.65,
-              color: Colors.grey[600],
+          Obx(
+            () => Text(
+              unit,
+              style: darktextstyle.copyWith(
+                fontSize: fontSize1 * 0.65,
+                color: Colors.grey[600],
+              ),
             ),
           ),
         ],

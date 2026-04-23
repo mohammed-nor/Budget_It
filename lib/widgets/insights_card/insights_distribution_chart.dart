@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:get/get.dart';
 
 class InsightsDistributionChart extends StatelessWidget {
   final List<Map<String, dynamic>> chartData;
@@ -53,7 +54,7 @@ class InsightsDistributionChart extends StatelessWidget {
           legend: Legend(isVisible: true, position: LegendPosition.bottom),
           series: <CartesianSeries<Map<String, dynamic>, String>>[
             ColumnSeries<Map<String, dynamic>, String>(
-              name: 'دخل',
+              name: 'income_label'.tr,
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['income'] as num,
@@ -61,7 +62,7 @@ class InsightsDistributionChart extends StatelessWidget {
               animationDuration: 0,
             ),
             ColumnSeries<Map<String, dynamic>, String>(
-              name: 'مصاريف',
+              name: 'expenses_label'.tr,
               dataSource: chartData,
               xValueMapper: (m, _) => m['day'] as String,
               yValueMapper: (m, _) => m['spend'] as num,

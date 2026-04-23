@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
+import 'package:budget_it/utils/language_controller.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -26,33 +27,33 @@ class _WalletPageState extends State<WalletPage> {
 
   final List<SpendingCategory> categories = [
     SpendingCategory(
-      title: 'personal_expenses'.tr,
-      description: 'personal_expenses_desc'.tr,
+      title: 'personal_expenses',
+      description: 'personal_expenses_desc',
       budget: 150,
     ),
     SpendingCategory(
-      title: 'home_expenses'.tr,
-      description: 'home_expenses_desc'.tr,
+      title: 'home_expenses',
+      description: 'home_expenses_desc',
       budget: 500,
     ),
     SpendingCategory(
-      title: 'transport'.tr,
-      description: 'transport_desc'.tr,
+      title: 'transport',
+      description: 'transport_desc',
       budget: 200,
     ),
     SpendingCategory(
-      title: 'entertainment'.tr,
-      description: 'entertainment_desc'.tr,
+      title: 'entertainment',
+      description: 'entertainment_desc',
       budget: 100,
     ),
     SpendingCategory(
-      title: 'emergency'.tr,
-      description: 'emergency_desc'.tr,
+      title: 'emergency',
+      description: 'emergency_desc',
       budget: 100,
     ),
     SpendingCategory(
-      title: 'other_expenses'.tr,
-      description: 'other_expenses_desc'.tr,
+      title: 'other_expenses',
+      description: 'other_expenses_desc',
       budget: 250,
     ),
   ];
@@ -309,8 +310,11 @@ class _WalletPageState extends State<WalletPage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isAr = Get.locale?.languageCode == 'ar';
     return ValueListenableBuilder(
-      valueListenable: prefsdata.listenable(keys: ['cardcolor', 'fontsize1', 'fontsize2']),
+      valueListenable: prefsdata.listenable(
+        keys: ['cardcolor', 'fontsize1', 'fontsize2'],
+      ),
       builder: (context, box, child) {
         double fontSize1 = box.get("fontsize1", defaultValue: 15.toDouble());
         double fontSize2 = box.get("fontsize2", defaultValue: 15.toDouble());
@@ -329,16 +333,13 @@ class _WalletPageState extends State<WalletPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: isAr
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.end,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.key, color: Colors.green),
-                            onPressed: _openApiKeyManager,
-                            tooltip: 'configure_api_key_tooltip'.tr,
-                          ),
                           Row(
                             children: [
                               const SizedBox(width: 8),
@@ -353,12 +354,19 @@ class _WalletPageState extends State<WalletPage> {
                               ),
                             ],
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.key, color: Colors.green),
+                            onPressed: _openApiKeyManager,
+                            tooltip: 'configure_api_key_tooltip'.tr,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'get_advice_msg'.tr,
-                        textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                        textAlign: Get.locale?.languageCode == 'ar'
+                            ? TextAlign.right
+                            : TextAlign.left,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: _getSecondaryTextColor(),
                           fontSize: 14,
@@ -558,7 +566,9 @@ class _WalletPageState extends State<WalletPage> {
                               const SizedBox(height: 16),
                               // Advice Content with Markdown Rendering (RTL for Arabic)
                               Directionality(
-                                textDirection: Get.locale?.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                                textDirection: Get.locale?.languageCode == 'ar'
+                                    ? TextDirection.rtl
+                                    : TextDirection.ltr,
                                 child: MarkdownBody(
                                   data: _aiAdvice!,
                                   selectable: true,
@@ -687,7 +697,9 @@ class _WalletPageState extends State<WalletPage> {
                       else
                         Text(
                           'press_for_advice'.tr,
-                          textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+                          textAlign: Get.locale?.languageCode == 'ar'
+                              ? TextAlign.right
+                              : TextAlign.left,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: _getSecondaryTextColor(),
@@ -823,11 +835,13 @@ class BudgetCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
         child: Column(
-          crossAxisAlignment: Get.locale?.languageCode == 'ar' ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          mainAxisAlignment: Get.locale?.languageCode == 'ar'
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.end,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              //crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -843,36 +857,32 @@ class BudgetCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                    child: Text(
-                      category.title,
-                      textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: getTextColor(),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
+                  child: Text(
+                    category.title.tr,
+                    textAlign: Get.locale?.languageCode == 'ar'
+                        ? TextAlign.right
+                        : TextAlign.left,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: getTextColor(),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              category.description,
-              textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
+              category.description.tr,
+              textAlign: Get.locale?.languageCode == 'ar'
+                  ? TextAlign.right
+                  : TextAlign.left,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: getSecondaryTextColor(),
                 fontSize: 15,
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'monthly_increment_ratio'.tr + ': ${(incrementRatios[index] * 100).toStringAsFixed(0)}% (${getCategoryIncrement(index).toStringAsFixed(2)} ${'currency'.tr})',
-              textAlign: Get.locale?.languageCode == 'ar' ? TextAlign.right : TextAlign.left,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.green.shade400,
-                fontSize: 14,
-              ),
-            ),
+
             const SizedBox(height: 10),
             TextField(
               controller: TextEditingController(
@@ -887,7 +897,7 @@ class BudgetCard extends StatelessWidget {
                 ),
                 labelStyle: const TextStyle(color: Colors.white),
                 floatingLabelAlignment: FloatingLabelAlignment.center,
-                suffixText: 'currency'.tr,
+                suffixText: LanguageController.to.currency.value,
                 filled: true,
                 fillColor: Colors.black.withOpacity(0.15),
               ),

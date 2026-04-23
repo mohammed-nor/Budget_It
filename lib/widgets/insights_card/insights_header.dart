@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
+import 'package:get/get.dart';
 
 class InsightsHeader extends StatelessWidget {
   const InsightsHeader({super.key});
@@ -40,7 +41,7 @@ class InsightsHeader extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            'تحليل المصاريف والمداخيل',
+            'expense_income_analysis'.tr,
             style: darktextstyle.copyWith(
               fontSize: fontSize1 * 1.1,
               fontWeight: FontWeight.bold,
