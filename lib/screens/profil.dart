@@ -30,7 +30,7 @@ class _ProfilpageState extends State<Profilpage> {
 
   TextStyle darktextstyle = GoogleFonts.elMessiri(
     fontWeight: FontWeight.w700,
-    fontSize: fontSize2.toDouble(),
+    fontSize: fontSize1.toDouble(),
     color: Colors.white,
   );
   //String selectedColorName = 'Light';
@@ -73,7 +73,7 @@ class _ProfilpageState extends State<Profilpage> {
 
     TextStyle titleStyle = GoogleFonts.elMessiri(
       fontWeight: FontWeight.bold,
-      fontSize: fontSize2.toDouble() + 4,
+      fontSize: fontSize1.toDouble() + 4,
       color: Colors.white,
     );
 
@@ -208,18 +208,6 @@ class _ProfilpageState extends State<Profilpage> {
                     setState(() {
                       fontSize1 = val;
                       prefsdata.put("fontsize1", val);
-                    });
-                  },
-                ),
-                const Divider(height: 1, color: Colors.white10),
-                _buildFontSizeSlider(
-                  context,
-                  label: "settings_font_size".tr,
-                  value: fontSize2,
-                  onChanged: (val) {
-                    setState(() {
-                      fontSize2 = val;
-                      prefsdata.put("fontsize2", val);
                     });
                   },
                 ),
@@ -943,13 +931,13 @@ class _ProfilpageState extends State<Profilpage> {
     // Reset settings to defaults
     setState(() {
       fontSize1 = 15.0;
-      fontSize2 = 15.0;
+      fontSize1 = 15.0;
       selectedColorName = 'Dark';
       cardcolor = colorMap[selectedColorName]!;
 
       // Save default values
       prefsdata.put("fontsize1", fontSize1);
-      prefsdata.put("fontsize2", fontSize2);
+      prefsdata.put("fontSize1", fontSize1);
       prefsdata.put("selectedColorName", selectedColorName);
       prefsdata.put("cardcolor", cardcolor);
 

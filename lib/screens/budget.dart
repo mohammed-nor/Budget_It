@@ -159,10 +159,7 @@ class _BudgetpageState extends State<Budgetpage> {
 
     // Decide periods based on focused calendar month (today)
     //DateTime firstDay = DateTime(today.year, today.month, 1);
-    /*DateTime firstDay = prefsdata.get(
-      "startDate",
-      defaultValue: DateTime(2024, 9, 1),
-    );*/
+
     DateTime firstDay = DateTime(
       today.year,
       today.month,
@@ -301,33 +298,15 @@ class _BudgetpageState extends State<Budgetpage> {
 
     for (var start in periodStarts) {
       DateTime previousday = start.subtract(const Duration(days: 1));
-      // We'll use the period start date as the 'today' variable when evaluating the requested formulas.
-      // simulate day-by-day from start to overlapEnd (inclusive) applying:
-      // - daily unexpected earns/spends
-      // - monthly income on day 30 (mntinc)
-      // - monthly expense on day 1 (mntexp)
-      // overlapEnd no longer required for the simplified open/close computation
-      // Compute open/close per the user's requested formulas. The 'today' variable in the formula
-      // is set to the period start (for daily granularity that's the day itself). We iterate days
-      // when building periodStarts, so start represents the day to use as `today`.
+
       final num open = evaluateOpening(previousday);
-      final num close = evaluateOpening(start)
-      /* +
-          calculateEarningsBetweenDates(previousday, start) -
-          calculateSpendingBetweenDates(previousday, start) -
-          dailySpending*/
-      ; // per user: close is the rounded daily spending value
+      final num close = evaluateOpening(
+        start,
+      ); // per user: close is the rounded daily spending value
       num high = close > open ? close : open;
       num low = close < open ? close : open;
 
-      // Note: we still want the chart to reflect one-off earns/spends and monthly scheduled events,
-      // but the user requested specific formulas for open/close. To keep intra-period extremes simple
-      // we derive high/low from open/close. If you prefer incorporating daily one-offs into high/low,
-      // I can simulate each day and recompute high/low accordingly.
-
       generated.add(_CandleData(start, open, high, low, close));
-
-      // no cumulative baseline update required for this representation
     }
 
     setState(() {
@@ -1232,7 +1211,7 @@ class _BudgetpageState extends State<Budgetpage> {
     return GoogleFonts.elMessiri(
       fontWeight: fontWeight ?? FontWeight.w700,
       fontSize:
-          fontSize ?? prefsdata.get("fontsize2", defaultValue: 15.toDouble()),
+          fontSize ?? prefsdata.get("fontSize1", defaultValue: 15.toDouble()),
       color:
           color ??
           (isDark ? ColorTheme.darkTextPrimary : ColorTheme.lightTextPrimary),
@@ -1243,7 +1222,6 @@ class _BudgetpageState extends State<Budgetpage> {
   Widget build(BuildContext context) {
     final isAr = Get.locale?.languageCode == 'ar';
     double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
-    double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
     // Next/This month payment date calculations removed (not used).
     int daysleftInCurrentMonth() {
       int payingDay = prefsdata.get("payingDay", defaultValue: 30);
@@ -1381,18 +1359,18 @@ class _BudgetpageState extends State<Budgetpage> {
           builder: (context) {
             final isAr = Get.locale?.languageCode == 'ar';
             final inputWidget = SizedBox(
-              height: 48 * fontSize2 / 16,
-              width: size.width * 0.25 * fontSize2 / 16,
+              height: 48 * fontSize1 / 16,
+              width: size.width * 0.25 * fontSize1 / 16,
               child: TextFormField(
                 textAlign: TextAlign.center,
                 style: darktextstyle.copyWith(
-                  fontSize: fontSize2,
+                  fontSize: fontSize1,
                   fontWeight: FontWeight.bold,
                 ),
                 initialValue: boxvariable.toString(),
                 decoration: InputDecoration(
                   hintStyle: darktextstyle.copyWith(
-                    fontSize: fontSize2,
+                    fontSize: fontSize1,
                     color: Colors.grey[600],
                   ),
                   contentPadding: const EdgeInsets.symmetric(
@@ -1447,7 +1425,7 @@ class _BudgetpageState extends State<Budgetpage> {
               child: Text(
                 textlabel,
                 style: darktextstyle.copyWith(
-                  fontSize: fontSize2,
+                  fontSize: fontSize1,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: isAr ? TextAlign.left : TextAlign.right,
@@ -1758,54 +1736,6 @@ class _BudgetpageState extends State<Budgetpage> {
                             ),
                           ),
                         ),
-                        /* Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color.fromARGB(37, 95, 169, 253),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.credit_card,
-                                color: Color.fromARGB(255, 154, 156, 255),
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    "amount_at_start_of_day".tr,
-                                    style: themedTextStyle(fontSize: fontSize1),
-                                    textAlign: Get.locale?.languageCode == 'ar'
-                                        ? TextAlign.right
-                                        : TextAlign.left,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Obx(() => Text(
-                                    "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} ${LanguageController.to.currency.value}",
-                                    style: themedTextStyle(
-                                      fontSize: fontSize1 * 1.2,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color.fromARGB(
-                                        255,
-                                        154,
-                                        156,
-                                        255,
-                                      ),
-                                    ),
-                                    textAlign: Get.locale?.languageCode == 'ar'
-                                        ? TextAlign.right
-                                        : TextAlign.left,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ), */
                       ),
                     ),
 
@@ -2216,124 +2146,6 @@ class _BudgetpageState extends State<Budgetpage> {
                                 ),
                               ),
                             ),
-                            /* Row(
-                              children: isAr
-                                  ? [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: const Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.savings,
-                                          color: Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            1.0,
-                                          ),
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            "amount_saved".tr,
-                                            style: themedTextStyle(
-                                              fontSize: fontSize1,
-                                            ),
-                                            textAlign: TextAlign.right,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Obx(
-                                            () => Text(
-                                              "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.2,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
-                                              ),
-                                              textAlign: TextAlign.right,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ]
-                                  : [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "amount_saved".tr,
-                                            style: themedTextStyle(
-                                              fontSize: fontSize1,
-                                            ),
-                                            textAlign: TextAlign.left,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Obx(
-                                            () => Text(
-                                              "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.2,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
-                                              ),
-                                              textAlign: TextAlign.left,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      const SizedBox(width: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: const Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.savings,
-                                          color: Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            1.0,
-                                          ),
-                                          size: 24,
-                                        ),
-                                      ),
-                                    ],
-                            ), */
                           ),
                         ),
 
@@ -2524,372 +2336,6 @@ class _BudgetpageState extends State<Budgetpage> {
                                 ),
                               ),
                             ),
-                            /* Row(
-                              children: isAr
-                                  ? [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  0.15,
-                                                )
-                                              : const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  0.15,
-                                                ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? Icons.track_changes
-                                              : Icons.emoji_events,
-                                          color:
-                                              totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  1.0,
-                                                )
-                                              : const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            totsaving -
-                                                        calculateSpendingBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) +
-                                                        calculateEarningsBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) -
-                                                        nownetcredit -
-                                                        count30thsPassed(
-                                                              startDate,
-                                                              today,
-                                                            ) *
-                                                            (mntsaving) >
-                                                    0
-                                                ? "remaining_target_amount".tr
-                                                : "congratulations".tr,
-                                            style: themedTextStyle(
-                                              fontSize: fontSize1,
-                                            ),
-                                            textAlign:
-                                                Get.locale?.languageCode == 'ar'
-                                                ? TextAlign.left
-                                                : TextAlign.right,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Obx(() => Text(
-                                            totsaving -
-                                                        calculateSpendingBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) +
-                                                        calculateEarningsBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) -
-                                                        nownetcredit -
-                                                        count30thsPassed(
-                                                              startDate,
-                                                              today,
-                                                            ) *
-                                                            (mntsaving) >
-                                                    0
-                                                ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
-                                                : "target_achieved_msg".tr,
-                                            style: darktextstyle.copyWith(
-                                              fontSize: fontSize1 * 1.2,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  totsaving -
-                                                          calculateSpendingBetweenDates(
-                                                            startDate,
-                                                            today,
-                                                          ) +
-                                                          calculateEarningsBetweenDates(
-                                                            startDate,
-                                                            today,
-                                                          ) -
-                                                          nownetcredit -
-                                                          count30thsPassed(
-                                                                startDate,
-                                                                today,
-                                                              ) *
-                                                              (mntsaving) >
-                                                      0
-                                                  ? const Color.fromRGBO(
-                                                      253,
-                                                      95,
-                                                      95,
-                                                      1.0,
-                                                    )
-                                                  : const Color.fromRGBO(
-                                                      106,
-                                                      253,
-                                                      95,
-                                                      1.0,
-                                                    ),
-                                            ),
-                                            textAlign:
-                                                Get.locale?.languageCode == 'ar'
-                                                ? TextAlign.right
-                                                : TextAlign.left,
-                                          )),
-                                        ],
-                                      ),
-                                    ]
-                                  : [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            totsaving -
-                                                        calculateSpendingBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) +
-                                                        calculateEarningsBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) -
-                                                        nownetcredit -
-                                                        count30thsPassed(
-                                                              startDate,
-                                                              today,
-                                                            ) *
-                                                            (mntsaving) >
-                                                    0
-                                                ? "remaining_target_amount".tr
-                                                : "congratulations".tr,
-                                            style: themedTextStyle(
-                                              fontSize: fontSize1,
-                                            ),
-                                            textAlign:
-                                                Get.locale?.languageCode == 'ar'
-                                                ? TextAlign.left
-                                                : TextAlign.right,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Obx(() => Text(
-                                            totsaving -
-                                                        calculateSpendingBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) +
-                                                        calculateEarningsBetweenDates(
-                                                          startDate,
-                                                          today,
-                                                        ) -
-                                                        nownetcredit -
-                                                        count30thsPassed(
-                                                              startDate,
-                                                              today,
-                                                            ) *
-                                                            (mntsaving) >
-                                                    0
-                                                ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
-                                                : "target_achieved_msg".tr,
-                                            style: darktextstyle.copyWith(
-                                              fontSize: fontSize1 * 1.2,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  totsaving -
-                                                          calculateSpendingBetweenDates(
-                                                            startDate,
-                                                            today,
-                                                          ) +
-                                                          calculateEarningsBetweenDates(
-                                                            startDate,
-                                                            today,
-                                                          ) -
-                                                          nownetcredit -
-                                                          count30thsPassed(
-                                                                startDate,
-                                                                today,
-                                                              ) *
-                                                              (mntsaving) >
-                                                      0
-                                                  ? const Color.fromRGBO(
-                                                      253,
-                                                      95,
-                                                      95,
-                                                      1.0,
-                                                    )
-                                                  : const Color.fromRGBO(
-                                                      106,
-                                                      253,
-                                                      95,
-                                                      1.0,
-                                                    ),
-                                            ),
-                                            textAlign:
-                                                Get.locale?.languageCode == 'ar'
-                                                ? TextAlign.right
-                                                : TextAlign.left,
-                                          )),
-                                        ],
-                                      ),
-
-                                      const SizedBox(width: 16),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  0.15,
-                                                )
-                                              : const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  0.15,
-                                                ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? Icons.track_changes
-                                              : Icons.emoji_events,
-                                          color:
-                                              totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  1.0,
-                                                )
-                                              : const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
-                                          size: 24,
-                                        ),
-                                      ),
-                                    ],
-                            ), */
                           ),
                         ),
                       ],
@@ -3898,15 +3344,7 @@ class _BudgetpageState extends State<Budgetpage> {
                   "totsaving",
                   "total_amount_to_save".tr,
                 ),
-                /*
-                moneyinput(
-                  size,
-                  nowcredit,
-                  "nowcredit",
-                  "المبلغ المتوفر يوم"
-                      " ${startDate.year}-${startDate.month}-${startDate.day} "
-                      "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} يوم )",
-                ),*/
+
                 Container(
                   margin: const EdgeInsets.symmetric(
                     vertical: 5,
@@ -3942,18 +3380,18 @@ class _BudgetpageState extends State<Budgetpage> {
                     builder: (context) {
                       final isAr = Get.locale?.languageCode == 'ar';
                       final inputWidget = SizedBox(
-                        height: 208 * fontSize2 / 16,
-                        width: size.width * 0.25 * fontSize2 / 16,
+                        height: 208 * fontSize1 / 16,
+                        width: size.width * 0.25 * fontSize1 / 16,
                         child: TextFormField(
                           textAlign: TextAlign.center,
                           style: darktextstyle.copyWith(
-                            fontSize: fontSize2,
+                            fontSize: fontSize1,
                             fontWeight: FontWeight.bold,
                           ),
                           initialValue: nowcredit.toString(),
                           decoration: InputDecoration(
                             hintStyle: darktextstyle.copyWith(
-                              fontSize: fontSize2,
+                              fontSize: fontSize1,
                               color: Colors.grey[600],
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -4046,7 +3484,7 @@ class _BudgetpageState extends State<Budgetpage> {
                             Text(
                               "amount_available_on".tr,
                               style: darktextstyle.copyWith(
-                                fontSize: fontSize2,
+                                fontSize: fontSize1,
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: isAr
@@ -4058,7 +3496,7 @@ class _BudgetpageState extends State<Budgetpage> {
                               "${startDate.year}-${startDate.month}-${startDate.day} "
                               "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} ${"day".tr} )",
                               style: darktextstyle.copyWith(
-                                fontSize: fontSize2 * 0.8,
+                                fontSize: fontSize1 * 0.8,
                                 color: Colors.grey[400],
                               ),
                               textAlign: isAr
@@ -4513,13 +3951,13 @@ class _BudgetpageState extends State<Budgetpage> {
   Widget moneyinput2(size, boxvariable, boxvariablename, String textlabel) {
     final isAr = Get.locale?.languageCode == 'ar';
     final inputWidget = SizedBox(
-      width: size.width * 0.17 * fontSize2 / 16,
+      width: size.width * 0.17 * fontSize1 / 16,
       child: TextFormField(
         textAlign: TextAlign.center,
-        style: darktextstyle.copyWith(fontSize: fontSize2),
+        style: darktextstyle.copyWith(fontSize: fontSize1),
         initialValue: boxvariable.toString(),
         decoration: InputDecoration(
-          hintStyle: darktextstyle.copyWith(fontSize: fontSize2),
+          hintStyle: darktextstyle.copyWith(fontSize: fontSize1),
           border: OutlineInputBorder(gapPadding: 1),
         ),
         onChanged: (newval) {
@@ -4545,7 +3983,7 @@ class _BudgetpageState extends State<Budgetpage> {
     );
     final labelWidget = Text(
       textlabel,
-      style: darktextstyle.copyWith(fontSize: fontSize2),
+      style: darktextstyle.copyWith(fontSize: fontSize1),
       textAlign: isAr ? TextAlign.left : TextAlign.right,
     );
     return ListTile(
@@ -4598,7 +4036,7 @@ class _BudgetpageState extends State<Budgetpage> {
     );
     final labelWidget = Text(
       textlabel,
-      style: darktextstyle.copyWith(fontSize: fontSize2),
+      style: darktextstyle.copyWith(fontSize: fontSize1),
       textAlign: isAr ? TextAlign.left : TextAlign.right,
     );
     return Column(

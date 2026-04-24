@@ -4,7 +4,6 @@ import 'package:hive/hive.dart';
 
 final prefsdata = Hive.box('data');
 double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
-double fontSize2 = prefsdata.get("fontsize2", defaultValue: 15.toDouble());
 
 // Helper function to determine if background is dark or light
 bool _isDarkTheme() {
@@ -38,7 +37,7 @@ TextStyle darkteststyle2 = TextStyle(
 
 TextStyle darktextstyle = GoogleFonts.elMessiri(
   fontWeight: FontWeight.w700,
-  fontSize: fontSize2.toDouble(),
+  fontSize: fontSize1.toDouble(),
   color: _getTextColor(),
 );
 

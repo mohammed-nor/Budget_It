@@ -5,6 +5,7 @@ import 'services/ColorAdapter.dart';
 import 'models/budget_history.dart';
 import 'models/upcoming_spending.dart';
 import 'models/unexpected_earning.dart';
+import 'models/financial_goal.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'utils/theme_controller.dart';
@@ -21,11 +22,13 @@ void main() async {
   Hive.registerAdapter(BudgetHistoryAdapter());
   Hive.registerAdapter(UpcomingSpendingAdapter());
   Hive.registerAdapter(UnexpectedEarningAdapter());
+  Hive.registerAdapter(FinancialGoalAdapter());
 
   await Hive.openBox('data');
   await Hive.openBox<BudgetHistory>('budget_history');
   await Hive.openBox<UpcomingSpending>('upcoming_spending');
   await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
+  await Hive.openBox<FinancialGoal>('financial_goals');
   await Hive.openBox('budgets');
 
   // Initialize Controllers

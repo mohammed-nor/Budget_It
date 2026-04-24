@@ -313,11 +313,10 @@ class _WalletPageState extends State<WalletPage> {
     bool isAr = Get.locale?.languageCode == 'ar';
     return ValueListenableBuilder(
       valueListenable: prefsdata.listenable(
-        keys: ['cardcolor', 'fontsize1', 'fontsize2'],
+        keys: ['cardcolor', 'fontsize1', 'fontSize1'],
       ),
       builder: (context, box, child) {
         double fontSize1 = box.get("fontsize1", defaultValue: 15.toDouble());
-        double fontSize2 = box.get("fontsize2", defaultValue: 15.toDouble());
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: ListView(

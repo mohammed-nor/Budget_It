@@ -1,10 +1,12 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hive/hive.dart';
+import '../models/budget_history.dart';
+import '../models/upcoming_spending.dart';
 
 class GeminiService {
   static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
   static String? _apiKey;
 
@@ -60,12 +62,65 @@ class GeminiService {
     required double currentSavings,
     required double netCredit,
     required List<String> categoryDescriptions,
-    double upcomingExpenses = 0,
-    double availableFunds = 0,
-    double fixedMonthlyExpenses = 0,
-    double savedAmount = 0,
-    String language = 'ar',
+    double? upcomingExpenses,
+    double? availableFunds,
+    double? fixedMonthlyExpenses,
+    double? savedAmount,
+    String? language,
   }) async {
+    // If values are not provided, fetch them from Hive
+    final prefsBox = Hive.box('data');
+    final String effectiveLanguage =
+        language ?? prefsBox.get('language', defaultValue: 'ar');
+
+    double effectiveUpcomingExpenses = upcomingExpenses ?? 0;
+    if (upcomingExpenses == null) {
+      final upcomingBox = Hive.box<UpcomingSpending>('upcoming_spending');
+      effectiveUpcomingExpenses = upcomingBox.values.fold<double>(
+        0.0,
+        (sum, item) => sum + item.amount,
+      );
+    }
+
+    double effectiveSavedAmount = savedAmount ?? 0;
+    if (savedAmount == null) {
+      final historyBox = Hive.box<BudgetHistory>('budget_history');
+      if (historyBox.isNotEmpty) {
+        effectiveSavedAmount = historyBox.values.last.nownetcredit.toDouble();
+      }
+    }
+
+    double effectiveFixedMonthlyExpenses = fixedMonthlyExpenses ?? 0;
+    if (fixedMonthlyExpenses == null) {
+      final num mntexp = prefsBox.get("mntexp", defaultValue: 2000);
+      final num annexp = prefsBox.get("annexp", defaultValue: 7000);
+      effectiveFixedMonthlyExpenses =
+          mntexp.toDouble() + (annexp.toDouble() / 12);
+    }
+
+    double effectiveAvailableFunds = availableFunds ?? 0;
+    if (availableFunds == null) {
+      final num mntinc = prefsBox.get("mntinc", defaultValue: 4300);
+      final num mntnstblinc = prefsBox.get("mntnstblinc", defaultValue: 2000);
+      final num mntperinc = prefsBox.get("mntperinc", defaultValue: 40);
+      final num freemnt = prefsBox.get("freemnt", defaultValue: 2);
+      final num mntexp = prefsBox.get("mntexp", defaultValue: 2000);
+      final num annexp = prefsBox.get("annexp", defaultValue: 7000);
+      final num mntsaving = prefsBox.get("mntsaving", defaultValue: 1000);
+
+      final now = DateTime.now();
+      final daysInCurrentMonth = DateTime(now.year, now.month + 1, 0).day;
+
+      effectiveAvailableFunds =
+          ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                          (1 - freemnt / 12) -
+                      (mntexp + annexp / 12) -
+                      (mntsaving)) /
+                  daysInCurrentMonth))
+              .round() *
+          30.45;
+    }
+
     if (!hasApiKey()) {
       throw Exception(
         'API key not configured. Please set your Gemini API key.',
@@ -79,11 +134,11 @@ class GeminiService {
       currentSavings: currentSavings,
       netCredit: netCredit,
       categoryDescriptions: categoryDescriptions,
-      upcomingExpenses: upcomingExpenses,
-      availableFunds: availableFunds,
-      fixedMonthlyExpenses: fixedMonthlyExpenses,
-      savedAmount: savedAmount,
-      language: language,
+      upcomingExpenses: effectiveUpcomingExpenses,
+      availableFunds: effectiveAvailableFunds,
+      fixedMonthlyExpenses: effectiveFixedMonthlyExpenses,
+      savedAmount: effectiveSavedAmount,
+      language: effectiveLanguage,
     );
 
     try {
@@ -139,12 +194,61 @@ class GeminiService {
     required double currentSavings,
     required double netCredit,
     required List<String> categoryDescriptions,
-    double upcomingExpenses = 0,
-    double availableFunds = 0,
-    double fixedMonthlyExpenses = 0,
-    double savedAmount = 0,
-    String language = 'ar',
+    double? upcomingExpenses,
+    double? availableFunds,
+    double? fixedMonthlyExpenses,
+    double? savedAmount,
+    String? language,
   }) {
+    // Synchronous fallback from Hive if parameters are null
+    final prefsBox = Hive.box('data');
+    final String finalLanguage =
+        language ?? prefsBox.get('language', defaultValue: 'ar');
+
+    final double finalUpcomingExpenses =
+        upcomingExpenses ??
+        Hive.box<UpcomingSpending>(
+          'upcoming_spending',
+        ).values.fold<double>(0.0, (sum, item) => sum + item.amount);
+
+    double finalSavedAmount = savedAmount ?? 0;
+    if (savedAmount == null) {
+      final historyBox = Hive.box<BudgetHistory>('budget_history');
+      if (historyBox.isNotEmpty) {
+        finalSavedAmount = historyBox.values.last.nownetcredit.toDouble();
+      }
+    }
+
+    double finalFixedMonthlyExpenses = fixedMonthlyExpenses ?? 0;
+    if (fixedMonthlyExpenses == null) {
+      final num mntexp = prefsBox.get("mntexp", defaultValue: 2000);
+      final num annexp = prefsBox.get("annexp", defaultValue: 7000);
+      finalFixedMonthlyExpenses = mntexp.toDouble() + (annexp.toDouble() / 12);
+    }
+
+    double finalAvailableFunds = availableFunds ?? 0;
+    if (availableFunds == null) {
+      final num mntinc = prefsBox.get("mntinc", defaultValue: 4300);
+      final num mntnstblinc = prefsBox.get("mntnstblinc", defaultValue: 2000);
+      final num mntperinc = prefsBox.get("mntperinc", defaultValue: 40);
+      final num freemnt = prefsBox.get("freemnt", defaultValue: 2);
+      final num mntexp = prefsBox.get("mntexp", defaultValue: 2000);
+      final num annexp = prefsBox.get("annexp", defaultValue: 7000);
+      final num mntsaving = prefsBox.get("mntsaving", defaultValue: 1000);
+
+      final now = DateTime.now();
+      final daysInCurrentMonth = DateTime(now.year, now.month + 1, 0).day;
+
+      finalAvailableFunds =
+          ((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                          (1 - freemnt / 12) -
+                      (mntexp + annexp / 12) -
+                      (mntsaving)) /
+                  daysInCurrentMonth))
+              .round() *
+          30.45;
+    }
+
     final budgetBreakdown = categoryBudgets.entries
         .toList()
         .asMap()
@@ -160,12 +264,17 @@ class GeminiService {
         .join('\n');
 
     final totalBudget = categoryBudgets.values.fold(0.0, (a, b) => a + b);
-    final variableExpenses = fixedmonthlyExpenses - fixedMonthlyExpenses;
-    final remainingAfterFixedExpenses = monthlyIncome - fixedMonthlyExpenses;
+    final variableExpenses = fixedmonthlyExpenses - finalFixedMonthlyExpenses;
+    final remainingAfterFixedExpenses =
+        monthlyIncome - finalFixedMonthlyExpenses;
     final projectedAfterUpcoming =
-        remainingAfterFixedExpenses - upcomingExpenses;
+        remainingAfterFixedExpenses - finalUpcomingExpenses;
 
-    return '''You are an experienced financial advisor. Analyze this person's monthly budget based on their actual spending history from their Budget page and provide personalized financial advice in Arabic (العربية). Focus on:
+    final String promptLanguage = finalLanguage == 'ar'
+        ? 'Arabic (العربية)'
+        : 'English';
+
+    return '''You are an experienced financial advisor. Analyze this person's monthly budget based on their actual spending history from their Budget page and provide personalized financial advice in $promptLanguage. Focus on:
 1. Actual spending analysis and patterns from their records
 2. Realistic savings opportunities
 3. Budget optimization based on real spending data
@@ -173,14 +282,14 @@ class GeminiService {
 5. Actionable recommendations
 
 **Financial Overview (from Budget Page Data):**
-- المداخيل الشهرية الكلية (Total Monthly Income): ${monthlyIncome.toStringAsFixed(2) + availableFunds.toStringAsFixed(2)} MAD
--  المصاريف القارة للكراء و الفواتير(Fixed Monthly Expenses - الفواتير والدائنة): ${fixedMonthlyExpenses.toStringAsFixed(2)} MAD
+- المداخيل الشهرية الكلية (Total Monthly Income): ${monthlyIncome.toStringAsFixed(2) + finalAvailableFunds.toStringAsFixed(2)} MAD
+- المصاريف القارة للكراء والفواتير (Fixed Expenses - Rent & Bills): ${finalFixedMonthlyExpenses.toStringAsFixed(2)} MAD
 - المصاريف المتغيرة (Variable Expenses - غير القارة): ${variableExpenses.toStringAsFixed(2)} MAD
 - المتبقي بعد المصاريف القارة (Remaining After Fixed Expenses): ${remainingAfterFixedExpenses.toStringAsFixed(2)} MAD
-- المصاريف المجدولة القادمة (Upcoming Planned Expenses): ${upcomingExpenses.toStringAsFixed(2)} MAD
-- المتوقع بعد المصاريف المجدولة (Projected After Upcoming): ${projectedAfterUpcoming.toStringAsFixed(2)} MAD
+- المصاريف غير المتوقعة (past unpredicted  Expenses): ${finalUpcomingExpenses.toStringAsFixed(2)} MAD
+- المتوقع بعد المصاريف غير المتوقعة (Projected After Unexpected): ${projectedAfterUpcoming.toStringAsFixed(2)} MAD
 - المبلغ المرتقب إدخاره شهرياً (Expected Monthly Savings Target): ${currentSavings.toStringAsFixed(2)} MAD
-- إجمالي المبلغ المدخر (Total Accumulated Savings): ${savedAmount.toStringAsFixed(2)} MAD
+- إجمالي المبلغ المدخر (Total Accumulated Savings): ${finalSavedAmount.toStringAsFixed(2)} MAD
 - متوسط الرصيد الصافي (Average Net Credit Balance): ${netCredit.toStringAsFixed(2)} MAD
 
 **Budget Allocation by Category (Current):**
@@ -190,8 +299,8 @@ $budgetBreakdown
 
 **Analysis Focus Areas:**
 - This data is based on ACTUAL spending history tracked in the app (not estimates)
-- تصنيف المصاريف: المصاريف القارة (mntexp + annexp) vs المصاريف المتغيرة (upcoming spendings)
-- Total accumulated savings: ${savedAmount.toStringAsFixed(2)} MAD
+- تصنيف المصاريف: المصاريف القارة (Fixed: Rent & Bills) vs المصاريف المتغيرة (Variable: Upcoming spendings)
+- Total accumulated savings: ${finalSavedAmount.toStringAsFixed(2)} MAD
 - Consider seasonal patterns and upcoming obligations
 - Account for free available funds when making recommendations
 - Provide realistic savings targets based on historical data
@@ -203,6 +312,6 @@ Please provide:
 4. **الصحة المالية** (Financial Health) - Overall assessment of balance between fixed and variable spending
 5. **التوصيات** (Recommendations) - Specific, actionable steps with focus on managing variable expenses while maintaining fixed obligations
 
-Keep the advice concise, practical, and encouraging. Use Arabic for main headings and English for details if needed. Reference the actual numbers provided. Emphasize the importance of fixed expenses (الفواتير والدائنة) as non-negotiable commitments.''';
+Keep the advice concise, practical, and encouraging. Use $promptLanguage for the response. Reference the actual numbers provided. Emphasize that Fixed Expenses (${finalFixedMonthlyExpenses.toStringAsFixed(2)} MAD) are non-negotiable commitments for rent and utilities (الكراء والفواتير).''';
   }
 }
