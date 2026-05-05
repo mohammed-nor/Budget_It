@@ -1,9 +1,17 @@
+import 'package:get/get.dart';
+import '../utils/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 
 final prefsdata = Hive.box('data');
-double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
+double get fontSize1 {
+  try {
+    return Get.find<ThemeController>().fontSize1.value;
+  } catch (e) {
+    return 15.0;
+  }
+}
 
 // Helper function to determine if background is dark or light
 bool _isDarkTheme() {
@@ -29,25 +37,23 @@ Color _getSecondaryTextColor() {
   return _isDarkTheme() ? Colors.white70 : Colors.black54;
 }
 
-TextStyle darkteststyle2 = TextStyle(
-  fontWeight: FontWeight.bold,
-  fontSize: fontSize1.toDouble(),
-  color: _getTextColor(),
-);
+TextStyle get darkteststyle2 => TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: fontSize1,
+      color: _getTextColor(),
+    );
 
-TextStyle darktextstyle = GoogleFonts.elMessiri(
-  fontWeight: FontWeight.w700,
-  fontSize: fontSize1.toDouble(),
-  color: _getTextColor(),
-);
+TextStyle get darktextstyle => GoogleFonts.elMessiri(
+      fontWeight: FontWeight.w700,
+      fontSize: fontSize1,
+      color: _getTextColor(),
+    );
 
 final Map<String, Color> colorMap = {
   'Red': Color.fromRGBO(255, 0, 0, 0.1843137254901961),
   'Green': Color.fromRGBO(0, 46, 2, 1.0),
   'Blue': Color.fromRGBO(97, 134, 255, 0.1843137254901961),
   'Dark': Color.fromRGBO(14, 14, 14, 0.1843137254901961),
-  'Light': Color.fromRGBO(157, 157, 157, 1),
-  'Yellow': Color.fromRGBO(255, 255, 0, 0.1843137254901961),
   'Purple': Color.fromRGBO(255, 0, 255, 0.1843137254901961),
 };
 

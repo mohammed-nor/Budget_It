@@ -11,7 +11,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:hive/hive.dart';
 import 'package:budget_it/utils/language_controller.dart';
 import 'package:get/get.dart';
+import 'package:budget_it/utils/theme_controller.dart';
 import 'dart:io';
+import 'package:share_plus/share_plus.dart';
 
 class Profilpage extends StatefulWidget {
   const Profilpage({super.key});
@@ -65,10 +67,20 @@ class _ProfilpageState extends State<Profilpage> {
             .toDouble();
   }
 
+  Future<void> _launchURL(String urlString) async {
+    try {
+      Uri url = Uri.parse(urlString);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint("Error launching URL: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefsdata = Hive.box('data');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accentColor = Theme.of(context).colorScheme.primary;
 
     TextStyle titleStyle = GoogleFonts.elMessiri(
@@ -125,7 +137,7 @@ class _ProfilpageState extends State<Profilpage> {
                 Text(
                   email,
                   style: bodyStyle.copyWith(
-                    fontSize: 14,
+                    fontSize: fontSize1,
                     color: Colors.white54,
                   ),
                 ),
@@ -136,25 +148,37 @@ class _ProfilpageState extends State<Profilpage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                _buildSettingsAction(
-                  context,
-                  label: "github_profile_btn".tr,
-                  icon: Icons.link,
-                  onTap: () async {
-                    const String githubUrl = "https://github.com/mohammed-nor";
-                    try {
-                      Uri url = Uri.parse(githubUrl);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(
-                          url,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    } catch (e) {
-                      debugPrint("Error launching URL: $e");
-                    }
-                  },
-                  color: accentColor,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildSocialIcon(
+                      icon: Icons.code_rounded,
+                      onTap: () =>
+                          _launchURL("https://github.com/mohammed-nor"),
+                      color: accentColor,
+                      label: "github_profile_btn".tr,
+                    ),
+                    _buildSocialIcon(
+                      icon: Icons.email_outlined,
+                      onTap: () => _launchURL("mailto:nour1608@gmail.com"),
+                      color: accentColor,
+                      label: "email".tr,
+                    ),
+                    _buildSocialIcon(
+                      icon: Icons.shop_outlined,
+                      onTap: () => _launchURL(
+                        "https://play.google.com/store/apps/dev?id=6694339020319831911",
+                      ),
+                      color: accentColor,
+                      label: "play_store".tr,
+                    ),
+                    _buildSocialIcon(
+                      icon: Icons.share_outlined,
+                      onTap: () => Share.share('share_message'.tr),
+                      color: accentColor,
+                      label: "share_app".tr,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -185,7 +209,10 @@ class _ProfilpageState extends State<Profilpage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text("quran_truth".tr, style: bodyStyle.copyWith(fontSize: 12)),
+                Text(
+                  "quran_truth".tr,
+                  style: bodyStyle.copyWith(fontSize: fontSize1 - 3),
+                ),
               ],
             ),
           ),
@@ -205,10 +232,8 @@ class _ProfilpageState extends State<Profilpage> {
                   label: "info_font_size".tr,
                   value: fontSize1,
                   onChanged: (val) {
-                    setState(() {
-                      fontSize1 = val;
-                      prefsdata.put("fontsize1", val);
-                    });
+                    Get.find<ThemeController>().updateFontSize(val);
+                    setState(() {});
                   },
                 ),
                 const Divider(height: 1, color: Colors.white10),
@@ -286,7 +311,7 @@ class _ProfilpageState extends State<Profilpage> {
                       title,
                       style: GoogleFonts.elMessiri(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: fontSize1,
                         color: Colors.white,
                       ),
                     ),
@@ -304,37 +329,37 @@ class _ProfilpageState extends State<Profilpage> {
     );
   }
 
-  Widget _buildSettingsAction(
-    BuildContext context, {
-    required String label,
+  Widget _buildSocialIcon({
     required IconData icon,
     required VoidCallback onTap,
     required Color color,
+    required String label,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.lato(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withOpacity(0.2)),
             ),
-            const SizedBox(width: 8),
-            Icon(icon, color: color, size: 18),
-          ],
-        ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.elMessiri(
+              color: color.withOpacity(0.8),
+              fontSize: fontSize1 - 5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -352,7 +377,10 @@ class _ProfilpageState extends State<Profilpage> {
         children: [
           Text(
             label,
-            style: GoogleFonts.elMessiri(color: Colors.white70, fontSize: 14),
+            style: GoogleFonts.elMessiri(
+              color: Colors.white70,
+              fontSize: fontSize1 - 1,
+            ),
           ),
           SfSlider(
             min: 10.0,
@@ -397,9 +425,24 @@ class _ProfilpageState extends State<Profilpage> {
         underline: const SizedBox(),
         dropdownColor: const Color(0xFF1A1A1A),
         items: colorMap.keys.map((name) {
+          String translatedName = name;
+          if (name == 'Red') {
+            translatedName = 'color_red'.tr;
+          } else if (name == 'Green')
+            translatedName = 'color_green'.tr;
+          else if (name == 'Blue')
+            translatedName = 'color_blue'.tr;
+          else if (name == 'Dark')
+            translatedName = 'color_dark'.tr;
+          else if (name == 'Purple')
+            translatedName = 'color_purple'.tr;
+
           return DropdownMenuItem(
             value: name,
-            child: Text(name, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              translatedName,
+              style: const TextStyle(color: Colors.white),
+            ),
           );
         }).toList(),
         onChanged: (val) {
@@ -455,6 +498,13 @@ class _ProfilpageState extends State<Profilpage> {
             value: 'en',
             child: Text(
               "english".tr,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          DropdownMenuItem(
+            value: 'fr',
+            child: Text(
+              "french".tr,
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -930,14 +980,11 @@ class _ProfilpageState extends State<Profilpage> {
 
     // Reset settings to defaults
     setState(() {
-      fontSize1 = 15.0;
-      fontSize1 = 15.0;
+      Get.find<ThemeController>().updateFontSize(15.0);
       selectedColorName = 'Dark';
       cardcolor = colorMap[selectedColorName]!;
 
       // Save default values
-      prefsdata.put("fontsize1", fontSize1);
-      prefsdata.put("fontSize1", fontSize1);
       prefsdata.put("selectedColorName", selectedColorName);
       prefsdata.put("cardcolor", cardcolor);
 

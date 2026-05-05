@@ -1,3 +1,4 @@
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
@@ -100,7 +101,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'app_name'.tr,
                         style: GoogleFonts.lato(
-                          fontSize: 40,
+                          fontSize: fontSize1 + 20,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: 1.2,
@@ -124,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                           'app_slogan'.tr,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.elMessiri(
-                            fontSize: 16,
+                            fontSize: fontSize1,
                             color: Colors.white70,
                             letterSpacing: 0.5,
                             height: 1.5,
@@ -154,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'developed_by_simple'.tr,
                     style: GoogleFonts.elMessiri(
-                      fontSize: 13,
+                      fontSize: fontSize1 - 2,
                       color: Colors.white54,
                     ),
                   ),
@@ -162,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     'all_rights_reserved'.tr,
                     style: GoogleFonts.elMessiri(
-                      fontSize: 12,
+                      fontSize: fontSize1 - 4,
                       color: Colors.white38,
                     ),
                   ),

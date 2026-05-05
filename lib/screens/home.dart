@@ -1,11 +1,12 @@
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:flutter/material.dart';
 import 'package:budget_it/screens/budget.dart';
 import 'package:budget_it/screens/profil.dart';
 import 'package:budget_it/screens/stats.dart';
 import 'package:budget_it/screens/wallet.dart';
-import 'package:hive/hive.dart';
 import 'package:budget_it/services/notification_service.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 final prefsdata = Hive.box('data');
 
@@ -54,21 +55,8 @@ class _MyhomeState extends State<Myhome> {
     List<String> labels = ["budget".tr, "wallet".tr, "stats".tr, "settings".tr];
     return SafeArea(
       child: Scaffold(
-        //backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
-        backgroundColor: Color.fromRGBO(20, 20, 20, 1.0),
+        backgroundColor: const Color.fromRGBO(20, 20, 20, 1.0),
         body: getbody(),
-        //bottomNavigationBar: getfooter(),
-        /*floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            /* await FirebaseFirestore.instance
-                .collection('data')
-                .add({'timestamp': Timestamp.fromDate(DateTime.now())}); */
-            setTabs(2);
-          },
-          backgroundColor: Colors.pink,
-          child: const Icon(Icons.query_stats, size: 25),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.miniEndDocked,*/
         bottomNavigationBar: Directionality(
           textDirection: TextDirection.ltr,
           child: Theme(
@@ -76,45 +64,59 @@ class _MyhomeState extends State<Myhome> {
               splashColor: Colors.black,
               highlightColor: Colors.transparent,
             ),
-            child: BottomNavigationBar(
-              currentIndex: pageindex,
-              type: BottomNavigationBarType.fixed,
-              // backgroundColor: prefsdata.get("cardcolor", defaultValue: Colors.black) == Color.fromRGBO(89, 89, 89, 1) ? Color.fromRGBO(20, 20, 20, 1.0) : const Color.fromARGB(255, 212, 212, 212),
-              backgroundColor: Colors.black,
-              selectedItemColor: Color.fromARGB(
-                255,
-                (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-                    .clamp(0, 255),
-                (prefsdata.get("cardcolor", defaultValue: Colors.black).green +
-                        50)
-                    .clamp(0, 255),
-                (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-                    .clamp(0, 255),
+            child: ValueListenableBuilder(
+              valueListenable: prefsdata.listenable(
+                keys: ['fontsize1', 'cardcolor'],
               ),
-              unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
-              showSelectedLabels: true,
-              showUnselectedLabels: true,
-              elevation: 0,
-              iconSize: 26,
-              selectedIconTheme: const IconThemeData(size: 30),
-              selectedFontSize: 12,
-              unselectedFontSize: 10,
-              items: List.generate(listactions.length, (index) {
-                return BottomNavigationBarItem(
-                  icon: ExcludeSemantics(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: EdgeInsets.only(
-                        bottom: pageindex == index ? 4 : 0,
-                      ),
-                      child: Icon(listactions[index]),
-                    ),
+              builder: (context, box, child) {
+                return BottomNavigationBar(
+                  currentIndex: pageindex,
+                  type: BottomNavigationBarType.fixed,
+                  backgroundColor: Colors.black,
+                  selectedItemColor: Color.fromARGB(
+                    255,
+                    (prefsdata
+                                .get("cardcolor", defaultValue: Colors.black)
+                                .red +
+                            50)
+                        .clamp(0, 255),
+                    (prefsdata
+                                .get("cardcolor", defaultValue: Colors.black)
+                                .green +
+                            50)
+                        .clamp(0, 255),
+                    (prefsdata
+                                .get("cardcolor", defaultValue: Colors.black)
+                                .blue +
+                            50)
+                        .clamp(0, 255),
                   ),
-                  label: labels[index],
+                  unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  elevation: 0,
+                  iconSize: 26,
+                  selectedIconTheme: const IconThemeData(size: 30),
+                  selectedFontSize: fontSize1 - 3,
+                  unselectedFontSize: fontSize1 - 5,
+                  items: List.generate(listactions.length, (index) {
+                    return BottomNavigationBarItem(
+                      icon: ExcludeSemantics(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: EdgeInsets.only(
+                            bottom: pageindex == index ? 4 : 0,
+                          ),
+                          child: Icon(listactions[index]),
+                        ),
+                      ),
+                      label: labels[index],
+                    );
+                  }),
+                  onTap: (index) {
+                    setTabs(index);
+                  },
                 );
-              }),
-              onTap: (index) {
-                setTabs(index);
               },
             ),
           ),
@@ -155,42 +157,53 @@ class _MyhomeState extends State<Myhome> {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
         ),
-        child: BottomNavigationBar(
-          currentIndex: pageindex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-
-          selectedItemColor: Color.fromARGB(
-            255,
-            (prefsdata.get("cardcolor", defaultValue: Colors.black).red + 50)
-                .clamp(0, 255),
-            (prefsdata.get("cardcolor", defaultValue: Colors.black).green + 50)
-                .clamp(0, 255),
-            (prefsdata.get("cardcolor", defaultValue: Colors.black).blue + 50)
-                .clamp(0, 255),
+        child: ValueListenableBuilder(
+          valueListenable: prefsdata.listenable(
+            keys: ['fontsize1', 'cardcolor'],
           ),
-          unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 0,
-          iconSize: 26,
-          selectedIconTheme: const IconThemeData(size: 30),
-          selectedFontSize: 12,
-          unselectedFontSize: 10,
-          items: List.generate(listactions.length, (index) {
-            return BottomNavigationBarItem(
-              icon: ExcludeSemantics(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.only(bottom: pageindex == index ? 4 : 0),
-                  child: Icon(listactions[index]),
-                ),
+          builder: (context, box, child) {
+            return BottomNavigationBar(
+              currentIndex: pageindex,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              selectedItemColor: Color.fromARGB(
+                255,
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).red +
+                        50)
+                    .clamp(0, 255),
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).green +
+                        50)
+                    .clamp(0, 255),
+                (prefsdata.get("cardcolor", defaultValue: Colors.black).blue +
+                        50)
+                    .clamp(0, 255),
               ),
-              label: labels[index],
+              unselectedItemColor: const Color.fromARGB(255, 136, 136, 136),
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              elevation: 0,
+              iconSize: 26,
+              selectedIconTheme: const IconThemeData(size: 30),
+              selectedFontSize: fontSize1 - 3,
+              unselectedFontSize: fontSize1 - 5,
+              items: List.generate(listactions.length, (index) {
+                return BottomNavigationBarItem(
+                  icon: ExcludeSemantics(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.only(
+                        bottom: pageindex == index ? 4 : 0,
+                      ),
+                      child: Icon(listactions[index]),
+                    ),
+                  ),
+                  label: labels[index],
+                );
+              }),
+              onTap: (index) {
+                setTabs(index);
+              },
             );
-          }),
-          onTap: (index) {
-            setTabs(index);
           },
         ),
       ),

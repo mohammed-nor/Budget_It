@@ -272,7 +272,9 @@ class GeminiService {
 
     final String promptLanguage = finalLanguage == 'ar'
         ? 'Arabic (العربية)'
-        : 'English';
+        : finalLanguage == 'fr'
+            ? 'French (Français)'
+            : 'English';
 
     return '''You are an experienced financial advisor. Analyze this person's monthly budget based on their actual spending history from their Budget page and provide personalized financial advice in $promptLanguage. Focus on:
 1. Actual spending analysis and patterns from their records

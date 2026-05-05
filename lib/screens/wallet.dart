@@ -8,6 +8,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:budget_it/utils/language_controller.dart';
+import 'package:syncfusion_flutter_charts/charts.dart' as chart;
+import 'package:google_fonts/google_fonts.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -322,6 +324,253 @@ class _WalletPageState extends State<WalletPage> {
           body: ListView(
             padding: const EdgeInsets.all(8),
             children: [
+              ValueListenableBuilder(
+                valueListenable: budgetsBox.listenable(),
+                builder: (context, Box box, _) {
+                  double totalSum = 0;
+                  final List<ChartData> chartData = [];
+
+                  for (int i = 0; i < categories.length; i++) {
+                    double currentVal = getCurrentBudget(i);
+                    totalSum += currentVal;
+                    chartData.add(
+                      ChartData(categories[i].title.tr, currentVal),
+                    );
+                  }
+
+                  chartData.sort((a, b) => b.y.compareTo(a.y));
+
+                  final bool isAr = Get.locale?.languageCode == 'ar';
+                  final Color textColor = _getTextColor();
+                  final Color secondaryTextColor = _getSecondaryTextColor();
+                  final Color cardColor = prefsdata.get(
+                    "cardcolor",
+                    defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                  );
+
+                  return Card(
+                    color: cardColor,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: isAr
+                            ? CrossAxisAlignment.start
+                            : CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_wallet,
+                                      color: Colors.greenAccent,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'wallet_distribution'.tr,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          color: textColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: fontSize1 + 3,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: isAr
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'total_balance'.tr,
+                                    style: TextStyle(
+                                      color: secondaryTextColor,
+                                      fontSize: fontSize1 - 3,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${totalSum.toStringAsFixed(2)} ${LanguageController.to.currency.value}',
+                                    style: TextStyle(
+                                      color: Colors.greenAccent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: fontSize1 + 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Center(
+                              child: Text(
+                                'wallet_hint'.tr,
+                                textAlign: isAr
+                                    ? TextAlign.right
+                                    : TextAlign.left,
+                                style: TextStyle(
+                                  color: secondaryTextColor,
+                                  fontSize: fontSize1 - 2,
+                                  fontStyle: FontStyle.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 220,
+                            child: chart.SfCircularChart(
+                              margin: EdgeInsets.zero,
+                              palette: <Color>[
+                                const Color.fromARGB(255, 136, 138, 6),
+                                Colors.blue.shade900,
+                                const Color.fromARGB(255, 56, 147, 40),
+                                const Color.fromARGB(255, 146, 27, 142),
+                                Colors.cyan.shade800,
+                                const Color.fromARGB(255, 79, 58, 55),
+                              ],
+                              legend: chart.Legend(
+                                isVisible: true,
+                                position: chart.LegendPosition.right,
+                                overflowMode: chart.LegendItemOverflowMode.wrap,
+                                textStyle: GoogleFonts.elMessiri(
+                                  color: secondaryTextColor,
+                                  fontSize: fontSize1 - 5,
+                                ),
+                              ),
+                              series: <chart.CircularSeries<ChartData, String>>[
+                                chart.DoughnutSeries<ChartData, String>(
+                                  dataSource: chartData,
+                                  xValueMapper: (ChartData data, _) => data.x,
+                                  yValueMapper: (ChartData data, _) => data.y,
+                                  innerRadius: '65%',
+                                  explode: true,
+                                  dataLabelSettings: chart.DataLabelSettings(
+                                    isVisible: true,
+                                    labelPosition:
+                                        chart.ChartDataLabelPosition.inside,
+                                    textStyle: GoogleFonts.elMessiri(
+                                      fontSize: fontSize1 - 5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  enableTooltip: false,
+                                ),
+                              ],
+                              annotations: <chart.CircularChartAnnotation>[
+                                chart.CircularChartAnnotation(
+                                  widget: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Builder(
+                                        builder: (context) {
+                                          final now = DateTime.now();
+                                          final today = DateTime(
+                                            now.year,
+                                            now.month,
+                                            now.day,
+                                          );
+                                          final payDay =
+                                              prefsdata.get(
+                                                    "payingDay",
+                                                    defaultValue: 30,
+                                                  )
+                                                  as int;
+                                          final daysInMonth = DateTime(
+                                            now.year,
+                                            now.month + 1,
+                                            0,
+                                          ).day;
+
+                                          DateTime paydayDate;
+                                          if (now.day < payDay) {
+                                            paydayDate = DateTime(
+                                              now.year,
+                                              now.month,
+                                              payDay,
+                                            );
+                                          } else {
+                                            paydayDate = DateTime(
+                                              now.year,
+                                              now.month + 1,
+                                              payDay,
+                                            );
+                                          }
+
+                                          int daysLeft = paydayDate
+                                              .difference(today)
+                                              .inDays;
+                                          if (daysLeft <= 0) daysLeft = 1;
+
+                                          final targetTotal =
+                                              (totalSum / daysInMonth) *
+                                              daysLeft;
+
+                                          return Text(
+                                            targetTotal.toStringAsFixed(0),
+                                            style: GoogleFonts.elMessiri(
+                                              color: textColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      Text(
+                                        'remaining'.tr,
+                                        style: GoogleFonts.elMessiri(
+                                          color: secondaryTextColor,
+                                          fontSize: fontSize1 - 5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              tooltipBehavior: chart.TooltipBehavior(
+                                enable: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ...List.generate(categories.length, (index) {
+                return BudgetCard(
+                  category: categories[index],
+                  onBudgetChanged: (newValue) {
+                    setState(() {
+                      categories[index].budget = newValue;
+                      budgetsBox.put(categories[index].title, newValue);
+                      saveCategoryUpdate(index, newValue);
+                    });
+                  },
+                  cardColor: cardColor,
+                  index: index,
+                  getCategoryIncrement: getCategoryIncrement,
+                  getCurrentBudget: getCurrentBudget,
+                );
+              }),
               // AI Financial Advisor Section
               Card(
                 color: prefsdata.get(
@@ -368,7 +617,7 @@ class _WalletPageState extends State<WalletPage> {
                             : TextAlign.left,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: _getSecondaryTextColor(),
-                          fontSize: 14,
+                          fontSize: fontSize1 - 1,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -419,7 +668,7 @@ class _WalletPageState extends State<WalletPage> {
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: Colors.blue.shade300,
-                                        fontSize: 15,
+                                        fontSize: fontSize1 - 0,
                                         fontWeight: FontWeight.w500,
                                       ),
                                 ),
@@ -429,7 +678,7 @@ class _WalletPageState extends State<WalletPage> {
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Colors.blue.shade400,
-                                        fontSize: 12,
+                                        fontSize: fontSize1 - 3,
                                       ),
                                 ),
                               ],
@@ -485,7 +734,7 @@ class _WalletPageState extends State<WalletPage> {
                                       style: TextStyle(
                                         color: Colors.red.shade300,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                                        fontSize: fontSize1 - 1,
                                       ),
                                     ),
                                   ),
@@ -496,7 +745,7 @@ class _WalletPageState extends State<WalletPage> {
                                 _adviceError!.replaceAll('Exception: ', ''),
                                 style: TextStyle(
                                   color: Colors.red.shade200,
-                                  fontSize: 12,
+                                  fontSize: fontSize1 - 3,
                                   height: 1.5,
                                 ),
                               ),
@@ -557,7 +806,7 @@ class _WalletPageState extends State<WalletPage> {
                                         ?.copyWith(
                                           color: Colors.green.shade300,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                          fontSize: fontSize1 + 1,
                                         ),
                                   ),
                                 ],
@@ -592,25 +841,25 @@ class _WalletPageState extends State<WalletPage> {
                                     p: Theme.of(context).textTheme.bodyMedium
                                         ?.copyWith(
                                           color: _getTextColor(),
-                                          fontSize: 13,
+                                          fontSize: fontSize1 - 2,
                                           height: 1.8,
                                         ),
                                     strong: TextStyle(
                                       color: Colors.green.shade300,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 13,
+                                      fontSize: fontSize1 - 2,
                                     ),
                                     em: TextStyle(
                                       color: Colors.green.shade200,
                                       fontStyle: FontStyle.italic,
-                                      fontSize: 13,
+                                      fontSize: fontSize1 - 2,
                                     ),
                                     listBullet: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
                                         ?.copyWith(
                                           color: _getTextColor(),
-                                          fontSize: 13,
+                                          fontSize: fontSize1 - 2,
                                           height: 1.6,
                                         ),
                                     code: TextStyle(
@@ -618,7 +867,7 @@ class _WalletPageState extends State<WalletPage> {
                                           .withOpacity(0.3),
                                       color: Colors.green.shade200,
                                       fontFamily: 'monospace',
-                                      fontSize: 12,
+                                      fontSize: fontSize1 - 3,
                                     ),
                                     blockquoteDecoration: BoxDecoration(
                                       border: Border(
@@ -669,7 +918,7 @@ class _WalletPageState extends State<WalletPage> {
                                               .labelSmall
                                               ?.copyWith(
                                                 color: Colors.green.shade400,
-                                                fontSize: 11,
+                                                fontSize: fontSize1 - 4,
                                               ),
                                         ),
                                       ],
@@ -684,7 +933,7 @@ class _WalletPageState extends State<WalletPage> {
                                           .labelSmall
                                           ?.copyWith(
                                             color: Colors.green.shade300,
-                                            fontSize: 11,
+                                            fontSize: fontSize1 - 4,
                                             fontWeight: FontWeight.w500,
                                           ),
                                     ),
@@ -702,7 +951,7 @@ class _WalletPageState extends State<WalletPage> {
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: _getSecondaryTextColor(),
-                                fontSize: 13,
+                                fontSize: fontSize1 - 2,
                               ),
                         ),
                       const SizedBox(height: 16),
@@ -724,8 +973,8 @@ class _WalletPageState extends State<WalletPage> {
                             _aiAdvice != null
                                 ? 'update_advice'.tr
                                 : 'get_advice_btn'.tr,
-                            style: const TextStyle(
-                              fontSize: 15,
+                            style: TextStyle(
+                              fontSize: fontSize1 - 0,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
                             ),
@@ -751,22 +1000,6 @@ class _WalletPageState extends State<WalletPage> {
                   ),
                 ),
               ),
-              ...List.generate(categories.length, (index) {
-                return BudgetCard(
-                  category: categories[index],
-                  onBudgetChanged: (newValue) {
-                    setState(() {
-                      categories[index].budget = newValue;
-                      budgetsBox.put(categories[index].title, newValue);
-                      saveCategoryUpdate(index, newValue);
-                    });
-                  },
-                  cardColor: cardColor,
-                  index: index,
-                  getCategoryIncrement: getCategoryIncrement,
-                  getCurrentBudget: getCurrentBudget,
-                );
-              }),
             ],
           ),
         );
@@ -878,10 +1111,134 @@ class BudgetCard extends StatelessWidget {
                   : TextAlign.left,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: getSecondaryTextColor(),
-                fontSize: 15,
+                fontSize: fontSize1 - 0,
               ),
             ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.04),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.timer_outlined,
+                      color: Colors.orange.shade300,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'daily_remaining'.tr,
+                          style: TextStyle(
+                            color: getSecondaryTextColor(),
+                            fontSize: fontSize1 - 3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final prefs = Hive.box('data');
+                                final now = DateTime.now();
+                                final today = DateTime(
+                                  now.year,
+                                  now.month,
+                                  now.day,
+                                );
+                                final payDay =
+                                    prefs.get("payingDay", defaultValue: 30)
+                                        as int;
+                                final daysInMonth = DateTime(
+                                  now.year,
+                                  now.month + 1,
+                                  0,
+                                ).day;
 
+                                DateTime paydayDate;
+                                if (now.day < payDay) {
+                                  paydayDate = DateTime(
+                                    now.year,
+                                    now.month,
+                                    payDay,
+                                  );
+                                } else {
+                                  paydayDate = DateTime(
+                                    now.year,
+                                    now.month + 1,
+                                    payDay,
+                                  );
+                                }
+
+                                int daysLeft = paydayDate
+                                    .difference(today)
+                                    .inDays;
+                                if (daysLeft <= 0) daysLeft = 1;
+
+                                final current = getCurrentBudget(index);
+                                final daily = current / daysLeft;
+                                final target =
+                                    (current / daysInMonth) * daysLeft;
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              '${target.toStringAsFixed(2)} ${LanguageController.to.currency.value}',
+                                              style: TextStyle(
+                                                color:
+                                                    Colors.greenAccent.shade400,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: fontSize1 - 1,
+                                              ),
+                                            ),
+                                            Text(
+                                              '($daysLeft ${'days_left'.tr})',
+                                              style: TextStyle(
+                                                color: getSecondaryTextColor()
+                                                    .withOpacity(0.5),
+                                                fontSize: fontSize1 - 5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: TextEditingController(
@@ -903,9 +1260,9 @@ class BudgetCard extends StatelessWidget {
               style: TextStyle(
                 color: getTextColor(),
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: fontSize1 + 1,
               ),
-              onChanged: (value) {
+              onSubmitted: (value) {
                 if (value.isNotEmpty) {
                   onBudgetChanged(double.parse(value));
                 }
@@ -978,4 +1335,11 @@ class SpendingCategory {
     required this.description,
     required this.budget,
   });
+}
+
+class ChartData {
+  ChartData(this.x, this.y, [this.color]);
+  final String x;
+  final double y;
+  final Color? color;
 }

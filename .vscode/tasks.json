@@ -6,6 +6,10 @@
 			"command": "flutter",
 			"args": [
 				"build",
+				"appbundle",
+				"--release",
+				"&&",
+				"build",
 				"apk",
 				"--release",
 				"&&",

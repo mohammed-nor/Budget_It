@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/styles%20and%20constants.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart' as sfs;
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -96,6 +96,12 @@ class _BudgetpageState extends State<Budgetpage> {
     _initUpcomingSpendingBox();
     _initUnexpectedEarningsBox();
     _initChartSettings();
+  }
+
+  void _ondayselected(DateTime day, DateTime focusedDay) {
+    setState(() {
+      today = day;
+    });
   }
 
   Future<void> _initChartSettings() async {
@@ -1220,7 +1226,6 @@ class _BudgetpageState extends State<Budgetpage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Get.locale?.languageCode == 'ar';
     double fontSize1 = prefsdata.get("fontsize1", defaultValue: 15.toDouble());
     // Next/This month payment date calculations removed (not used).
     int daysleftInCurrentMonth() {
@@ -1441,100 +1446,130 @@ class _BudgetpageState extends State<Budgetpage> {
       );
     }
 
-    return Scaffold(
-      //backgroundColor: Colors.black,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: ListView(
-        padding: const EdgeInsets.all(7),
-        children: <Widget>[
-          Card(
-            elevation: 2,
-            //color: Theme.of(context).cardColor,
-            color: prefsdata.get(
-              "cardcolor",
-              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Column(
+    return ValueListenableBuilder(
+      valueListenable: prefsdata.listenable(keys: ['fontsize1', 'cardcolor']),
+      builder: (context, box, child) {
+        return Scaffold(
+          //backgroundColor: Colors.black,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: ListView(
+            padding: const EdgeInsets.all(7),
+            children: <Widget>[
+              Card(
+                elevation: 2,
+                //color: Theme.of(context).cardColor,
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 00,
-                        horizontal: 10.0,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color.fromARGB(10, 45, 45, 45),
-                            const Color.fromARGB(125, 35, 35, 35),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            offset: const Offset(0, 3),
-                            blurRadius: 6,
+                    const SizedBox(height: 20),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 00,
+                            horizontal: 10.0,
                           ),
-                        ],
-                        border: Border.all(
-                          color: const Color.fromRGBO(106, 253, 95, 0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color.fromARGB(10, 45, 45, 45),
+                                const Color.fromARGB(125, 35, 35, 35),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                offset: const Offset(0, 3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                            border: Border.all(
+                              color: const Color.fromRGBO(106, 253, 95, 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
                               children: [
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: const Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          0.15,
-                                        ).withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.account_balance_wallet,
-                                        color: Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          1.0,
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              0.15,
+                                            ).withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: const Icon(
+                                            Icons.account_balance_wallet,
+                                            color: Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              1.0,
+                                            ),
+                                            size: 24,
+                                          ),
                                         ),
-                                        size: 24,
-                                      ),
+                                        const SizedBox(width: 12),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "daily_allowance".tr,
+                                              style: themedTextStyle(
+                                                fontSize: fontSize1 * 0.7,
+                                              ),
+                                            ),
+                                            Obx(
+                                              () => Text(
+                                                "${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} ${LanguageController.to.currency.value}",
+                                                style: themedTextStyle(
+                                                  fontSize: fontSize1 * 1.7,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 12),
+
                                     Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Text(
-                                          "daily_allowance".tr,
+                                          "total_remaining_amount".tr,
                                           style: themedTextStyle(
                                             fontSize: fontSize1 * 0.7,
                                           ),
                                         ),
                                         Obx(
                                           () => Text(
-                                            "${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} ${LanguageController.to.currency.value}",
+                                            "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} ${LanguageController.to.currency.value}",
                                             style: themedTextStyle(
                                               fontSize: fontSize1 * 1.7,
                                               fontWeight: FontWeight.bold,
@@ -1546,542 +1581,120 @@ class _BudgetpageState extends State<Budgetpage> {
                                   ],
                                 ),
 
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                const SizedBox(height: 14),
+                                const Divider(
+                                  height: 1,
+                                  color: Color.fromRGBO(80, 80, 80, 0.5),
+                                ),
+                                const SizedBox(height: 14),
+
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      "total_remaining_amount".tr,
+                                      "days_left_for_salary".tr,
                                       style: themedTextStyle(
-                                        fontSize: fontSize1 * 0.7,
+                                        fontSize: fontSize1,
                                       ),
                                     ),
-                                    Obx(
-                                      () => Text(
-                                        "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} ${LanguageController.to.currency.value}",
-                                        style: themedTextStyle(
-                                          fontSize: fontSize1 * 1.7,
-                                          fontWeight: FontWeight.bold,
+                                    Expanded(child: SizedBox(width: 5)),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 4,
+                                        horizontal: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.amber.withOpacity(0.4),
                                         ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.amber[300],
+                                            size: 18,
+                                          ),
+                                          Text(
+                                            "    ${daysleftInCurrentMonth()}",
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.amber[300],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ],
                             ),
-
-                            const SizedBox(height: 14),
-                            const Divider(
-                              height: 1,
-                              color: Color.fromRGBO(80, 80, 80, 0.5),
-                            ),
-                            const SizedBox(height: 14),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "days_left_for_salary".tr,
-                                  style: themedTextStyle(fontSize: fontSize1),
-                                ),
-                                Expanded(child: SizedBox(width: 5)),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
-                                    horizontal: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: Colors.amber.withOpacity(0.4),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_today,
-                                        color: Colors.amber[300],
-                                        size: 18,
-                                      ),
-                                      Text(
-                                        "    ${daysleftInCurrentMonth()}",
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.amber[300],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    TableCalendar(
-                      focusedDay: today,
-                      rowHeight: 45,
-                      firstDay: DateTime(startDate.year, startDate.month, 1),
-                      lastDay: DateTime(2050, 12, 31),
-                      selectedDayPredicate: (day) => isSameDay(day, today),
-                      calendarFormat: CalendarFormat.month,
-
-                      headerStyle: const HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                      ),
-                      onDaySelected: _ondayselected,
-                      calendarStyle: CalendarStyle(
-                        weekNumberTextStyle: themedTextStyle(
-                          fontSize: fontSize1,
-                        ),
-
-                        weekendTextStyle: themedTextStyle(
-                          fontSize: fontSize1,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFE82064),
-                        ),
-                        outsideTextStyle: themedTextStyle(
-                          color: const Color(0xFFBEBEBE),
-                        ),
-                        todayDecoration: const BoxDecoration(
-                          color: Color(0xFFE696B2),
-                          shape: BoxShape.circle,
-                        ),
-                        todayTextStyle: themedTextStyle(
-                          color: Color(0xFFFAFAFA),
-                          fontSize: fontSize1,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        selectedDecoration: const BoxDecoration(
-                          color: Color(0xFFE82064),
-                          shape: BoxShape.circle,
-                        ),
-                        selectedTextStyle: themedTextStyle(
-                          color: Color(0xFFFAFAFA),
-                          fontSize: fontSize1,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        defaultTextStyle: themedTextStyle(
-                          fontSize: fontSize1,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFFFFFFF),
-                        ),
-                      ),
-                    ),
-                    //Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color.fromARGB(10, 45, 45, 45),
-                            const Color.fromARGB(125, 35, 35, 35),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: const Offset(0, 2),
-                            blurRadius: 6,
                           ),
-                        ],
-                        border: Border.all(
-                          color: const Color.fromRGBO(106, 253, 95, 0.3),
-                          width: 1.5,
                         ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ListTile(
-                          title: Text(
-                            "amount_at_start_of_day".tr,
-                            style: themedTextStyle(fontSize: fontSize1),
-                            textAlign: Get.locale?.languageCode == 'ar'
-                                ? TextAlign.right
-                                : TextAlign.left,
+
+                        TableCalendar(
+                          focusedDay: today,
+                          rowHeight: 45,
+                          firstDay: DateTime(
+                            startDate.year,
+                            startDate.month,
+                            1,
                           ),
-                          subtitle: Obx(
-                            () => Text(
-                              "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} ${LanguageController.to.currency.value}",
-                              style: themedTextStyle(
-                                fontSize: fontSize1 * 1.2,
-                                fontWeight: FontWeight.bold,
-                                color: const Color.fromARGB(255, 154, 156, 255),
-                              ),
-                              textAlign: Get.locale?.languageCode == 'ar'
-                                  ? TextAlign.right
-                                  : TextAlign.left,
-                            ),
+                          lastDay: DateTime(2050, 12, 31),
+                          selectedDayPredicate: (day) => isSameDay(day, today),
+                          calendarFormat: CalendarFormat.month,
+
+                          headerStyle: const HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
                           ),
-                          trailing: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(37, 95, 169, 253),
-                              borderRadius: BorderRadius.circular(14),
+                          onDaySelected: _ondayselected,
+                          calendarStyle: CalendarStyle(
+                            weekNumberTextStyle: themedTextStyle(
+                              fontSize: fontSize1,
                             ),
-                            child: const Icon(
-                              Icons.credit_card,
-                              color: Color.fromARGB(255, 154, 156, 255),
-                              size: 24,
+
+                            weekendTextStyle: themedTextStyle(
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFE82064),
+                            ),
+                            outsideTextStyle: themedTextStyle(
+                              color: const Color(0xFFBEBEBE),
+                            ),
+                            todayDecoration: const BoxDecoration(
+                              color: Color(0xFFE696B2),
+                              shape: BoxShape.circle,
+                            ),
+                            todayTextStyle: themedTextStyle(
+                              color: Color(0xFFFAFAFA),
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            selectedDecoration: const BoxDecoration(
+                              color: Color(0xFFE82064),
+                              shape: BoxShape.circle,
+                            ),
+                            selectedTextStyle: themedTextStyle(
+                              color: Color(0xFFFAFAFA),
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            defaultTextStyle: themedTextStyle(
+                              fontSize: fontSize1,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFFFFFFF),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-
-                    // Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
-
-                    // (controls moved below the chart; kept for UI but relocated)
-
-                    // Compute Bollinger Bands (SMA + stddev * multiplier)
-                    // We do this locally in the build method using existing candleData.close values
-                    // without changing any existing open/high/low/close calculations.
-                    Builder(
-                      builder: (context) {
-                        final int bbP = bbPeriod;
-                        final double bbM = bbMultiplier;
-                        final int dispCount = displayCount;
-
-                        // Compute bands over the full candleData (do NOT change calculation logic)
-                        final List<_BandPoint> fullBandData = [];
-                        if (candleData.isNotEmpty) {
-                          final closesFull = candleData
-                              .map((c) => c.close.toDouble())
-                              .toList();
-                          for (int i = 0; i < candleData.length; i++) {
-                            if (i >= bbP - 1) {
-                              final window = closesFull.sublist(
-                                i - (bbP - 1),
-                                i + 1,
-                              );
-                              final mean =
-                                  window.reduce((a, b) => a + b) /
-                                  window.length;
-                              final variance =
-                                  window
-                                      .map((v) => (v - mean) * (v - mean))
-                                      .reduce((a, b) => a + b) /
-                                  window.length;
-                              final sd = math.sqrt(variance);
-                              final up = mean + bbM * sd;
-                              final low = mean - bbM * sd;
-                              fullBandData.add(
-                                _BandPoint(candleData[i].x, mean, up, low),
-                              );
-                            } else {
-                              fullBandData.add(
-                                _BandPoint(candleData[i].x, null, null, null),
-                              );
-                            }
-                          }
-                        }
-
-                        // Choose the last `dispCount` candles for plotting (do NOT modify original data)
-                        final List<_CandleData> displayCandles =
-                            candleData.length > dispCount
-                            ? candleData.sublist(candleData.length - dispCount)
-                            : List<_CandleData>.from(candleData);
-
-                        // Align band points to the displayed window by slicing the fullBandData
-                        final int startIndex = math.max(
-                          0,
-                          candleData.length - dispCount,
-                        );
-                        final List<_BandPoint> bandData =
-                            fullBandData.length > startIndex
-                            ? fullBandData.sublist(startIndex)
-                            : fullBandData.isEmpty
-                            ? <_BandPoint>[]
-                            : List<_BandPoint>.from(fullBandData);
-
-                        return SizedBox(
-                          height: 400,
-                          child: displayCandles.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    "not_enough_historical_data".tr,
-                                    style: darktextstyle.copyWith(),
-                                  ),
-                                )
-                              : ExcludeSemantics(
-                                  child: SfCartesianChart(
-                                    primaryXAxis: DateTimeAxis(
-                                      dateFormat: DateFormat('d MMM'),
-                                      intervalType: DateTimeIntervalType.days,
-                                      interval: 7,
-                                      majorGridLines: const MajorGridLines(
-                                        width: 1,
-                                        color: Color.fromRGBO(
-                                          200,
-                                          200,
-                                          200,
-                                          0.1,
-                                        ),
-                                      ),
-                                      edgeLabelPlacement:
-                                          EdgeLabelPlacement.shift,
-                                    ),
-                                    primaryYAxis: NumericAxis(
-                                      minimum:
-                                          displayCandles
-                                              .map((c) => c.low)
-                                              .fold<num>(
-                                                double.infinity,
-                                                (min, v) => v < min ? v : min,
-                                              ) -
-                                          1500,
-                                      maximum:
-                                          displayCandles
-                                              .map((c) => c.high)
-                                              .fold<num>(
-                                                double.negativeInfinity,
-                                                (max, v) => v > max ? v : max,
-                                              ) +
-                                          1500,
-                                    ),
-                                    tooltipBehavior: TooltipBehavior(
-                                      enable: true,
-                                    ),
-                                    series: <CartesianSeries<dynamic, DateTime>>[
-                                      // original candle series (unchanged)
-                                      CandleSeries<_CandleData, DateTime>(
-                                        dataSource: displayCandles,
-                                        xValueMapper: (_CandleData data, _) =>
-                                            data.x,
-                                        lowValueMapper: (_CandleData data, _) =>
-                                            data.low,
-                                        highValueMapper:
-                                            (_CandleData data, _) => data.high,
-                                        openValueMapper:
-                                            (_CandleData data, _) => data.open,
-                                        closeValueMapper:
-                                            (_CandleData data, _) => data.close,
-                                        enableTooltip: true,
-                                        animationDuration: 0,
-                                        pointColorMapper:
-                                            (_CandleData data, _) {
-                                              if (isSameDay(data.x, today)) {
-                                                return const Color.fromARGB(
-                                                  255,
-                                                  255,
-                                                  191,
-                                                  0,
-                                                );
-                                              }
-                                              return data.close >= data.open
-                                                  ? const Color.fromRGBO(
-                                                      106,
-                                                      253,
-                                                      95,
-                                                      1.0,
-                                                    )
-                                                  : const Color.fromRGBO(
-                                                      253,
-                                                      95,
-                                                      95,
-                                                      1.0,
-                                                    );
-                                            },
-                                        bearColor: const Color.fromRGBO(
-                                          253,
-                                          95,
-                                          95,
-                                          1.0,
-                                        ),
-                                        bullColor: const Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          1.0,
-                                        ),
-                                      ),
-
-                                      // Bollinger middle line (SMA)
-                                      LineSeries<_BandPoint, DateTime>(
-                                        dataSource: bandData,
-                                        xValueMapper: (_BandPoint d, _) => d.x,
-                                        yValueMapper: (_BandPoint d, _) =>
-                                            d.mid,
-                                        color: const Color.fromRGBO(
-                                          255,
-                                          165,
-                                          0,
-                                          1.0,
-                                        ),
-                                        width: 2,
-                                        name: 'SMA',
-                                        animationDuration: 0,
-                                      ),
-
-                                      // Bollinger shaded area between upper and lower bands
-                                      RangeAreaSeries<_BandPoint, DateTime>(
-                                        dataSource: bandData,
-                                        xValueMapper: (_BandPoint d, _) => d.x,
-                                        lowValueMapper: (_BandPoint d, _) =>
-                                            d.lower,
-                                        highValueMapper: (_BandPoint d, _) =>
-                                            d.upper,
-                                        color: const Color.fromRGBO(
-                                          255,
-                                          165,
-                                          0,
-                                          0.15,
-                                        ),
-                                        borderColor: const Color.fromRGBO(
-                                          255,
-                                          165,
-                                          0,
-                                          0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                        );
-                      },
-                    ),
-                    // Collapsible controls: moved under the chart
-                    ExpansionTile(
-                      //backgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
-                      //collapsedBackgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
-                      tilePadding: const EdgeInsets.symmetric(
-                        horizontal: 1.0,
-                        vertical: 0,
-                      ),
-                      title: Center(
-                        child: Text(
-                          'changes_chart'.tr,
-                          style: darktextstyle.copyWith(fontSize: fontSize1),
-                        ),
-                      ),
-                      initiallyExpanded: false,
-                      showTrailingIcon: false,
-                      expandedCrossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                            vertical: 8.0,
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            //decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: cardcolor.withOpacity(0.05), border: Border.all(color: Colors.grey[800]!, width: 0.5)),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-
-                              children: [
-                                SizedBox(height: 5),
-
-                                Center(
-                                  child: Text(
-                                    'number_of_days'.tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.9,
-                                    ),
-                                  ),
-                                ),
-                                sfs.SfSlider(
-                                  min: 5.0,
-                                  max: 215.0,
-                                  interval: 30,
-                                  showTicks: true,
-                                  showLabels: true,
-                                  enableTooltip: true,
-                                  value: displayCount.toDouble(),
-                                  onChanged: (dynamic newValue) {
-                                    setState(() {
-                                      displayCount = (newValue as double)
-                                          .round();
-                                      _saveChartSetting(
-                                        'displayCount',
-                                        displayCount,
-                                      );
-                                    });
-                                  },
-                                ),
-                                SizedBox(height: 16),
-                                Center(
-                                  child: Text(
-                                    'recovery_period'.tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.9,
-                                    ),
-                                    //textDirection: TextDirection.rtl,
-                                  ),
-                                ),
-                                sfs.SfSlider(
-                                  min: 1.0,
-                                  max: 31.0,
-                                  interval: 2,
-                                  showTicks: true,
-                                  showLabels: true,
-                                  value: bbPeriod.toDouble(),
-                                  onChanged: (dynamic newValue) {
-                                    setState(() {
-                                      bbPeriod = (newValue as double).round();
-                                      _saveChartSetting('bbPeriod', bbPeriod);
-                                    });
-                                  },
-                                ),
-                                SizedBox(height: 16),
-                                Center(
-                                  child: Text(
-                                    'care_factor'.tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.9,
-                                    ),
-                                    //textDirection: TextDirection.rtl,
-                                  ),
-                                ),
-                                sfs.SfSlider(
-                                  min: 0.0,
-                                  max: 100.0,
-                                  interval: 20,
-                                  showTicks: true,
-                                  showLabels: true,
-                                  value: vv,
-                                  onChanged: (dynamic newValue) {
-                                    setState(() {
-                                      vv = newValue as double;
-                                      bbMultiplier =
-                                          ((100 - vv) * 3.5 / 100 + 0.5);
-                                      _saveChartSetting('vv', vv);
-                                      _saveChartSetting(
-                                        'bbMultiplier',
-                                        bbMultiplier,
-                                      );
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Divider(height: 21),
-                    ),
-
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        //Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                         Container(
                           margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: 10,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -2109,39 +1722,39 @@ class _BudgetpageState extends State<Budgetpage> {
                             padding: const EdgeInsets.all(8.0),
                             child: ListTile(
                               title: Text(
-                                "amount_saved".tr,
+                                "amount_at_start_of_day".tr,
                                 style: themedTextStyle(fontSize: fontSize1),
+                                textAlign: Get.locale?.languageCode == 'ar'
+                                    ? TextAlign.right
+                                    : TextAlign.left,
                               ),
                               subtitle: Obx(
                                 () => Text(
-                                  "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
-                                  style: darktextstyle.copyWith(
+                                  "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} ${LanguageController.to.currency.value}",
+                                  style: themedTextStyle(
                                     fontSize: fontSize1 * 1.2,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      106,
-                                      253,
-                                      95,
-                                      1.0,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      154,
+                                      156,
+                                      255,
                                     ),
                                   ),
+                                  textAlign: Get.locale?.languageCode == 'ar'
+                                      ? TextAlign.right
+                                      : TextAlign.left,
                                 ),
                               ),
-
                               trailing: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(
-                                    106,
-                                    253,
-                                    95,
-                                    0.15,
-                                  ),
+                                  color: const Color.fromARGB(37, 95, 169, 253),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: const Icon(
-                                  Icons.savings,
-                                  color: Color.fromRGBO(106, 253, 95, 1.0),
+                                  Icons.credit_card,
+                                  color: Color.fromARGB(255, 154, 156, 255),
                                   size: 24,
                                 ),
                               ),
@@ -2149,72 +1762,471 @@ class _BudgetpageState extends State<Budgetpage> {
                           ),
                         ),
 
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                        // Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
+
+                        // (controls moved below the chart; kept for UI but relocated)
+
+                        // Compute Bollinger Bands (SMA + stddev * multiplier)
+                        // We do this locally in the build method using existing candleData.close values
+                        // without changing any existing open/high/low/close calculations.
+                        Builder(
+                          builder: (context) {
+                            final int bbP = bbPeriod;
+                            final double bbM = bbMultiplier;
+                            final int dispCount = displayCount;
+
+                            // Compute bands over the full candleData (do NOT change calculation logic)
+                            final List<_BandPoint> fullBandData = [];
+                            if (candleData.isNotEmpty) {
+                              final closesFull = candleData
+                                  .map((c) => c.close.toDouble())
+                                  .toList();
+                              for (int i = 0; i < candleData.length; i++) {
+                                if (i >= bbP - 1) {
+                                  final window = closesFull.sublist(
+                                    i - (bbP - 1),
+                                    i + 1,
+                                  );
+                                  final mean =
+                                      window.reduce((a, b) => a + b) /
+                                      window.length;
+                                  final variance =
+                                      window
+                                          .map((v) => (v - mean) * (v - mean))
+                                          .reduce((a, b) => a + b) /
+                                      window.length;
+                                  final sd = math.sqrt(variance);
+                                  final up = mean + bbM * sd;
+                                  final low = mean - bbM * sd;
+                                  fullBandData.add(
+                                    _BandPoint(candleData[i].x, mean, up, low),
+                                  );
+                                } else {
+                                  fullBandData.add(
+                                    _BandPoint(
+                                      candleData[i].x,
+                                      null,
+                                      null,
+                                      null,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+
+                            // Choose the last `dispCount` candles for plotting (do NOT modify original data)
+                            final List<_CandleData> displayCandles =
+                                candleData.length > dispCount
+                                ? candleData.sublist(
+                                    candleData.length - dispCount,
+                                  )
+                                : List<_CandleData>.from(candleData);
+
+                            // Align band points to the displayed window by slicing the fullBandData
+                            final int startIndex = math.max(
+                              0,
+                              candleData.length - dispCount,
+                            );
+                            final List<_BandPoint> bandData =
+                                fullBandData.length > startIndex
+                                ? fullBandData.sublist(startIndex)
+                                : fullBandData.isEmpty
+                                ? <_BandPoint>[]
+                                : List<_BandPoint>.from(fullBandData);
+
+                            return SizedBox(
+                              height: 400,
+                              child: displayCandles.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        "not_enough_historical_data".tr,
+                                        style: darktextstyle.copyWith(),
+                                      ),
+                                    )
+                                  : ExcludeSemantics(
+                                      child: SfCartesianChart(
+                                        primaryXAxis: DateTimeAxis(
+                                          dateFormat: DateFormat('d MMM'),
+                                          intervalType:
+                                              DateTimeIntervalType.days,
+                                          interval: 7,
+                                          majorGridLines: const MajorGridLines(
+                                            width: 1,
+                                            color: Color.fromRGBO(
+                                              200,
+                                              200,
+                                              200,
+                                              0.1,
+                                            ),
+                                          ),
+                                          edgeLabelPlacement:
+                                              EdgeLabelPlacement.shift,
+                                        ),
+                                        primaryYAxis: NumericAxis(
+                                          minimum:
+                                              displayCandles
+                                                  .map((c) => c.low)
+                                                  .fold<num>(
+                                                    double.infinity,
+                                                    (min, v) =>
+                                                        v < min ? v : min,
+                                                  ) -
+                                              1500,
+                                          maximum:
+                                              displayCandles
+                                                  .map((c) => c.high)
+                                                  .fold<num>(
+                                                    double.negativeInfinity,
+                                                    (max, v) =>
+                                                        v > max ? v : max,
+                                                  ) +
+                                              1500,
+                                        ),
+                                        tooltipBehavior: TooltipBehavior(
+                                          enable: true,
+                                        ),
+                                        series: <CartesianSeries<dynamic, DateTime>>[
+                                          // original candle series (unchanged)
+                                          CandleSeries<_CandleData, DateTime>(
+                                            dataSource: displayCandles,
+                                            xValueMapper:
+                                                (_CandleData data, _) => data.x,
+                                            lowValueMapper:
+                                                (_CandleData data, _) =>
+                                                    data.low,
+                                            highValueMapper:
+                                                (_CandleData data, _) =>
+                                                    data.high,
+                                            openValueMapper:
+                                                (_CandleData data, _) =>
+                                                    data.open,
+                                            closeValueMapper:
+                                                (_CandleData data, _) =>
+                                                    data.close,
+                                            enableTooltip: true,
+                                            animationDuration: 0,
+                                            pointColorMapper:
+                                                (_CandleData data, _) {
+                                                  if (isSameDay(
+                                                    data.x,
+                                                    today,
+                                                  )) {
+                                                    return const Color.fromARGB(
+                                                      255,
+                                                      255,
+                                                      191,
+                                                      0,
+                                                    );
+                                                  }
+                                                  return data.close >= data.open
+                                                      ? const Color.fromRGBO(
+                                                          106,
+                                                          253,
+                                                          95,
+                                                          1.0,
+                                                        )
+                                                      : const Color.fromRGBO(
+                                                          253,
+                                                          95,
+                                                          95,
+                                                          1.0,
+                                                        );
+                                                },
+                                            bearColor: const Color.fromRGBO(
+                                              253,
+                                              95,
+                                              95,
+                                              1.0,
+                                            ),
+                                            bullColor: const Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              1.0,
+                                            ),
+                                          ),
+
+                                          // Bollinger middle line (SMA)
+                                          LineSeries<_BandPoint, DateTime>(
+                                            dataSource: bandData,
+                                            xValueMapper: (_BandPoint d, _) =>
+                                                d.x,
+                                            yValueMapper: (_BandPoint d, _) =>
+                                                d.mid,
+                                            color: const Color.fromRGBO(
+                                              255,
+                                              165,
+                                              0,
+                                              1.0,
+                                            ),
+                                            width: 2,
+                                            name: 'SMA',
+                                            animationDuration: 0,
+                                          ),
+
+                                          // Bollinger shaded area between upper and lower bands
+                                          RangeAreaSeries<_BandPoint, DateTime>(
+                                            dataSource: bandData,
+                                            xValueMapper: (_BandPoint d, _) =>
+                                                d.x,
+                                            lowValueMapper: (_BandPoint d, _) =>
+                                                d.lower,
+                                            highValueMapper:
+                                                (_BandPoint d, _) => d.upper,
+                                            color: const Color.fromRGBO(
+                                              255,
+                                              165,
+                                              0,
+                                              0.15,
+                                            ),
+                                            borderColor: const Color.fromRGBO(
+                                              255,
+                                              165,
+                                              0,
+                                              0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            );
+                          },
+                        ),
+                        // Collapsible controls: moved under the chart
+                        ExpansionTile(
+                          //backgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
+                          //collapsedBackgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
+                          tilePadding: const EdgeInsets.symmetric(
+                            horizontal: 1.0,
+                            vertical: 0,
                           ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color.fromARGB(10, 45, 45, 45),
-                                const Color.fromARGB(125, 35, 35, 35),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                offset: const Offset(0, 2),
-                                blurRadius: 6,
+                          title: Center(
+                            child: Text(
+                              'changes_chart'.tr,
+                              style: darktextstyle.copyWith(
+                                fontSize: fontSize1,
                               ),
-                            ],
-                            border: Border.all(
-                              color:
-                                  totsaving -
-                                          calculateSpendingBetweenDates(
-                                            startDate,
-                                            today,
-                                          ) +
-                                          calculateEarningsBetweenDates(
-                                            startDate,
-                                            today,
-                                          ) -
-                                          nownetcredit -
-                                          count30thsPassed(startDate, today) *
-                                              (mntsaving) >
-                                      0
-                                  ? const Color.fromRGBO(253, 95, 95, 0.3)
-                                  : const Color.fromRGBO(106, 253, 95, 0.3),
-                              width: 1.5,
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ListTile(
-                              title: Text(
-                                totsaving -
-                                            calculateSpendingBetweenDates(
-                                              startDate,
-                                              today,
-                                            ) +
-                                            calculateEarningsBetweenDates(
-                                              startDate,
-                                              today,
-                                            ) -
-                                            nownetcredit -
-                                            count30thsPassed(startDate, today) *
-                                                (mntsaving) >
-                                        0
-                                    ? "remaining_target_amount".tr
-                                    : "congratulations".tr,
-                                style: themedTextStyle(fontSize: fontSize1),
+                          initiallyExpanded: false,
+                          showTrailingIcon: false,
+                          expandedCrossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 8.0,
                               ),
-                              subtitle: Obx(
-                                () => Text(
-                                  totsaving -
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                //decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: cardcolor.withOpacity(0.05), border: Border.all(color: Colors.grey[800]!, width: 0.5)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+
+                                  children: [
+                                    SizedBox(height: 5),
+
+                                    Center(
+                                      child: Text(
+                                        'number_of_days'.tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.9,
+                                        ),
+                                      ),
+                                    ),
+                                    sfs.SfSlider(
+                                      min: 5.0,
+                                      max: 215.0,
+                                      interval: 30,
+                                      showTicks: true,
+                                      showLabels: true,
+                                      enableTooltip: true,
+                                      value: displayCount.toDouble(),
+                                      onChanged: (dynamic newValue) {
+                                        setState(() {
+                                          displayCount = (newValue as double)
+                                              .round();
+                                          _saveChartSetting(
+                                            'displayCount',
+                                            displayCount,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(height: 16),
+                                    Center(
+                                      child: Text(
+                                        'recovery_period'.tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.9,
+                                        ),
+                                        //textDirection: TextDirection.rtl,
+                                      ),
+                                    ),
+                                    sfs.SfSlider(
+                                      min: 1.0,
+                                      max: 31.0,
+                                      interval: 2,
+                                      showTicks: true,
+                                      showLabels: true,
+                                      value: bbPeriod.toDouble(),
+                                      onChanged: (dynamic newValue) {
+                                        setState(() {
+                                          bbPeriod = (newValue as double)
+                                              .round();
+                                          _saveChartSetting(
+                                            'bbPeriod',
+                                            bbPeriod,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(height: 16),
+                                    Center(
+                                      child: Text(
+                                        'care_factor'.tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.9,
+                                        ),
+                                        //textDirection: TextDirection.rtl,
+                                      ),
+                                    ),
+                                    sfs.SfSlider(
+                                      min: 0.0,
+                                      max: 100.0,
+                                      interval: 20,
+                                      showTicks: true,
+                                      showLabels: true,
+                                      value: vv,
+                                      onChanged: (dynamic newValue) {
+                                        setState(() {
+                                          vv = newValue as double;
+                                          bbMultiplier =
+                                              ((100 - vv) * 3.5 / 100 + 0.5);
+                                          _saveChartSetting('vv', vv);
+                                          _saveChartSetting(
+                                            'bbMultiplier',
+                                            bbMultiplier,
+                                          );
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Divider(height: 21),
+                        ),
+
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color.fromARGB(10, 45, 45, 45),
+                                    const Color.fromARGB(125, 35, 35, 35),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: const Color.fromRGBO(
+                                    106,
+                                    253,
+                                    95,
+                                    0.3,
+                                  ),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListTile(
+                                  title: Text(
+                                    "amount_saved".tr,
+                                    style: themedTextStyle(fontSize: fontSize1),
+                                  ),
+                                  subtitle: Obx(
+                                    () => Text(
+                                      "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.2,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color.fromRGBO(
+                                          106,
+                                          253,
+                                          95,
+                                          1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  trailing: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromRGBO(
+                                        106,
+                                        253,
+                                        95,
+                                        0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Icon(
+                                      Icons.savings,
+                                      color: Color.fromRGBO(106, 253, 95, 1.0),
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color.fromARGB(10, 45, 45, 45),
+                                    const Color.fromARGB(125, 35, 35, 35),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color:
+                                      totsaving -
                                               calculateSpendingBetweenDates(
                                                 startDate,
                                                 today,
@@ -2230,13 +2242,16 @@ class _BudgetpageState extends State<Budgetpage> {
                                                   ) *
                                                   (mntsaving) >
                                           0
-                                      ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
-                                      : "target_achieved_msg".tr,
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 1.2,
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        totsaving -
+                                      ? const Color.fromRGBO(253, 95, 95, 0.3)
+                                      : const Color.fromRGBO(106, 253, 95, 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ListTile(
+                                  title: Text(
+                                    totsaving -
                                                 calculateSpendingBetweenDates(
                                                   startDate,
                                                   today,
@@ -2252,882 +2267,673 @@ class _BudgetpageState extends State<Budgetpage> {
                                                     ) *
                                                     (mntsaving) >
                                             0
-                                        ? const Color.fromRGBO(253, 95, 95, 1.0)
-                                        : const Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            1.0,
-                                          ),
+                                        ? "remaining_target_amount".tr
+                                        : "congratulations".tr,
+                                    style: themedTextStyle(fontSize: fontSize1),
                                   ),
-                                  textAlign: Get.locale?.languageCode == 'ar'
-                                      ? TextAlign.right
-                                      : TextAlign.left,
-                                ),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color:
+                                  subtitle: Obx(
+                                    () => Text(
                                       totsaving -
-                                              calculateSpendingBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) +
-                                              calculateEarningsBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) -
-                                              nownetcredit -
-                                              count30thsPassed(
+                                                  calculateSpendingBetweenDates(
                                                     startDate,
                                                     today,
-                                                  ) *
-                                                  (mntsaving) >
-                                          0
-                                      ? const Color.fromRGBO(253, 95, 95, 0.15)
-                                      : const Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          0.15,
-                                        ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Icon(
-                                  totsaving -
-                                              calculateSpendingBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) +
-                                              calculateEarningsBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) -
-                                              nownetcredit -
-                                              count30thsPassed(
+                                                  ) +
+                                                  calculateEarningsBetweenDates(
                                                     startDate,
                                                     today,
-                                                  ) *
-                                                  (mntsaving) >
-                                          0
-                                      ? Icons.track_changes
-                                      : Icons.emoji_events,
-                                  color:
+                                                  ) -
+                                                  nownetcredit -
+                                                  count30thsPassed(
+                                                        startDate,
+                                                        today,
+                                                      ) *
+                                                      (mntsaving) >
+                                              0
+                                          ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
+                                          : "target_achieved_msg".tr,
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.2,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            totsaving -
+                                                    calculateSpendingBetweenDates(
+                                                      startDate,
+                                                      today,
+                                                    ) +
+                                                    calculateEarningsBetweenDates(
+                                                      startDate,
+                                                      today,
+                                                    ) -
+                                                    nownetcredit -
+                                                    count30thsPassed(
+                                                          startDate,
+                                                          today,
+                                                        ) *
+                                                        (mntsaving) >
+                                                0
+                                            ? const Color.fromRGBO(
+                                                253,
+                                                95,
+                                                95,
+                                                1.0,
+                                              )
+                                            : const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
+                                              ),
+                                      ),
+                                      textAlign:
+                                          Get.locale?.languageCode == 'ar'
+                                          ? TextAlign.right
+                                          : TextAlign.left,
+                                    ),
+                                  ),
+                                  trailing: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          totsaving -
+                                                  calculateSpendingBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) +
+                                                  calculateEarningsBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) -
+                                                  nownetcredit -
+                                                  count30thsPassed(
+                                                        startDate,
+                                                        today,
+                                                      ) *
+                                                      (mntsaving) >
+                                              0
+                                          ? const Color.fromRGBO(
+                                              253,
+                                              95,
+                                              95,
+                                              0.15,
+                                            )
+                                          : const Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              0.15,
+                                            ),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Icon(
                                       totsaving -
-                                              calculateSpendingBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) +
-                                              calculateEarningsBetweenDates(
-                                                startDate,
-                                                today,
-                                              ) -
-                                              nownetcredit -
-                                              count30thsPassed(
+                                                  calculateSpendingBetweenDates(
                                                     startDate,
                                                     today,
-                                                  ) *
-                                                  (mntsaving) >
-                                          0
-                                      ? const Color.fromRGBO(253, 95, 95, 1.0)
-                                      : const Color.fromRGBO(106, 253, 95, 1.0),
-                                  size: 24,
+                                                  ) +
+                                                  calculateEarningsBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) -
+                                                  nownetcredit -
+                                                  count30thsPassed(
+                                                        startDate,
+                                                        today,
+                                                      ) *
+                                                      (mntsaving) >
+                                              0
+                                          ? Icons.track_changes
+                                          : Icons.emoji_events,
+                                      color:
+                                          totsaving -
+                                                  calculateSpendingBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) +
+                                                  calculateEarningsBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) -
+                                                  nownetcredit -
+                                                  count30thsPassed(
+                                                        startDate,
+                                                        today,
+                                                      ) *
+                                                      (mntsaving) >
+                                              0
+                                          ? const Color.fromRGBO(
+                                              253,
+                                              95,
+                                              95,
+                                              1.0,
+                                            )
+                                          : const Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              1.0,
+                                            ),
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                clrdinfo(
-                  mntinc: mntinc,
-                  mntnstblinc: mntnstblinc,
-                  mntperinc: mntperinc,
-                  freemnt: freemnt,
-                  mntexp: mntexp,
-                  annexp: annexp,
-                  daysInCurrentMonth: daysInCurrentMonth.toInt(),
-                  fontSize1: fontSize1,
-                  mntsaving: mntsaving,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Divider(height: 21),
-                ),
+                    clrdinfo(
+                      mntinc: mntinc,
+                      mntnstblinc: mntnstblinc,
+                      mntperinc: mntperinc,
+                      freemnt: freemnt,
+                      mntexp: mntexp,
+                      annexp: annexp,
+                      daysInCurrentMonth: daysInCurrentMonth.toInt(),
+                      fontSize1: fontSize1,
+                      mntsaving: mntsaving,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Divider(height: 21),
+                    ),
 
-                infocalculated(
-                  (totsaving - nownetcredit) / mntsaving,
-                  "number_of_months_saving".tr,
-                ),
-                infocalculated(
-                  (totsaving - nownetcredit) /
-                      (0.5 *
-                          ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
-                                  (1 - freemnt / 12) -
-                              (mntexp + annexp / 12))),
-                  "optimal_saving_months".tr,
-                ),
-                infocalculated(
-                  -(mntsaving -
+                    infocalculated(
+                      (totsaving - nownetcredit) / mntsaving,
+                      "number_of_months_saving".tr,
+                    ),
+                    infocalculated(
+                      (totsaving - nownetcredit) /
+                          (0.5 *
+                              ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) *
+                                      (1 - freemnt / 12) -
+                                  (mntexp + annexp / 12))),
+                      "optimal_saving_months".tr,
+                    ),
+                    infocalculated(
+                      -(mntsaving -
+                          0.5 *
+                              ((mntinc + mntnstblinc) * (1 - freemnt / 12) -
+                                  (mntexp + annexp / 12))),
+                      "management_surplus_deficit".tr,
+                    ),
+                    infocalculated(
                       0.5 *
                           ((mntinc + mntnstblinc) * (1 - freemnt / 12) -
-                              (mntexp + annexp / 12))),
-                  "management_surplus_deficit".tr,
-                ),
-                infocalculated(
-                  0.5 *
-                      ((mntinc + mntnstblinc) * (1 - freemnt / 12) -
-                          (mntexp + annexp / 12)),
-                  "max_possible_saving".tr,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Divider(height: 21),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Column(
-                    children: [
-                      // Ramadan Tile
-                      Builder(
-                        builder: (context) {
-                          final double bal1 =
-                              (nowcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        ramadane,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        ramadane,
-                                      ) +
-                                      (daysdiff(startDate, ramadane) + 1) *
-                                          (-(((mntinc +
-                                                          mntnstblinc *
-                                                              (1 -
-                                                                  0.01 *
-                                                                      mntperinc)) *
-                                                      (1 - freemnt / 12) -
-                                                  (mntexp + annexp / 12) -
-                                                  (mntsaving)) /
-                                              daysInCurrentMonth)) +
-                                      count30thsPassed(startDate, ramadane) *
-                                          ((mntinc +
-                                                      mntnstblinc *
-                                                          (1 -
-                                                              0.01 *
-                                                                  mntperinc)) *
-                                                  (1 - freemnt / 12) -
-                                              mntexp))
-                                  .toDouble();
-                          final double bal2 =
-                              (nownetcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        ramadane,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        ramadane,
-                                      ) +
-                                      count30thsPassed(startDate, ramadane) *
-                                          (mntsaving))
-                                  .toDouble();
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "ramadan_start".tr,
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                  ),
-                                ),
-                                Text(
-                                  "${bal1.round()}",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: bal1 > 5000
-                                        ? const Color(0xF4C3FFBE)
-                                        : const Color(0xFAFDBFBF),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), ramadane)} ${"day".tr})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  "(${bal2.round()})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      const Divider(height: 1, indent: 8, endIndent: 8),
-                      // Eid Fitr Tile
-                      Builder(
-                        builder: (context) {
-                          final double bal1 =
-                              (nowcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        aidfitr,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        aidfitr,
-                                      ) +
-                                      (daysdiff(startDate, aidfitr) + 1) *
-                                          (-(((mntinc +
-                                                          mntnstblinc *
-                                                              (1 -
-                                                                  0.01 *
-                                                                      mntperinc)) *
-                                                      (1 - freemnt / 12) -
-                                                  (mntexp + annexp / 12) -
-                                                  (mntsaving)) /
-                                              daysInCurrentMonth)) +
-                                      count30thsPassed(startDate, aidfitr) *
-                                          ((mntinc +
-                                                      mntnstblinc *
-                                                          (1 -
-                                                              0.01 *
-                                                                  mntperinc)) *
-                                                  (1 - freemnt / 12) -
-                                              mntexp))
-                                  .toDouble();
-                          final double bal2 =
-                              (nownetcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        aidfitr,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        aidfitr,
-                                      ) +
-                                      count30thsPassed(startDate, aidfitr) *
-                                          (mntsaving))
-                                  .toDouble();
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "eid_al_fitr".tr,
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                  ),
-                                ),
-                                Text(
-                                  "${bal1.round()}",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: bal1 > 5000
-                                        ? const Color(0xF4C3FFBE)
-                                        : const Color(0xFAFDBFBF),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), aidfitr)} ${"day".tr})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  "(${bal2.round()})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                      const Divider(height: 1, indent: 8, endIndent: 8),
-                      // Eid Adha Tile
-                      Builder(
-                        builder: (context) {
-                          final double bal1 =
-                              (nowcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        aidfadha,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        aidfadha,
-                                      ) +
-                                      (daysdiff(startDate, aidfadha) + 1) *
-                                          (-(((mntinc +
-                                                          mntnstblinc *
-                                                              (1 -
-                                                                  0.01 *
-                                                                      mntperinc)) *
-                                                      (1 - freemnt / 12) -
-                                                  (mntexp + annexp / 12) -
-                                                  (mntsaving)) /
-                                              daysInCurrentMonth)) +
-                                      count30thsPassed(startDate, aidfadha) *
-                                          ((mntinc +
-                                                      mntnstblinc *
-                                                          (1 -
-                                                              0.01 *
-                                                                  mntperinc)) *
-                                                  (1 - freemnt / 12) -
-                                              mntexp))
-                                  .toDouble();
-                          final double bal2 =
-                              (nownetcredit -
-                                      calculateSpendingBetweenDates(
-                                        startDate,
-                                        aidfadha,
-                                      ) +
-                                      calculateEarningsBetweenDates(
-                                        startDate,
-                                        aidfadha,
-                                      ) +
-                                      count30thsPassed(startDate, aidfadha) *
-                                          (mntsaving))
-                                  .toDouble();
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "eid_al_adha".tr,
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                  ),
-                                ),
-                                Text(
-                                  "${bal1.round()}",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: bal1 > 6000
-                                        ? const Color(0xF4C3FFBE)
-                                        : const Color(0xFAFDBFBF),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), aidfadha)} ${"day".tr})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  "(${bal2.round()})",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.8,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-
-          // Candle-like chart card: shows evolution of budget (nownetcredit)
-          Card(
-            elevation: 5,
-            color: prefsdata.get(
-              "cardcolor",
-              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 12),
-
-                  // Summary + distribution + top-3
-                  Builder(
-                    builder: (context) {
-                      // Compute month range (current month)
-                      final DateTime monthStart = DateTime(
-                        DateTime.now().year,
-                        DateTime.now().month,
-                        1,
-                      );
-                      final DateTime monthEnd = DateTime(
-                        DateTime.now().year,
-                        DateTime.now().month + 1,
-                        1,
-                      ).subtract(const Duration(days: 1));
-
-                      // Totals for the month
-                      // Totals for all time
-                      num totalIncomeMonth = 0;
-                      for (var e in unexpectedEarningsList) {
-                        totalIncomeMonth += e.amount;
-                      }
-
-                      num totalSpendingMonth = 0;
-                      for (var s in upcomingSpendingList) {
-                        totalSpendingMonth += s.amount;
-                      }
-
-                      final num netMonth =
-                          totalIncomeMonth - totalSpendingMonth;
-
-                      // Prepare daily distribution data for the chart (day -> totals)
-                      final int daysInMonth = monthEnd.day;
-                      // final List<int> days = List<int>.generate(daysInMonth, (i) => i + 1); // unused
-                      final List<num> dailyIncome = List<num>.filled(
-                        daysInMonth,
-                        0,
-                      );
-                      final List<num> dailySpend = List<num>.filled(
-                        daysInMonth,
-                        0,
-                      );
-
-                      for (var e in unexpectedEarningsList) {
-                        if ((e.date.isAfter(monthStart) ||
-                                e.date.isAtSameMomentAs(monthStart)) &&
-                            (e.date.isBefore(monthEnd) ||
-                                e.date.isAtSameMomentAs(monthEnd))) {
-                          final idx = e.date.day - 1;
-                          if (idx >= 0 && idx < daysInMonth) {
-                            dailyIncome[idx] += e.amount;
-                          }
-                        }
-                      }
-                      for (var s in upcomingSpendingList) {
-                        if ((s.date.isAfter(monthStart) ||
-                                s.date.isAtSameMomentAs(monthStart)) &&
-                            (s.date.isBefore(monthEnd) ||
-                                s.date.isAtSameMomentAs(monthEnd))) {
-                          final idx = s.date.day - 1;
-                          if (idx >= 0 && idx < daysInMonth) {
-                            dailySpend[idx] += s.amount;
-                          }
-                        }
-                      }
-
-                      // Top-3 lists across full data (not limited to month) for visibility
-                      final List unexpectedSortedDesc = List.from(
-                        unexpectedEarningsList,
-                      )..sort((a, b) => b.amount.compareTo(a.amount));
-                      final top3Income = unexpectedSortedDesc.take(3).toList();
-
-                      final List upcomingSortedDesc = List.from(
-                        upcomingSpendingList,
-                      )..sort((a, b) => b.amount.compareTo(a.amount));
-                      final top3Spending = upcomingSortedDesc.take(3).toList();
-
-                      // Chart data model
-                      final List<Map<String, dynamic>> chartData = [];
-                      for (int i = 0; i < daysInMonth; i++) {
-                        chartData.add({
-                          'day': (i + 1).toString(),
-                          'income': dailyIncome[i],
-                          'spend': dailySpend[i],
-                        });
-                      }
-
-                      return Column(
+                              (mntexp + annexp / 12)),
+                      "max_possible_saving".tr,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Divider(height: 21),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Column(
                         children: [
-                          // Totals row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              // Expenses
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(
-                                      20,
-                                      253,
-                                      95,
-                                      95,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color.fromARGB(
-                                        50,
-                                        253,
-                                        95,
-                                        95,
-                                      ),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.arrow_downward,
-                                        color: Color.fromRGBO(253, 95, 95, 1.0),
-                                        size: 22,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Obx(
-                                        () => Text(
-                                          '${totalSpendingMonth.round()} ${LanguageController.to.currency.value}',
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 1.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color.fromRGBO(
-                                              253,
-                                              95,
-                                              95,
-                                              1.0,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "total_expenses".tr,
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 0.8,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Net
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(
-                                      20,
-                                      255,
-                                      255,
-                                      255,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: netMonth >= 0
-                                          ? const Color.fromARGB(
-                                              50,
-                                              106,
-                                              253,
-                                              95,
-                                            )
-                                          : const Color.fromARGB(
-                                              50,
-                                              253,
-                                              95,
-                                              95,
-                                            ),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.account_balance_wallet,
-                                        color: netMonth >= 0
-                                            ? Colors.green[300]
-                                            : Colors.red[300],
-                                        size: 22,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Obx(
-                                        () => Text(
-                                          '${netMonth.round()} ${LanguageController.to.currency.value}',
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 1.15,
-                                            fontWeight: FontWeight.bold,
-                                            color: netMonth >= 0
-                                                ? Colors.green[300]
-                                                : Colors.red[300],
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "net_balance".tr,
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 0.8,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Income
-                              Expanded(
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color.fromARGB(
-                                      20,
-                                      106,
-                                      253,
-                                      95,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color.fromARGB(
-                                        50,
-                                        106,
-                                        253,
-                                        95,
-                                      ),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.arrow_upward,
-                                        color: Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          1.0,
-                                        ),
-                                        size: 22,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Obx(
-                                        () => Text(
-                                          '${totalIncomeMonth.round()} ${LanguageController.to.currency.value}',
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 1.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color.fromRGBO(
-                                              106,
-                                              253,
-                                              95,
-                                              1.0,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "total_income".tr,
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 0.8,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // --- New: Global statistics for unexpected earnings and spendings ---
-
-                          // --- End statistics ---
-                          const SizedBox(height: 12),
-
-                          // Distribution chart (compact)
-                          SizedBox(
-                            height: 140,
-                            child: ExcludeSemantics(
-                              child: SfCartesianChart(
-                                primaryXAxis: CategoryAxis(
-                                  labelRotation: 0,
-                                  interval: (daysInMonth / 4).ceilToDouble(),
-                                  majorGridLines: const MajorGridLines(
-                                    width: 0.5,
-                                    color: Color.fromRGBO(200, 200, 200, 0.3),
-                                  ),
-                                  edgeLabelPlacement: EdgeLabelPlacement.shift,
-                                ),
-                                primaryYAxis: NumericAxis(
-                                  labelFormat: '{value}',
-                                  majorGridLines: const MajorGridLines(
-                                    width: 0.5,
-                                    color: Color.fromRGBO(200, 200, 200, 0.3),
-                                  ),
-                                ),
-                                tooltipBehavior: TooltipBehavior(enable: true),
-                                legend: Legend(
-                                  isVisible: true,
-                                  position: LegendPosition.bottom,
-                                ),
-                                series:
-                                    <
-                                      CartesianSeries<
-                                        Map<String, dynamic>,
-                                        String
-                                      >
-                                    >[
-                                      ColumnSeries<
-                                        Map<String, dynamic>,
-                                        String
-                                      >(
-                                        name: 'income'.tr,
-                                        dataSource: chartData,
-                                        xValueMapper: (m, _) =>
-                                            m['day'] as String,
-                                        yValueMapper: (m, _) =>
-                                            m['income'] as num,
-                                        color: const Color(0xFF15803D),
-                                        animationDuration: 0,
-                                      ),
-                                      ColumnSeries<
-                                        Map<String, dynamic>,
-                                        String
-                                      >(
-                                        name: 'expenses'.tr,
-                                        dataSource: chartData,
-                                        xValueMapper: (m, _) =>
-                                            m['day'] as String,
-                                        yValueMapper: (m, _) =>
-                                            m['spend'] as num,
-                                        color: const Color(0xFFB91C1C),
-                                        animationDuration: 0,
-                                      ),
-                                    ],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
+                          // Ramadan Tile
                           Builder(
                             builder: (context) {
-                              // Gather all dates for range
-                              final allDates = <DateTime>[];
-                              for (var e in unexpectedEarningsList) {
-                                allDates.add(e.date);
-                              }
-                              for (var s in upcomingSpendingList) {
-                                allDates.add(s.date);
-                              }
-                              if (allDates.isEmpty) {
-                                return Text(
-                                  "not_enough_stats_data".tr,
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1,
-                                  ),
-                                );
-                              }
-                              allDates.sort();
-                              final firstDate = allDates.first;
-                              final lastDate = allDates.last;
-                              final monthsSpan =
-                                  ((lastDate.year - firstDate.year) * 12 +
-                                          (lastDate.month - firstDate.month) +
-                                          1)
-                                      .clamp(1, 10000);
+                              final double bal1 =
+                                  (nowcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            ramadane,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            ramadane,
+                                          ) +
+                                          (daysdiff(startDate, ramadane) + 1) *
+                                              (-(((mntinc +
+                                                              mntnstblinc *
+                                                                  (1 -
+                                                                      0.01 *
+                                                                          mntperinc)) *
+                                                          (1 - freemnt / 12) -
+                                                      (mntexp + annexp / 12) -
+                                                      (mntsaving)) /
+                                                  daysInCurrentMonth)) +
+                                          count30thsPassed(
+                                                startDate,
+                                                ramadane,
+                                              ) *
+                                              ((mntinc +
+                                                          mntnstblinc *
+                                                              (1 -
+                                                                  0.01 *
+                                                                      mntperinc)) *
+                                                      (1 - freemnt / 12) -
+                                                  mntexp))
+                                      .toDouble();
+                              final double bal2 =
+                                  (nownetcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            ramadane,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            ramadane,
+                                          ) +
+                                          count30thsPassed(
+                                                startDate,
+                                                ramadane,
+                                              ) *
+                                              (mntsaving))
+                                      .toDouble();
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                title: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "ramadan_start".tr,
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${bal1.round()}",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        fontWeight: FontWeight.bold,
+                                        color: bal1 > 5000
+                                            ? const Color(0xF4C3FFBE)
+                                            : const Color(0xFAFDBFBF),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${ramadane.year}-${ramadane.month.toString().padLeft(2, '0')}-${ramadane.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), ramadane)} ${"day".tr})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      "(${bal2.round()})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(height: 1, indent: 8, endIndent: 8),
+                          // Eid Fitr Tile
+                          Builder(
+                            builder: (context) {
+                              final double bal1 =
+                                  (nowcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            aidfitr,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            aidfitr,
+                                          ) +
+                                          (daysdiff(startDate, aidfitr) + 1) *
+                                              (-(((mntinc +
+                                                              mntnstblinc *
+                                                                  (1 -
+                                                                      0.01 *
+                                                                          mntperinc)) *
+                                                          (1 - freemnt / 12) -
+                                                      (mntexp + annexp / 12) -
+                                                      (mntsaving)) /
+                                                  daysInCurrentMonth)) +
+                                          count30thsPassed(startDate, aidfitr) *
+                                              ((mntinc +
+                                                          mntnstblinc *
+                                                              (1 -
+                                                                  0.01 *
+                                                                      mntperinc)) *
+                                                      (1 - freemnt / 12) -
+                                                  mntexp))
+                                      .toDouble();
+                              final double bal2 =
+                                  (nownetcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            aidfitr,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            aidfitr,
+                                          ) +
+                                          count30thsPassed(startDate, aidfitr) *
+                                              (mntsaving))
+                                      .toDouble();
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                title: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "eid_al_fitr".tr,
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${bal1.round()}",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        fontWeight: FontWeight.bold,
+                                        color: bal1 > 5000
+                                            ? const Color(0xF4C3FFBE)
+                                            : const Color(0xFAFDBFBF),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${aidfitr.year}-${aidfitr.month.toString().padLeft(2, '0')}-${aidfitr.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), aidfitr)} ${"day".tr})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      "(${bal2.round()})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(height: 1, indent: 8, endIndent: 8),
+                          // Eid Adha Tile
+                          Builder(
+                            builder: (context) {
+                              final double bal1 =
+                                  (nowcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            aidfadha,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            aidfadha,
+                                          ) +
+                                          (daysdiff(startDate, aidfadha) + 1) *
+                                              (-(((mntinc +
+                                                              mntnstblinc *
+                                                                  (1 -
+                                                                      0.01 *
+                                                                          mntperinc)) *
+                                                          (1 - freemnt / 12) -
+                                                      (mntexp + annexp / 12) -
+                                                      (mntsaving)) /
+                                                  daysInCurrentMonth)) +
+                                          count30thsPassed(
+                                                startDate,
+                                                aidfadha,
+                                              ) *
+                                              ((mntinc +
+                                                          mntnstblinc *
+                                                              (1 -
+                                                                  0.01 *
+                                                                      mntperinc)) *
+                                                      (1 - freemnt / 12) -
+                                                  mntexp))
+                                      .toDouble();
+                              final double bal2 =
+                                  (nownetcredit -
+                                          calculateSpendingBetweenDates(
+                                            startDate,
+                                            aidfadha,
+                                          ) +
+                                          calculateEarningsBetweenDates(
+                                            startDate,
+                                            aidfadha,
+                                          ) +
+                                          count30thsPassed(
+                                                startDate,
+                                                aidfadha,
+                                              ) *
+                                              (mntsaving))
+                                      .toDouble();
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                title: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "eid_al_adha".tr,
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${bal1.round()}",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1,
+                                        fontWeight: FontWeight.bold,
+                                        color: bal1 > 6000
+                                            ? const Color(0xF4C3FFBE)
+                                            : const Color(0xFAFDBFBF),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "${aidfadha.year}-${aidfadha.month.toString().padLeft(2, '0')}-${aidfadha.day.toString().padLeft(2, '0')} (${daysdiff(DateTime.now(), aidfadha)} ${"day".tr})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      "(${bal2.round()})",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 0.8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
 
-                              // Earnings
-                              final totalEarnings = unexpectedEarningsList
-                                  .fold<num>(0, (sum, e) => sum + e.amount);
-                              final avgEarningsPerMonth =
-                                  totalEarnings / monthsSpan;
-                              final avgEarningsPerEntry =
-                                  unexpectedEarningsList.isNotEmpty
-                                  ? totalEarnings /
-                                        unexpectedEarningsList.length
-                                  : 0;
+              // Candle-like chart card: shows evolution of budget (nownetcredit)
+              Card(
+                elevation: 5,
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 12),
 
-                              // Spendings
-                              final totalSpendings = upcomingSpendingList
-                                  .fold<num>(0, (sum, s) => sum + s.amount);
-                              final avgSpendingsPerMonth =
-                                  totalSpendings / monthsSpan;
-                              final avgSpendingsPerEntry =
-                                  upcomingSpendingList.isNotEmpty
-                                  ? totalSpendings / upcomingSpendingList.length
-                                  : 0;
+                      // Summary + distribution + top-3
+                      Builder(
+                        builder: (context) {
+                          // Compute month range (current month)
+                          final DateTime monthStart = DateTime(
+                            DateTime.now().year,
+                            DateTime.now().month,
+                            1,
+                          );
+                          final DateTime monthEnd = DateTime(
+                            DateTime.now().year,
+                            DateTime.now().month + 1,
+                            1,
+                          ).subtract(const Duration(days: 1));
 
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                          // Totals for the month
+                          // Totals for all time
+                          num totalIncomeMonth = 0;
+                          for (var e in unexpectedEarningsList) {
+                            totalIncomeMonth += e.amount;
+                          }
+
+                          num totalSpendingMonth = 0;
+                          for (var s in upcomingSpendingList) {
+                            totalSpendingMonth += s.amount;
+                          }
+
+                          final num netMonth =
+                              totalIncomeMonth - totalSpendingMonth;
+
+                          // Prepare daily distribution data for the chart (day -> totals)
+                          final int daysInMonth = monthEnd.day;
+                          // final List<int> days = List<int>.generate(daysInMonth, (i) => i + 1); // unused
+                          final List<num> dailyIncome = List<num>.filled(
+                            daysInMonth,
+                            0,
+                          );
+                          final List<num> dailySpend = List<num>.filled(
+                            daysInMonth,
+                            0,
+                          );
+
+                          for (var e in unexpectedEarningsList) {
+                            if ((e.date.isAfter(monthStart) ||
+                                    e.date.isAtSameMomentAs(monthStart)) &&
+                                (e.date.isBefore(monthEnd) ||
+                                    e.date.isAtSameMomentAs(monthEnd))) {
+                              final idx = e.date.day - 1;
+                              if (idx >= 0 && idx < daysInMonth) {
+                                dailyIncome[idx] += e.amount;
+                              }
+                            }
+                          }
+                          for (var s in upcomingSpendingList) {
+                            if ((s.date.isAfter(monthStart) ||
+                                    s.date.isAtSameMomentAs(monthStart)) &&
+                                (s.date.isBefore(monthEnd) ||
+                                    s.date.isAtSameMomentAs(monthEnd))) {
+                              final idx = s.date.day - 1;
+                              if (idx >= 0 && idx < daysInMonth) {
+                                dailySpend[idx] += s.amount;
+                              }
+                            }
+                          }
+
+                          // Top-3 lists across full data (not limited to month) for visibility
+                          final List unexpectedSortedDesc = List.from(
+                            unexpectedEarningsList,
+                          )..sort((a, b) => b.amount.compareTo(a.amount));
+                          final top3Income = unexpectedSortedDesc
+                              .take(3)
+                              .toList();
+
+                          final List upcomingSortedDesc = List.from(
+                            upcomingSpendingList,
+                          )..sort((a, b) => b.amount.compareTo(a.amount));
+                          final top3Spending = upcomingSortedDesc
+                              .take(3)
+                              .toList();
+
+                          // Chart data model
+                          final List<Map<String, dynamic>> chartData = [];
+                          for (int i = 0; i < daysInMonth; i++) {
+                            chartData.add({
+                              'day': (i + 1).toString(),
+                              'income': dailyIncome[i],
+                              'spend': dailySpend[i],
+                            });
+                          }
+
+                          return Column(
+                            children: [
+                              // Totals row
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              "variable_expenses".tr,
+                                  // Expenses
+                                  Expanded(
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                        horizontal: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                          20,
+                                          253,
+                                          95,
+                                          95,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color.fromARGB(
+                                            50,
+                                            253,
+                                            95,
+                                            95,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.arrow_downward,
+                                            color: Color.fromRGBO(
+                                              253,
+                                              95,
+                                              95,
+                                              1.0,
+                                            ),
+                                            size: 22,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Obx(
+                                            () => Text(
+                                              '${totalSpendingMonth.round()} ${LanguageController.to.currency.value}',
                                               style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.05,
+                                                fontSize: fontSize1 * 1.0,
                                                 fontWeight: FontWeight.bold,
                                                 color: const Color.fromRGBO(
                                                   253,
@@ -3137,33 +2943,138 @@ class _BudgetpageState extends State<Budgetpage> {
                                                 ),
                                               ),
                                             ),
-
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${"avg_per_month".tr}: ${avgSpendingsPerMonth.toStringAsFixed(2)}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "total_expenses".tr,
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.8,
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${"avg_per_transaction".tr}: ${avgSpendingsPerEntry.toStringAsFixed(2)}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
-                                            ),
-                                          ],
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  // Net
+                                  Expanded(
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                        horizontal: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                          20,
+                                          255,
+                                          255,
+                                          255,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: netMonth >= 0
+                                              ? const Color.fromARGB(
+                                                  50,
+                                                  106,
+                                                  253,
+                                                  95,
+                                                )
+                                              : const Color.fromARGB(
+                                                  50,
+                                                  253,
+                                                  95,
+                                                  95,
+                                                ),
+                                          width: 1,
                                         ),
                                       ),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              "variable_income".tr,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.account_balance_wallet,
+                                            color: netMonth >= 0
+                                                ? Colors.green[300]
+                                                : Colors.red[300],
+                                            size: 22,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Obx(
+                                            () => Text(
+                                              '${netMonth.round()} ${LanguageController.to.currency.value}',
                                               style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
+                                                fontSize: fontSize1 * 1.15,
+                                                fontWeight: FontWeight.bold,
+                                                color: netMonth >= 0
+                                                    ? Colors.green[300]
+                                                    : Colors.red[300],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "net_balance".tr,
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.8,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  // Income
+                                  Expanded(
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                        horizontal: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                          20,
+                                          106,
+                                          253,
+                                          95,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color.fromARGB(
+                                            50,
+                                            106,
+                                            253,
+                                            95,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.arrow_upward,
+                                            color: Color.fromRGBO(
+                                              106,
+                                              253,
+                                              95,
+                                              1.0,
+                                            ),
+                                            size: 22,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Obx(
+                                            () => Text(
+                                              '${totalIncomeMonth.round()} ${LanguageController.to.currency.value}',
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 1.0,
                                                 fontWeight: FontWeight.bold,
                                                 color: const Color.fromRGBO(
                                                   106,
@@ -3173,778 +3084,1039 @@ class _BudgetpageState extends State<Budgetpage> {
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${"avg_per_month".tr}: ${avgEarningsPerMonth.toStringAsFixed(2)}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "total_income".tr,
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.8,
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${"avg_per_transaction".tr}: ${avgEarningsPerEntry.toStringAsFixed(2)}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
-                              );
-                            },
-                          ), // Top-3 lists side-by-side
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Top incomes
+                              ),
+                              const SizedBox(height: 12),
+                              // --- New: Global statistics for unexpected earnings and spendings ---
 
-                              // Top spendings
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      "top_3_expenses".tr,
-                                      style: darktextstyle.copyWith(
-                                        fontSize: fontSize1 * 0.8,
+                              // --- End statistics ---
+                              const SizedBox(height: 12),
+
+                              // Distribution chart (compact)
+                              SizedBox(
+                                height: 140,
+                                child: ExcludeSemantics(
+                                  child: SfCartesianChart(
+                                    primaryXAxis: CategoryAxis(
+                                      labelRotation: 0,
+                                      interval: (daysInMonth / 4)
+                                          .ceilToDouble(),
+                                      majorGridLines: const MajorGridLines(
+                                        width: 0.5,
+                                        color: Color.fromRGBO(
+                                          200,
+                                          200,
+                                          200,
+                                          0.3,
+                                        ),
+                                      ),
+                                      edgeLabelPlacement:
+                                          EdgeLabelPlacement.shift,
+                                    ),
+                                    primaryYAxis: NumericAxis(
+                                      labelFormat: '{value}',
+                                      majorGridLines: const MajorGridLines(
+                                        width: 0.5,
+                                        color: Color.fromRGBO(
+                                          200,
+                                          200,
+                                          200,
+                                          0.3,
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    ...top3Spending.map((it) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                '${it.amount}',
-                                                style: darktextstyle.copyWith(
-                                                  fontSize: fontSize1,
-                                                  color: const Color.fromRGBO(
-                                                    253,
-                                                    95,
-                                                    95,
-                                                    1.0,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              it.title ?? '-',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }),
-                                  ],
+                                    tooltipBehavior: TooltipBehavior(
+                                      enable: true,
+                                    ),
+                                    legend: Legend(
+                                      isVisible: true,
+                                      position: LegendPosition.bottom,
+                                    ),
+                                    series:
+                                        <
+                                          CartesianSeries<
+                                            Map<String, dynamic>,
+                                            String
+                                          >
+                                        >[
+                                          ColumnSeries<
+                                            Map<String, dynamic>,
+                                            String
+                                          >(
+                                            name: 'income'.tr,
+                                            dataSource: chartData,
+                                            xValueMapper: (m, _) =>
+                                                m['day'] as String,
+                                            yValueMapper: (m, _) =>
+                                                m['income'] as num,
+                                            color: const Color(0xFF15803D),
+                                            animationDuration: 0,
+                                          ),
+                                          ColumnSeries<
+                                            Map<String, dynamic>,
+                                            String
+                                          >(
+                                            name: 'expenses'.tr,
+                                            dataSource: chartData,
+                                            xValueMapper: (m, _) =>
+                                                m['day'] as String,
+                                            yValueMapper: (m, _) =>
+                                                m['spend'] as num,
+                                            color: const Color(0xFFB91C1C),
+                                            animationDuration: 0,
+                                          ),
+                                        ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      "top_3_income".tr,
+
+                              const SizedBox(height: 12),
+
+                              Builder(
+                                builder: (context) {
+                                  // Gather all dates for range
+                                  final allDates = <DateTime>[];
+                                  for (var e in unexpectedEarningsList) {
+                                    allDates.add(e.date);
+                                  }
+                                  for (var s in upcomingSpendingList) {
+                                    allDates.add(s.date);
+                                  }
+                                  if (allDates.isEmpty) {
+                                    return Text(
+                                      "not_enough_stats_data".tr,
                                       style: darktextstyle.copyWith(
-                                        fontSize: fontSize1 * 0.85,
+                                        fontSize: fontSize1,
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ...top3Income.map((it) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 6,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                '${it.amount}',
-                                                style: darktextstyle.copyWith(
-                                                  fontSize: fontSize1,
-                                                  color: const Color.fromRGBO(
-                                                    106,
-                                                    253,
-                                                    95,
-                                                    1.0,
+                                    );
+                                  }
+                                  allDates.sort();
+                                  final firstDate = allDates.first;
+                                  final lastDate = allDates.last;
+                                  final monthsSpan =
+                                      ((lastDate.year - firstDate.year) * 12 +
+                                              (lastDate.month -
+                                                  firstDate.month) +
+                                              1)
+                                          .clamp(1, 10000);
+
+                                  // Earnings
+                                  final totalEarnings = unexpectedEarningsList
+                                      .fold<num>(0, (sum, e) => sum + e.amount);
+                                  final avgEarningsPerMonth =
+                                      totalEarnings / monthsSpan;
+                                  final avgEarningsPerEntry =
+                                      unexpectedEarningsList.isNotEmpty
+                                      ? totalEarnings /
+                                            unexpectedEarningsList.length
+                                      : 0;
+
+                                  // Spendings
+                                  final totalSpendings = upcomingSpendingList
+                                      .fold<num>(0, (sum, s) => sum + s.amount);
+                                  final avgSpendingsPerMonth =
+                                      totalSpendings / monthsSpan;
+                                  final avgSpendingsPerEntry =
+                                      upcomingSpendingList.isNotEmpty
+                                      ? totalSpendings /
+                                            upcomingSpendingList.length
+                                      : 0;
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "variable_expenses".tr,
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1 * 1.05,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color.fromRGBO(
+                                                      253,
+                                                      95,
+                                                      95,
+                                                      1.0,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
+
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${"avg_per_month".tr}: ${avgSpendingsPerMonth.toStringAsFixed(2)}',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${"avg_per_transaction".tr}: ${avgSpendingsPerEntry.toStringAsFixed(2)}',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              it.title ?? '-',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "variable_income".tr,
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color.fromRGBO(
+                                                      106,
+                                                      253,
+                                                      95,
+                                                      1.0,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${"avg_per_month".tr}: ${avgEarningsPerMonth.toStringAsFixed(2)}',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${"avg_per_transaction".tr}: ${avgEarningsPerEntry.toStringAsFixed(2)}',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ), // Top-3 lists side-by-side
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Top incomes
+
+                                  // Top spendings
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          "top_3_expenses".tr,
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1 * 0.8,
+                                          ),
                                         ),
-                                      );
-                                    }),
-                                  ],
-                                ),
+                                        const SizedBox(height: 8),
+                                        ...top3Spending.map((it) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 6,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    '${it.amount}',
+                                                    style: darktextstyle.copyWith(
+                                                      fontSize: fontSize1,
+                                                      color:
+                                                          const Color.fromRGBO(
+                                                            253,
+                                                            95,
+                                                            95,
+                                                            1.0,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  it.title ?? '-',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          "top_3_income".tr,
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1 * 0.85,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        ...top3Income.map((it) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 6,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    '${it.amount}',
+                                                    style: darktextstyle.copyWith(
+                                                      fontSize: fontSize1,
+                                                      color:
+                                                          const Color.fromRGBO(
+                                                            106,
+                                                            253,
+                                                            95,
+                                                            1.0,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  it.title ?? '-',
+                                                  style: darktextstyle.copyWith(
+                                                    fontSize: fontSize1,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          _buildUnexpectedEarningsCard(context),
-          _buildUpcomingSpendingCard(context),
-
-          Card(
-            elevation: 2,
-            color: prefsdata.get(
-              "cardcolor",
-              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  "manage_your_resources".tr,
-                  style: darktextstyle.copyWith(fontSize: fontSize1),
-                ),
-                const SizedBox(height: 20),
-                moneyinput(
-                  size,
-                  totsaving,
-                  "totsaving",
-                  "total_amount_to_save".tr,
-                ),
-
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 5,
-                    horizontal: 10,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color.fromARGB(10, 45, 45, 45),
-                        const Color.fromARGB(125, 35, 35, 35),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        offset: const Offset(0, 2),
-                        blurRadius: 4,
+                          );
+                        },
                       ),
                     ],
-                    border: Border.all(
-                      color: const Color.fromRGBO(106, 253, 95, 0.2),
-                      width: 1,
-                    ),
                   ),
-                  child: Builder(
-                    builder: (context) {
-                      final isAr = Get.locale?.languageCode == 'ar';
-                      final inputWidget = SizedBox(
-                        height: 208 * fontSize1 / 16,
-                        width: size.width * 0.25 * fontSize1 / 16,
-                        child: TextFormField(
-                          textAlign: TextAlign.center,
-                          style: darktextstyle.copyWith(
-                            fontSize: fontSize1,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          initialValue: nowcredit.toString(),
-                          decoration: InputDecoration(
-                            hintStyle: darktextstyle.copyWith(
-                              fontSize: fontSize1,
-                              color: Colors.grey[600],
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(80, 80, 80, 1.0),
-                                width: 1,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(106, 253, 95, 0.7),
-                                width: 1.5,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: const Color.fromRGBO(25, 25, 25, 1.0),
-                          ),
-                          onChanged: (newval) {
-                            final v = int.tryParse(newval);
-                            if (v == null) {
-                              setState(() {
-                                pickStartDate(context);
-                                prefsdata.put("nownetcredit", 0);
-                                nownetcredit = prefsdata.get(
-                                  "nownetcredit".toString(),
-                                );
-                                prefsdata.put("nowcredit", 0);
-                                nowcredit = prefsdata.get(
-                                  "nowcredit".toString(),
-                                );
-                                _saveCurrentState();
-                              });
-                            } else {
-                              setState(() {
-                                pickStartDate(context);
-                                prefsdata.put(
-                                  "nownetcredit",
-                                  (v -
-                                          ((((mntinc +
-                                                              mntnstblinc *
-                                                                  (1 -
-                                                                      0.01 *
-                                                                          mntperinc)) *
-                                                          (1 - freemnt / 12) -
-                                                      (mntexp + annexp / 12) -
-                                                      (mntsaving)) /
-                                                  daysInCurrentMonth) *
-                                              (daysleftInCurrentMonth())))
-                                      .round(),
-                                );
-                                nownetcredit = prefsdata.get(
-                                  "nownetcredit".toString(),
-                                );
-                                prefsdata.put("nowcredit".toString(), v);
-                                nowcredit = prefsdata.get(
-                                  "nowcredit".toString(),
-                                );
-                                _saveCurrentState();
-                              });
-                            }
-                          },
-                          keyboardType: TextInputType.number,
-                        ),
-                      );
+                ),
+              ),
 
-                      final labelWidget = Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.grey[800]!,
-                            width: 0.5,
-                          ),
-                        ),
+              _buildUnexpectedEarningsCard(context),
+              _buildUpcomingSpendingCard(context),
 
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "amount_available_on".tr,
+              Card(
+                elevation: 2,
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      "manage_your_resources".tr,
+                      style: darktextstyle.copyWith(fontSize: fontSize1),
+                    ),
+                    const SizedBox(height: 20),
+                    moneyinput(
+                      size,
+                      totsaving,
+                      "totsaving",
+                      "total_amount_to_save".tr,
+                    ),
+
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 10,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color.fromARGB(10, 45, 45, 45),
+                            const Color.fromARGB(125, 35, 35, 35),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                        border: Border.all(
+                          color: const Color.fromRGBO(106, 253, 95, 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          final isAr = Get.locale?.languageCode == 'ar';
+                          final inputWidget = SizedBox(
+                            height: 208 * fontSize1 / 16,
+                            width: size.width * 0.25 * fontSize1 / 16,
+                            child: TextFormField(
+                              textAlign: TextAlign.center,
                               style: darktextstyle.copyWith(
                                 fontSize: fontSize1,
                                 fontWeight: FontWeight.bold,
                               ),
-                              textAlign: isAr
-                                  ? TextAlign.right
-                                  : TextAlign.left,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "${startDate.year}-${startDate.month}-${startDate.day} "
-                              "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} ${"day".tr} )",
-                              style: darktextstyle.copyWith(
-                                fontSize: fontSize1 * 0.8,
-                                color: Colors.grey[400],
+                              initialValue: nowcredit.toString(),
+                              decoration: InputDecoration(
+                                hintStyle: darktextstyle.copyWith(
+                                  fontSize: fontSize1,
+                                  color: Colors.grey[600],
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(80, 80, 80, 1.0),
+                                    width: 1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(106, 253, 95, 0.7),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color.fromRGBO(
+                                  25,
+                                  25,
+                                  25,
+                                  1.0,
+                                ),
                               ),
-                              textAlign: isAr
-                                  ? TextAlign.right
-                                  : TextAlign.left,
+                              onChanged: (newval) {
+                                final v = int.tryParse(newval);
+                                if (v == null) {
+                                  setState(() {
+                                    pickStartDate(context);
+                                    prefsdata.put("nownetcredit", 0);
+                                    nownetcredit = prefsdata.get(
+                                      "nownetcredit".toString(),
+                                    );
+                                    prefsdata.put("nowcredit", 0);
+                                    nowcredit = prefsdata.get(
+                                      "nowcredit".toString(),
+                                    );
+                                    _saveCurrentState();
+                                  });
+                                } else {
+                                  setState(() {
+                                    pickStartDate(context);
+                                    prefsdata.put(
+                                      "nownetcredit",
+                                      (v -
+                                              ((((mntinc +
+                                                                  mntnstblinc *
+                                                                      (1 -
+                                                                          0.01 *
+                                                                              mntperinc)) *
+                                                              (1 -
+                                                                  freemnt /
+                                                                      12) -
+                                                          (mntexp +
+                                                              annexp / 12) -
+                                                          (mntsaving)) /
+                                                      daysInCurrentMonth) *
+                                                  (daysleftInCurrentMonth())))
+                                          .round(),
+                                    );
+                                    nownetcredit = prefsdata.get(
+                                      "nownetcredit".toString(),
+                                    );
+                                    prefsdata.put("nowcredit".toString(), v);
+                                    nowcredit = prefsdata.get(
+                                      "nowcredit".toString(),
+                                    );
+                                    _saveCurrentState();
+                                  });
+                                }
+                              },
+                              keyboardType: TextInputType.number,
+                            ),
+                          );
+
+                          final labelWidget = Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey[800]!,
+                                width: 0.5,
+                              ),
+                            ),
+
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "amount_available_on".tr,
+                                  style: darktextstyle.copyWith(
+                                    fontSize: fontSize1,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: isAr
+                                      ? TextAlign.right
+                                      : TextAlign.left,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${startDate.year}-${startDate.month}-${startDate.day} "
+                                  "( ${DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day).difference(DateTime(startDate.year, startDate.month, startDate.day)).inDays.toString()} ${"day".tr} )",
+                                  style: darktextstyle.copyWith(
+                                    fontSize: fontSize1 * 0.8,
+                                    color: Colors.grey[400],
+                                  ),
+                                  textAlign: isAr
+                                      ? TextAlign.right
+                                      : TextAlign.left,
+                                ),
+                              ],
+                            ),
+                          );
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Align(
+                              alignment: isAr
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: labelWidget,
+                            ),
+                            trailing: inputWidget,
+                          );
+                        },
+                      ),
+                    ),
+                    moneyinput(
+                      size,
+                      mntsaving,
+                      "mntsaving",
+                      "expected_monthly_saving".tr,
+                    ),
+
+                    moneyinput(
+                      size,
+                      freemnt,
+                      "freemnt",
+                      "annual_rest_months".tr,
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              Card(
+                elevation: 5,
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      "personal_expenses_structure".tr,
+                      style: darktextstyle.copyWith(fontSize: fontSize1),
+                    ),
+                    const SizedBox(height: 20),
+                    moneyinput(size, mntexp, "mntexp", "monthly_expenses".tr),
+                    moneyinput(size, annexp, "annexp", "annual_expenses".tr),
+                    moneyinputslider(
+                      size,
+                      mntperexp,
+                      "mntperexp",
+                      "spending_change_percentage".tr,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Divider(height: 21),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 12.0,
+                          horizontal: 0.0,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color.fromARGB(10, 45, 45, 45),
+                              const Color.fromARGB(125, 35, 35, 35),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              offset: const Offset(0, 4),
+                              blurRadius: 8,
                             ),
                           ],
-                        ),
-                      );
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Align(
-                          alignment: isAr
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: labelWidget,
-                        ),
-                        trailing: inputWidget,
-                      );
-                    },
-                  ),
-                ),
-                moneyinput(
-                  size,
-                  mntsaving,
-                  "mntsaving",
-                  "expected_monthly_saving".tr,
-                ),
-
-                moneyinput(size, freemnt, "freemnt", "annual_rest_months".tr),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Card(
-            elevation: 5,
-            color: prefsdata.get(
-              "cardcolor",
-              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  "personal_expenses_structure".tr,
-                  style: darktextstyle.copyWith(fontSize: fontSize1),
-                ),
-                const SizedBox(height: 20),
-                moneyinput(size, mntexp, "mntexp", "monthly_expenses".tr),
-                moneyinput(size, annexp, "annexp", "annual_expenses".tr),
-                moneyinputslider(
-                  size,
-                  mntperexp,
-                  "mntperexp",
-                  "spending_change_percentage".tr,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Divider(height: 21),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 12.0,
-                      horizontal: 0.0,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color.fromARGB(10, 45, 45, 45),
-                          const Color.fromARGB(125, 35, 35, 35),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          offset: const Offset(0, 4),
-                          blurRadius: 8,
-                        ),
-                      ],
-                      border: Border.all(
-                        color: const Color.fromRGBO(106, 253, 95, 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(
-                                    106,
-                                    253,
-                                    95,
-                                    0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.timeline,
-                                  color: Color.fromRGBO(106, 253, 95, 1.0),
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "saving_months_chart".tr,
-                                style: darktextstyle.copyWith(
-                                  fontSize: fontSize1,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          border: Border.all(
+                            color: const Color.fromRGBO(106, 253, 95, 0.3),
+                            width: 1,
                           ),
-
-                          const SizedBox(height: 20),
-
-                          Row(
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    ((totsaving - nownetcredit) / mntsaving)
-                                        .toStringAsFixed(1),
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 1.2,
-                                      fontWeight: FontWeight.bold,
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
                                       color: const Color.fromRGBO(
                                         106,
                                         253,
                                         95,
-                                        1.0,
+                                        0.15,
                                       ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.timeline,
+                                      color: Color.fromRGBO(106, 253, 95, 1.0),
+                                      size: 18,
                                     ),
                                   ),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    "actual".tr,
+                                    "saving_months_chart".tr,
                                     style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.7,
+                                      fontSize: fontSize1,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
                               ),
 
-                              const SizedBox(width: 10),
+                              const SizedBox(height: 20),
 
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    SfLinearGauge(
-                                      interval: 4,
-                                      maximum: 24,
-                                      showLabels: false,
-                                      showAxisTrack: false,
-                                      axisTrackStyle:
-                                          const LinearAxisTrackStyle(
-                                            thickness: 12,
-                                            edgeStyle:
-                                                LinearEdgeStyle.bothCurve,
-                                            color: Color.fromRGBO(
-                                              60,
-                                              60,
-                                              60,
-                                              1.0,
-                                            ),
-                                            borderColor: Color.fromRGBO(
-                                              80,
-                                              80,
-                                              80,
-                                              1.0,
-                                            ),
-                                            borderWidth: 1,
-                                          ),
-                                      ranges: const [
-                                        LinearGaugeRange(
-                                          color: Colors.transparent,
-                                          startValue: 0,
-                                          endValue: 84,
-                                        ),
-                                      ],
-                                      markerPointers: [
-                                        LinearShapePointer(
-                                          value:
-                                              (totsaving - nownetcredit) /
-                                              (0.5 *
-                                                  ((mntinc +
-                                                              mntnstblinc *
-                                                                  (1 -
-                                                                      0.01 *
-                                                                          mntperinc)) *
-                                                          (1 - freemnt / 12) -
-                                                      (mntexp + annexp / 12))),
-                                          shapeType:
-                                              LinearShapePointerType.diamond,
-                                          color: Colors.amber,
-                                          position: LinearElementPosition.cross,
-                                          height: 12,
-                                          enableAnimation: false,
-                                        ),
-                                      ],
-                                      barPointers: [
-                                        LinearBarPointer(
-                                          value:
-                                              (totsaving - nownetcredit) /
-                                              mntsaving,
-                                          thickness: 12,
-                                          edgeStyle: LinearEdgeStyle.bothCurve,
+                              Row(
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        ((totsaving - nownetcredit) / mntsaving)
+                                            .toStringAsFixed(1),
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 1.2,
+                                          fontWeight: FontWeight.bold,
                                           color: const Color.fromRGBO(
                                             106,
                                             253,
                                             95,
                                             1.0,
                                           ),
-                                          position: LinearElementPosition.cross,
-                                          enableAnimation: false,
                                         ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 5),
-
-                                    // Month scale indicators
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "0",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "4",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "8",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "12",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "16",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "20",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        Text(
-                                          "24",
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.7,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 10),
-
-                              // Optimal months indicator
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    ((totsaving - nownetcredit) /
-                                            (0.5 *
-                                                ((mntinc +
-                                                            mntnstblinc *
-                                                                (1 -
-                                                                    0.01 *
-                                                                        mntperinc)) *
-                                                        (1 - freemnt / 12) -
-                                                    (mntexp + annexp / 12))))
-                                        .toStringAsFixed(1),
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 1.2,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.amber,
-                                    ),
-                                  ),
-                                  Text(
-                                    "optimal".tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.7,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Legend explanation
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    "ideal_duration".tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.8,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 20),
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(
-                                        106,
-                                        253,
-                                        95,
-                                        1.0,
                                       ),
-                                      borderRadius: BorderRadius.circular(2),
+                                      Text(
+                                        "actual".tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.7,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(width: 10),
+
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        SfLinearGauge(
+                                          interval: 4,
+                                          maximum: 24,
+                                          showLabels: false,
+                                          showAxisTrack: false,
+                                          axisTrackStyle:
+                                              const LinearAxisTrackStyle(
+                                                thickness: 12,
+                                                edgeStyle:
+                                                    LinearEdgeStyle.bothCurve,
+                                                color: Color.fromRGBO(
+                                                  60,
+                                                  60,
+                                                  60,
+                                                  1.0,
+                                                ),
+                                                borderColor: Color.fromRGBO(
+                                                  80,
+                                                  80,
+                                                  80,
+                                                  1.0,
+                                                ),
+                                                borderWidth: 1,
+                                              ),
+                                          ranges: const [
+                                            LinearGaugeRange(
+                                              color: Colors.transparent,
+                                              startValue: 0,
+                                              endValue: 84,
+                                            ),
+                                          ],
+                                          markerPointers: [
+                                            LinearShapePointer(
+                                              value:
+                                                  (totsaving - nownetcredit) /
+                                                  (0.5 *
+                                                      ((mntinc +
+                                                                  mntnstblinc *
+                                                                      (1 -
+                                                                          0.01 *
+                                                                              mntperinc)) *
+                                                              (1 -
+                                                                  freemnt /
+                                                                      12) -
+                                                          (mntexp +
+                                                              annexp / 12))),
+                                              shapeType: LinearShapePointerType
+                                                  .diamond,
+                                              color: Colors.amber,
+                                              position:
+                                                  LinearElementPosition.cross,
+                                              height: 12,
+                                              enableAnimation: false,
+                                            ),
+                                          ],
+                                          barPointers: [
+                                            LinearBarPointer(
+                                              value:
+                                                  (totsaving - nownetcredit) /
+                                                  mntsaving,
+                                              thickness: 12,
+                                              edgeStyle:
+                                                  LinearEdgeStyle.bothCurve,
+                                              color: const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
+                                              ),
+                                              position:
+                                                  LinearElementPosition.cross,
+                                              enableAnimation: false,
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 5),
+
+                                        // Month scale indicators
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "0",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "4",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "8",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "12",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "16",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "20",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              "24",
+                                              style: darktextstyle.copyWith(
+                                                fontSize: fontSize1 * 0.7,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    "actual_duration".tr,
-                                    style: darktextstyle.copyWith(
-                                      fontSize: fontSize1 * 0.8,
-                                    ),
+
+                                  const SizedBox(width: 10),
+
+                                  // Optimal months indicator
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        ((totsaving - nownetcredit) /
+                                                (0.5 *
+                                                    ((mntinc +
+                                                                mntnstblinc *
+                                                                    (1 -
+                                                                        0.01 *
+                                                                            mntperinc)) *
+                                                            (1 - freemnt / 12) -
+                                                        (mntexp +
+                                                            annexp / 12))))
+                                            .toStringAsFixed(1),
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 1.2,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                      Text(
+                                        "optimal".tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.7,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // Legend explanation
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        "ideal_duration".tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.8,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromRGBO(
+                                            106,
+                                            253,
+                                            95,
+                                            1.0,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        "actual_duration".tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.8,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-          Card(
-            elevation: 5,
-            color: prefsdata.get(
-              "cardcolor",
-              defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  "personal_income_structure".tr,
-                  style: darktextstyle.copyWith(fontSize: fontSize1),
+              ),
+              Card(
+                elevation: 5,
+                color: prefsdata.get(
+                  "cardcolor",
+                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
                 ),
-                const SizedBox(height: 20),
-                moneyinput(size, mntinc, "mntinc", "fixed_monthly_income".tr),
-                moneyinput(
-                  size,
-                  mntnstblinc,
-                  "mntnstblinc",
-                  "variable_monthly_income".tr,
-                ),
-                moneyinputslider(
-                  size,
-                  mntperinc,
-                  "mntperinc",
-                  "income_fluctuation_percentage".tr,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Divider(height: 21),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    infocalculated(
-                      0.5 *
-                              ((mntinc + mntnstblinc * (1 + mntperinc * 0.01)) *
-                                  (12 - freemnt)) -
-                          (mntexp * (1 - mntperexp * 0.01) + annexp),
-                      "max_annual_saving".tr,
+                    const SizedBox(height: 20),
+                    Text(
+                      "personal_income_structure".tr,
+                      style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
+                    const SizedBox(height: 20),
+                    moneyinput(
+                      size,
+                      mntinc,
+                      "mntinc",
+                      "fixed_monthly_income".tr,
+                    ),
+                    moneyinput(
+                      size,
+                      mntnstblinc,
+                      "mntnstblinc",
+                      "variable_monthly_income".tr,
+                    ),
+                    moneyinputslider(
+                      size,
+                      mntperinc,
+                      "mntperinc",
+                      "income_fluctuation_percentage".tr,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Divider(height: 21),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        infocalculated(
+                          0.5 *
+                                  ((mntinc +
+                                          mntnstblinc *
+                                              (1 + mntperinc * 0.01)) *
+                                      (12 - freemnt)) -
+                              (mntexp * (1 - mntperexp * 0.01) + annexp),
+                          "max_annual_saving".tr,
+                        ),
 
-                    infocalculated(
-                      0.5 *
-                              ((mntinc + mntnstblinc * (1 - mntperinc * 0.01)) *
-                                  (12 - freemnt)) -
-                          (mntexp * (1 + mntperexp * 0.01) + annexp),
-                      "min_annual_saving".tr,
+                        infocalculated(
+                          0.5 *
+                                  ((mntinc +
+                                          mntnstblinc *
+                                              (1 - mntperinc * 0.01)) *
+                                      (12 - freemnt)) -
+                              (mntexp * (1 + mntperexp * 0.01) + annexp),
+                          "min_annual_saving".tr,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -4371,12 +4543,6 @@ class _BudgetpageState extends State<Budgetpage> {
       debugPrint(startDate.toString());
     });
   }
-
-  void _ondayselected(DateTime day, DateTime focusedDay) {
-    setState(() {
-      today = day;
-    });
-  }
 }
 
 class clrdinfo extends StatelessWidget {
@@ -4405,7 +4571,6 @@ class clrdinfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = Get.locale?.languageCode == 'ar';
     // Calculate optimal daily spending
     final optimalDailySpending =
         ((0.5 *
@@ -4467,7 +4632,6 @@ class clrdinfo extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4.0),
-
         child: ListTile(
           trailing: Container(
             padding: const EdgeInsets.all(8),

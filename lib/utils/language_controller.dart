@@ -21,6 +21,19 @@ class LanguageController extends GetxController {
     String? storedLang = _prefsBox.get('language');
     if (storedLang != null) {
       language.value = storedLang;
+    } else {
+      // If no language is stored, use system language if supported
+      Locale? deviceLocale = Get.deviceLocale;
+      if (deviceLocale != null) {
+        String langCode = deviceLocale.languageCode;
+        if (['en', 'ar', 'fr'].contains(langCode)) {
+          language.value = langCode;
+        } else {
+          language.value = 'en'; // Fallback to English
+        }
+      } else {
+        language.value = 'en'; // Fallback to English
+      }
     }
   }
 

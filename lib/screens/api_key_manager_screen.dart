@@ -1,3 +1,4 @@
+import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:flutter/material.dart';
 import 'package:budget_it/services/gemini_service.dart';
 import 'package:get/get.dart';
@@ -146,9 +147,7 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                       Expanded(
                         child: Text(
                           'about_gemini_api'.tr,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: Colors.blue.shade900,
                                 fontWeight: FontWeight.bold,
@@ -170,7 +169,10 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
             const SizedBox(height: 24),
 
             // API Key Input
-            Text('gemini_api_key'.tr, style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              'gemini_api_key'.tr,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _apiKeyController,
@@ -200,16 +202,16 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                 decoration: BoxDecoration(
                   color:
                       _statusMessage!.contains('Error') ||
-                              _statusMessage!.startsWith('Error')
-                          ? Colors.red.shade50
-                          : Colors.green.shade50,
+                          _statusMessage!.startsWith('Error')
+                      ? Colors.red.shade50
+                      : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color:
                         _statusMessage!.contains('Error') ||
-                                _statusMessage!.startsWith('Error')
-                            ? Colors.red.shade200
-                            : Colors.green.shade200,
+                            _statusMessage!.startsWith('Error')
+                        ? Colors.red.shade200
+                        : Colors.green.shade200,
                   ),
                 ),
                 child: Text(
@@ -217,9 +219,9 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                   style: TextStyle(
                     color:
                         _statusMessage!.contains('Error') ||
-                                _statusMessage!.startsWith('Error')
-                            ? Colors.red.shade700
-                            : Colors.green.shade700,
+                            _statusMessage!.startsWith('Error')
+                        ? Colors.red.shade700
+                        : Colors.green.shade700,
                   ),
                 ),
               ),
@@ -251,8 +253,8 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                       )
                     : Text(
                         hasApiKey ? 'update_api_key'.tr : 'save_api_key'.tr,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: fontSize1 + 1,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -275,7 +277,10 @@ class _ApiKeyManagerScreenState extends State<ApiKeyManagerScreen> {
                   ),
                   child: Text(
                     'clear_api_key'.tr,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: fontSize1 + 1,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

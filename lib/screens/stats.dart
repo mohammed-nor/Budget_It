@@ -241,12 +241,25 @@ class _StatspageState extends State<Statspage> {
     // 2. Stability (30%)
     double stabilityScore = (1 - dispersion.clamp(0, 1)) * 30;
 
-    // 3. Emergency Fund (30%)
     // Aim for 6 months of spending
-    double currentSavings = 0;
-    if (historyBox != null && historyBox!.isNotEmpty) {
-      currentSavings = historyBox!.values.last.nownetcredit.toDouble();
-    }
+    num nownetcredit = prefsdata.get("nownetcredit", defaultValue: 2000);
+    DateTime startDate = prefsdata.get(
+      "startDate",
+      defaultValue: DateTime(2024, 9, 1),
+    );
+    num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
+    DateTime today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+
+    double currentSavings =
+        (nownetcredit -
+                calculateSpendingBetweenDates(startDate, today) +
+                calculateEarningsBetweenDates(startDate, today) +
+                count30thsPassed(startDate, today) * mntsaving)
+            .toDouble();
     double emergencyRatio = avgSpending > 0
         ? (currentSavings / (avgSpending * 6)).clamp(0, 1)
         : 1;
@@ -257,10 +270,24 @@ class _StatspageState extends State<Statspage> {
 
   List<ChartData> _generateWealthProjection(num netAvg) {
     List<ChartData> projection = [];
-    double currentWealth = 0;
-    if (historyBox != null && historyBox!.isNotEmpty) {
-      currentWealth = historyBox!.values.last.nownetcredit.toDouble();
-    }
+    num nownetcredit = prefsdata.get("nownetcredit", defaultValue: 2000);
+    DateTime startDate = prefsdata.get(
+      "startDate",
+      defaultValue: DateTime(2024, 9, 1),
+    );
+    num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
+    DateTime today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+
+    double currentWealth =
+        (nownetcredit -
+                calculateSpendingBetweenDates(startDate, today) +
+                calculateEarningsBetweenDates(startDate, today) +
+                count30thsPassed(startDate, today) * mntsaving)
+            .toDouble();
 
     final now = DateTime.now();
     for (int i = 0; i <= 12; i++) {
@@ -284,6 +311,104 @@ class _StatspageState extends State<Statspage> {
       );
     }
     return projection;
+  }
+
+  int count30thsPassed(DateTime startDate, DateTime endDate) {
+    if (startDate.isAfter(endDate)) {
+      return 0;
+    }
+
+    int payingDay = prefsdata.get("payingDay", defaultValue: 30);
+    int count = 0;
+
+    // Start checking from the current month of startDate
+    DateTime currentMonth = DateTime(startDate.year, startDate.month);
+
+    while (currentMonth.isBefore(endDate) ||
+        (currentMonth.year == endDate.year &&
+            currentMonth.month == endDate.month)) {
+      int year = currentMonth.year;
+      int month = currentMonth.month;
+
+      // Adjust target day if it's greater than the last day of the month
+      int lastDay = DateTime(year, month + 1, 0).day;
+      int targetDay = payingDay > lastDay ? lastDay : payingDay;
+
+      DateTime targetDate = DateTime(year, month, targetDay);
+
+      // We only count it if targetDate is between startDate and endDate (inclusive)
+      if ((targetDate.isAfter(startDate) ||
+              targetDate.isAtSameMomentAs(startDate)) &&
+          (targetDate.isBefore(endDate) ||
+              targetDate.isAtSameMomentAs(endDate))) {
+        count++;
+      }
+
+      // Move to the next month
+      currentMonth = DateTime(year, month + 1);
+    }
+
+    return count;
+  }
+
+  num calculateSpendingBetweenDates(DateTime startDate, DateTime endDate) {
+    final Box<UpcomingSpending> spendingBox = Hive.box<UpcomingSpending>(
+      'upcoming_spending',
+    );
+    if (spendingBox.isEmpty) {
+      return 0;
+    }
+
+    final spendingEntries = spendingBox.values
+        .where(
+          (entry) =>
+              (entry.date.isAfter(startDate) ||
+                  entry.date.isAtSameMomentAs(startDate)) &&
+              (entry.date.isBefore(endDate) ||
+                  entry.date.isAtSameMomentAs(endDate)),
+        )
+        .toList();
+
+    if (spendingEntries.isEmpty) {
+      return 0;
+    }
+
+    num totalSpending = 0;
+    for (var entry in spendingEntries) {
+      totalSpending += entry.amount;
+    }
+
+    return totalSpending;
+  }
+
+  num calculateEarningsBetweenDates(DateTime startDate, DateTime endDate) {
+    final Box<UnexpectedEarning> earningsBox = Hive.box<UnexpectedEarning>(
+      'unexpected_earnings',
+    );
+    if (earningsBox.isEmpty) {
+      return 0;
+    }
+
+    final earningEntries = earningsBox.values
+        .where(
+          (entry) =>
+              (entry.date.isAfter(startDate) ||
+                  entry.date.isAtSameMomentAs(startDate)) &&
+              (entry.date.isBefore(endDate) ||
+                  entry.date.isAtSameMomentAs(endDate)),
+        )
+        .toList();
+
+    if (earningEntries.isEmpty) {
+      return 0;
+    }
+
+    num totalEarnings = 0;
+    for (var entry in earningEntries) {
+      totalEarnings += entry.amount;
+    }
+
+    return totalEarnings;
   }
 
   String getMonthName(int index) {
@@ -331,6 +456,23 @@ class _StatspageState extends State<Statspage> {
         monthlyStats.length;
     num totalAvg = avgStable + avgUnstable;
     num netAvg = totalAvg - avgSpending;
+    final num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
+    num netSavingAvg = mntsaving + avgUnstable - avgSpending;
+
+    // Calculate Volatility (Standard Deviation of net savings)
+    List<num> monthlyNetSavings = monthlyStats.map((e) {
+      return mntsaving +
+          (e['unstableIncome'] as num) -
+          (e['unstableSpending'] as num);
+    }).toList();
+
+    num meanNetSaving = netSavingAvg;
+    num variance =
+        monthlyNetSavings
+            .map((x) => pow(x - meanNetSaving, 2))
+            .reduce((a, b) => a + b) /
+        monthlyNetSavings.length;
+    double volatility = sqrt(variance).toDouble();
 
     final dispersionIncome =
         (monthlyStats
@@ -432,7 +574,7 @@ class _StatspageState extends State<Statspage> {
               // Expert Analysis Section [NEW]
               _buildExpertAnalysisDashboard(
                 totalAvg,
-                netAvg,
+                netSavingAvg,
                 avgSpending,
                 dispersionIncome,
                 effectiveCardColor,
@@ -442,7 +584,8 @@ class _StatspageState extends State<Statspage> {
               const SizedBox(height: 6),
 
               _buildWealthForecastChart(
-                netAvg,
+                netSavingAvg,
+                volatility,
                 effectiveCardColor,
                 isCurrentDark,
                 currentTextColor,
@@ -451,7 +594,7 @@ class _StatspageState extends State<Statspage> {
               const SizedBox(height: 6),
 
               _buildGoalsSection(
-                netAvg,
+                netSavingAvg,
                 effectiveCardColor,
                 currentTextColor,
                 currentSecondaryTextColor,
@@ -531,6 +674,11 @@ class _StatspageState extends State<Statspage> {
               ),
               const SizedBox(height: 6),
               _buildHistoryInputsCard(
+                avgStable,
+                avgUnstable,
+                avgSpending,
+                netAvg,
+                netSavingAvg,
                 effectiveCardColor,
                 isCurrentDark,
                 currentTextColor,
@@ -623,7 +771,7 @@ class _StatspageState extends State<Statspage> {
                             : TextAlign.left,
                         style: GoogleFonts.elMessiri(
                           color: secondaryTextColor,
-                          fontSize: 15,
+                          fontSize: fontSize1 - 0,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -634,7 +782,7 @@ class _StatspageState extends State<Statspage> {
                             : TextAlign.left,
                         style: GoogleFonts.elMessiri(
                           color: textColor,
-                          fontSize: 15,
+                          fontSize: fontSize1 - 0,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -671,7 +819,7 @@ class _StatspageState extends State<Statspage> {
                             : TextAlign.left,
                         style: GoogleFonts.elMessiri(
                           color: secondaryTextColor,
-                          fontSize: 15,
+                          fontSize: fontSize1 - 0,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -682,7 +830,7 @@ class _StatspageState extends State<Statspage> {
                             : TextAlign.left,
                         style: GoogleFonts.elMessiri(
                           color: textColor,
-                          fontSize: 15,
+                          fontSize: fontSize1 - 0,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -718,7 +866,7 @@ class _StatspageState extends State<Statspage> {
               text: 'income_distribution'.tr,
               textStyle: GoogleFonts.elMessiri(
                 color: textColor,
-                fontSize: 11,
+                fontSize: fontSize1 - 4,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -727,7 +875,7 @@ class _StatspageState extends State<Statspage> {
               position: chart.LegendPosition.bottom,
               textStyle: GoogleFonts.elMessiri(
                 color: secondaryTextColor,
-                fontSize: 8,
+                fontSize: fontSize1 - 7,
               ),
             ),
             series: <chart.CircularSeries<ChartData, String>>[
@@ -739,7 +887,7 @@ class _StatspageState extends State<Statspage> {
                 dataLabelSettings: chart.DataLabelSettings(
                   isVisible: true,
                   textStyle: GoogleFonts.elMessiri(
-                    fontSize: 12,
+                    fontSize: fontSize1 - 3,
                     color: Color.fromARGB(255, 255, 255, 255),
                   ),
                 ),
@@ -807,7 +955,7 @@ class _StatspageState extends State<Statspage> {
               text: title,
               textStyle: GoogleFonts.elMessiri(
                 color: textColor,
-                fontSize: 11,
+                fontSize: fontSize1 - 4,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -851,7 +999,7 @@ class _StatspageState extends State<Statspage> {
                     widget: Text(
                       '${gaugeValue.toStringAsFixed(0)}%',
                       style: GoogleFonts.elMessiri(
-                        fontSize: 14,
+                        fontSize: fontSize1 - 1,
                         fontWeight: FontWeight.bold,
                         color: textColor,
                       ),
@@ -920,7 +1068,7 @@ class _StatspageState extends State<Statspage> {
               text: 'unstable_trends'.tr,
               textStyle: GoogleFonts.elMessiri(
                 color: textColor,
-                fontSize: 15,
+                fontSize: fontSize1 - 0,
                 fontWeight: FontWeight.bold,
               ),
               alignment: chart.ChartAlignment.center,
@@ -930,14 +1078,14 @@ class _StatspageState extends State<Statspage> {
               position: chart.LegendPosition.bottom,
               textStyle: GoogleFonts.elMessiri(
                 color: secondaryTextColor,
-                fontSize: 10,
+                fontSize: fontSize1 - 5,
               ),
             ),
             primaryXAxis: chart.CategoryAxis(
               majorGridLines: const chart.MajorGridLines(width: 0),
               labelStyle: GoogleFonts.elMessiri(
                 color: secondaryTextColor,
-                fontSize: 10,
+                fontSize: fontSize1 - 5,
               ),
             ),
             primaryYAxis: chart.NumericAxis(
@@ -949,7 +1097,7 @@ class _StatspageState extends State<Statspage> {
               axisLine: const chart.AxisLine(width: 0),
               labelStyle: GoogleFonts.elMessiri(
                 color: secondaryTextColor,
-                fontSize: 10,
+                fontSize: fontSize1 - 5,
               ),
             ),
             series: <chart.CartesianSeries<ChartData, String>>[
@@ -1033,7 +1181,7 @@ class _StatspageState extends State<Statspage> {
               text: 'top_spending'.tr,
               textStyle: GoogleFonts.elMessiri(
                 color: textColor,
-                fontSize: 11,
+                fontSize: fontSize1 - 4,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1042,7 +1190,7 @@ class _StatspageState extends State<Statspage> {
               position: chart.LegendPosition.bottom,
               textStyle: GoogleFonts.elMessiri(
                 color: secondaryTextColor,
-                fontSize: 8,
+                fontSize: fontSize1 - 7,
               ),
               overflowMode: chart.LegendItemOverflowMode.wrap,
             ),
@@ -1054,7 +1202,7 @@ class _StatspageState extends State<Statspage> {
                 dataLabelSettings: chart.DataLabelSettings(
                   isVisible: true,
                   textStyle: GoogleFonts.elMessiri(
-                    fontSize: 12,
+                    fontSize: fontSize1 - 3,
                     color: textColor,
                   ),
                 ),
@@ -1087,7 +1235,7 @@ class _StatspageState extends State<Statspage> {
             title,
             style: GoogleFonts.elMessiri(
               color: textColor,
-              fontSize: 15,
+              fontSize: fontSize1 - 0,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1264,6 +1412,11 @@ class _StatspageState extends State<Statspage> {
   }
 
   Widget _buildHistoryInputsCard(
+    num avgStable,
+    num avgUnstable,
+    num avgSpending,
+    num netAvg,
+    num netSavingAvg,
     Color cardColor,
     bool isDark,
     Color textColor,
@@ -1291,7 +1444,7 @@ class _StatspageState extends State<Statspage> {
                 Text(
                   "stats_past_months".tr,
                   style: GoogleFonts.elMessiri(
-                    fontSize: 16,
+                    fontSize: fontSize1 + 1,
                     fontWeight: FontWeight.bold,
                     color: textColor,
                   ),
@@ -1307,6 +1460,7 @@ class _StatspageState extends State<Statspage> {
                 2: FlexColumnWidth(1.1), // Unstable Inc
                 3: FlexColumnWidth(1), // Expenses
                 4: FlexColumnWidth(1.1), // Net
+                5: FlexColumnWidth(1.1), // Net Saving
               },
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
@@ -1315,7 +1469,7 @@ class _StatspageState extends State<Statspage> {
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: secondaryTextColor.withValues(alpha: 0.2),
+                        //color: secondaryTextColor.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -1330,6 +1484,52 @@ class _StatspageState extends State<Statspage> {
                     _buildTableHeader(
                       "net_income_header".tr,
                       Colors.greenAccent,
+                    ),
+                    _buildTableHeader(
+                      "net_saving_header".tr,
+                      Colors.cyanAccent,
+                    ),
+                  ],
+                ),
+                // Average Row
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        "monthly_average".tr,
+                        style: GoogleFonts.elMessiri(
+                          color: secondaryTextColor,
+                          fontSize: fontSize1 - 5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    _buildAverageCell(
+                      avgStable.toStringAsFixed(0),
+                      Colors.blue,
+                    ),
+                    _buildAverageCell(
+                      avgUnstable.toStringAsFixed(0),
+                      Colors.green,
+                    ),
+                    _buildAverageCell(
+                      avgSpending.toStringAsFixed(0),
+                      Colors.red,
+                    ),
+                    _buildAverageCell(
+                      netAvg.toStringAsFixed(0),
+                      netAvg >= 0 ? Colors.greenAccent : Colors.redAccent,
+                    ),
+                    _buildAverageCell(
+                      netSavingAvg.toStringAsFixed(0),
+                      netSavingAvg >= 0 ? Colors.cyanAccent : Colors.redAccent,
                     ),
                   ],
                 ),
@@ -1357,7 +1557,22 @@ class _StatspageState extends State<Statspage> {
         text,
         style: GoogleFonts.elMessiri(
           color: color,
-          fontSize: 10,
+          fontSize: fontSize1 - 5,
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildAverageCell(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        text,
+        style: GoogleFonts.elMessiri(
+          color: color,
+          fontSize: fontSize1 - 5,
           fontWeight: FontWeight.bold,
         ),
         textAlign: TextAlign.center,
@@ -1376,6 +1591,8 @@ class _StatspageState extends State<Statspage> {
     num mntincnstb = stat['unstableIncome'];
     num spending = stat['unstableSpending'];
     num net = mntincstb + mntincnstb - spending;
+    final num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
+    num netSaving = mntsaving + mntincnstb - spending;
     String keySuffix = "${stat['year']}_${stat['month']}";
 
     return TableRow(
@@ -1386,7 +1603,7 @@ class _StatspageState extends State<Statspage> {
             stat['monthName'].toString().tr,
             style: GoogleFonts.elMessiri(
               color: textColor,
-              fontSize: 11,
+              fontSize: fontSize1 - 4,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -1402,7 +1619,7 @@ class _StatspageState extends State<Statspage> {
             });
           },
           isDark: isDark,
-          textColor: textColor,
+          textColor: Colors.blue,
           secondaryTextColor: secondaryTextColor,
         ),
         _buildTableInputCell(
@@ -1415,7 +1632,7 @@ class _StatspageState extends State<Statspage> {
             });
           },
           isDark: isDark,
-          textColor: textColor,
+          textColor: Colors.green,
           secondaryTextColor: secondaryTextColor,
         ),
         _buildTableInputCell(
@@ -1428,7 +1645,7 @@ class _StatspageState extends State<Statspage> {
             });
           },
           isDark: isDark,
-          textColor: textColor,
+          textColor: Colors.red,
           secondaryTextColor: secondaryTextColor,
         ),
         Padding(
@@ -1436,8 +1653,20 @@ class _StatspageState extends State<Statspage> {
           child: Text(
             net.toStringAsFixed(0),
             style: GoogleFonts.elMessiri(
-              color: net >= 0 ? textColor : Colors.redAccent,
-              fontSize: 11,
+              color: net >= 0 ? Colors.greenAccent : Colors.redAccent,
+              fontSize: fontSize1 - 4,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            netSaving.toStringAsFixed(0),
+            style: GoogleFonts.elMessiri(
+              color: netSaving >= 0 ? Colors.cyanAccent : Colors.redAccent,
+              fontSize: fontSize1 - 4,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
@@ -1460,7 +1689,7 @@ class _StatspageState extends State<Statspage> {
         initialValue: initialValue,
         onChanged: onChanged,
         keyboardType: TextInputType.number,
-        style: GoogleFonts.elMessiri(color: textColor, fontSize: 10),
+        style: GoogleFonts.elMessiri(color: textColor, fontSize: fontSize1 - 5),
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(
@@ -1504,17 +1733,7 @@ class _StatspageState extends State<Statspage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.withValues(alpha: 0.1),
-              Colors.purple.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
         child: Column(
           children: [
             Row(
@@ -1541,7 +1760,7 @@ class _StatspageState extends State<Statspage> {
                             : "needs_attention".tr,
                         style: GoogleFonts.elMessiri(
                           color: secondaryTextColor,
-                          fontSize: 13,
+                          fontSize: fontSize1 - 2,
                         ),
                       ),
                     ],
@@ -1636,14 +1855,17 @@ class _StatspageState extends State<Statspage> {
         Text(
           value,
           style: GoogleFonts.elMessiri(
-            fontSize: 16,
+            fontSize: fontSize1 + 1,
             fontWeight: FontWeight.bold,
             color: textColor,
           ),
         ),
         Text(
           label,
-          style: GoogleFonts.elMessiri(fontSize: 10, color: Colors.white60),
+          style: GoogleFonts.elMessiri(
+            fontSize: fontSize1 - 5,
+            color: Colors.white60,
+          ),
         ),
       ],
     );
@@ -1651,12 +1873,15 @@ class _StatspageState extends State<Statspage> {
 
   Widget _buildWealthForecastChart(
     num netAvg,
+    double volatility,
     Color cardColor,
     bool isDark,
     Color textColor,
     Color secondaryTextColor,
   ) {
     final projectionData = _generateWealthProjection(netAvg);
+    final projectionUpper = _generateWealthProjection(netAvg + volatility);
+    final projectionLower = _generateWealthProjection(netAvg - volatility);
 
     // Identify Achievement Points
     List<ChartData> goalMarkers = [];
@@ -1686,17 +1911,7 @@ class _StatspageState extends State<Statspage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.withValues(alpha: 0.1),
-              Colors.purple.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1718,7 +1933,7 @@ class _StatspageState extends State<Statspage> {
                       "path_to_wishes".tr,
                       style: GoogleFonts.elMessiri(
                         color: secondaryTextColor,
-                        fontSize: 12,
+                        fontSize: fontSize1 - 3,
                       ),
                     ),
                   ],
@@ -1740,19 +1955,25 @@ class _StatspageState extends State<Statspage> {
             const SizedBox(height: 12),
             // Forecast Basis Details
             Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: const EdgeInsets.only(bottom: 12),
                 title: Row(
                   children: [
-                    Icon(Icons.info_outline, color: secondaryTextColor, size: 14),
+                    Icon(
+                      Icons.info_outline,
+                      color: secondaryTextColor,
+                      size: 14,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       "forecast_basis".tr,
                       style: GoogleFonts.elMessiri(
                         color: secondaryTextColor,
-                        fontSize: 11,
+                        fontSize: fontSize1 - 4,
                       ),
                     ),
                   ],
@@ -1780,7 +2001,9 @@ class _StatspageState extends State<Statspage> {
                         _buildForecastDetail(
                           "net_monthly_growth".tr,
                           "${netAvg.toStringAsFixed(0)} ${LanguageController.to.currency.value}/${"month".tr}",
-                          netAvg >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                          netAvg >= 0
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
                           netAvg >= 0 ? Colors.greenAccent : Colors.redAccent,
                           textColor,
                           secondaryTextColor,
@@ -1799,7 +2022,7 @@ class _StatspageState extends State<Statspage> {
                           "forecast_methodology".tr,
                           style: GoogleFonts.elMessiri(
                             color: secondaryTextColor,
-                            fontSize: 9,
+                            fontSize: fontSize1 - 6,
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,
@@ -1819,7 +2042,7 @@ class _StatspageState extends State<Statspage> {
                   majorGridLines: const chart.MajorGridLines(width: 0),
                   labelStyle: GoogleFonts.elMessiri(
                     color: secondaryTextColor,
-                    fontSize: 8,
+                    fontSize: fontSize1 - 7,
                   ),
                   axisLine: const chart.AxisLine(width: 0),
                 ),
@@ -1832,7 +2055,7 @@ class _StatspageState extends State<Statspage> {
                   ),
                   labelStyle: GoogleFonts.elMessiri(
                     color: secondaryTextColor,
-                    fontSize: 8,
+                    fontSize: fontSize1 - 7,
                   ),
                 ),
                 series: <chart.CartesianSeries<ChartData, String>>[
@@ -1850,6 +2073,24 @@ class _StatspageState extends State<Statspage> {
                     ),
                     borderColor: Colors.blueAccent,
                     borderWidth: 3,
+                    animationDuration: 1500,
+                  ),
+                  chart.SplineSeries<ChartData, String>(
+                    dataSource: projectionUpper,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    color: Colors.greenAccent.withValues(alpha: 0.3),
+                    width: 1,
+                    dashArray: const <double>[5, 5],
+                    animationDuration: 1500,
+                  ),
+                  chart.SplineSeries<ChartData, String>(
+                    dataSource: projectionLower,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    color: Colors.redAccent.withValues(alpha: 0.3),
+                    width: 1,
+                    dashArray: const <double>[5, 5],
                     animationDuration: 1500,
                   ),
                   chart.ScatterSeries<ChartData, String>(
@@ -1879,7 +2120,7 @@ class _StatspageState extends State<Statspage> {
                 "upcoming_achievements".tr,
                 style: GoogleFonts.elMessiri(
                   color: textColor,
-                  fontSize: 14,
+                  fontSize: fontSize1 - 1,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1922,7 +2163,7 @@ class _StatspageState extends State<Statspage> {
                             goal.title,
                             style: GoogleFonts.elMessiri(
                               color: textColor,
-                              fontSize: 11,
+                              fontSize: fontSize1 - 4,
                             ),
                           ),
                         ],
@@ -1948,7 +2189,7 @@ class _StatspageState extends State<Statspage> {
                         "negative_growth_warning".tr,
                         style: GoogleFonts.elMessiri(
                           color: Colors.redAccent,
-                          fontSize: 10,
+                          fontSize: fontSize1 - 5,
                         ),
                       ),
                     ),
@@ -1978,7 +2219,7 @@ class _StatspageState extends State<Statspage> {
             label,
             style: GoogleFonts.elMessiri(
               color: secondaryTextColor,
-              fontSize: 10,
+              fontSize: fontSize1 - 5,
             ),
           ),
         ),
@@ -1986,7 +2227,7 @@ class _StatspageState extends State<Statspage> {
           value,
           style: GoogleFonts.elMessiri(
             color: textColor,
-            fontSize: 10,
+            fontSize: fontSize1 - 5,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -1995,7 +2236,7 @@ class _StatspageState extends State<Statspage> {
   }
 
   Widget _buildGoalsSection(
-    num netAvg,
+    num netSavingAvg,
     Color cardColor,
     Color textColor,
     Color secondaryTextColor,
@@ -2045,7 +2286,7 @@ class _StatspageState extends State<Statspage> {
           ...financialGoals.map(
             (goal) => _buildGoalCard(
               goal,
-              netAvg,
+              netSavingAvg,
               cardColor,
               textColor,
               secondaryTextColor,
@@ -2057,7 +2298,7 @@ class _StatspageState extends State<Statspage> {
 
   Widget _buildGoalCard(
     FinancialGoal goal,
-    num netAvg,
+    num netSavingAvg,
     Color cardColor,
     Color textColor,
     Color secondaryTextColor,
@@ -2066,13 +2307,21 @@ class _StatspageState extends State<Statspage> {
     double remaining = goal.targetAmount - goal.currentAmount;
 
     // Evaluation Logic
-    int monthsToAchieve = netAvg > 0 ? (remaining / netAvg).ceil() : -1;
+    double monthsUntilDeadline =
+        goal.deadline.difference(DateTime.now()).inDays / 30;
+    if (monthsUntilDeadline <= 0) monthsUntilDeadline = 0.1;
+    double monthlyReq = remaining / monthsUntilDeadline;
+
+    int monthsToAchieve = netSavingAvg > 0
+        ? (remaining / netSavingAvg).ceil()
+        : -1;
     DateTime projectedAchieveDate = monthsToAchieve != -1
         ? DateTime.now().add(Duration(days: monthsToAchieve * 30))
         : DateTime.now();
 
     bool isOnTrack =
         monthsToAchieve != -1 && projectedAchieveDate.isBefore(goal.deadline);
+    double boostNeeded = monthlyReq - netSavingAvg;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -2111,14 +2360,14 @@ class _StatspageState extends State<Statspage> {
                         style: GoogleFonts.elMessiri(
                           color: textColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: fontSize1 + 1,
                         ),
                       ),
                       Text(
                         "${"target".tr}: ${goal.targetAmount.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
                         style: GoogleFonts.elMessiri(
                           color: secondaryTextColor,
-                          fontSize: 12,
+                          fontSize: fontSize1 - 3,
                         ),
                       ),
                     ],
@@ -2167,23 +2416,44 @@ class _StatspageState extends State<Statspage> {
                           monthsToAchieve == -1
                               ? "income_too_low_for_goal".tr
                               : isOnTrack
-                              ? "${"on_track_to_achieve".tr} ${monthsToAchieve} ${"months".tr}"
-                              : "${"requires_boost".tr}: ${(remaining / (goal.deadline.difference(DateTime.now()).inDays / 30)).toStringAsFixed(0)} ${"per_month".tr}",
+                              ? "${"on_track_to_achieve".tr} $monthsToAchieve ${"months".tr}"
+                              : "${"requires_boost".tr}: ${boostNeeded.toStringAsFixed(0)} ${LanguageController.to.currency.value}/${"month".tr}",
                           style: GoogleFonts.elMessiri(
                             color: isOnTrack
                                 ? Colors.greenAccent
                                 : Colors.orangeAccent,
-                            fontSize: 11,
+                            fontSize: fontSize1 - 4,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "${"monthly_requirement".tr}: ${(remaining / (goal.deadline.difference(DateTime.now()).inDays / 30)).toStringAsFixed(0)} ${LanguageController.to.currency.value}/${"month".tr}",
+                          "${"monthly_requirement".tr}: ${monthlyReq.toStringAsFixed(0)} ${LanguageController.to.currency.value}/${"month".tr}",
                           style: GoogleFonts.elMessiri(
                             color: Colors.white70,
-                            fontSize: 10,
+                            fontSize: fontSize1 - 5,
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline_rounded,
+                              color: Colors.amber,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                "goal_calculation_hint".tr,
+                                style: GoogleFonts.elMessiri(
+                                  color: Colors.white38,
+                                  fontSize: fontSize1 - 7,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -2249,7 +2519,7 @@ class _StatspageState extends State<Statspage> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: selectedCategory,
+                  initialValue: selectedCategory,
                   dropdownColor: const Color(0xFF1A1A1A),
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
