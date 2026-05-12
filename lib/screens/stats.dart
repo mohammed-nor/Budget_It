@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:budget_it/services/styles%20and%20constants.dart';
 import 'package:budget_it/utils/language_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart' as gauge;
 import 'package:syncfusion_flutter_charts/charts.dart' as chart;
 import 'package:budget_it/models/budget_history.dart';
@@ -12,6 +11,7 @@ import 'package:budget_it/models/financial_goal.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -21,10 +21,11 @@ class Statspage extends StatefulWidget {
 }
 
 class ChartData {
-  ChartData(this.x, this.y, [this.color]);
+  ChartData(this.x, this.y, [this.color, this.label]);
   final String x;
   final double y;
   final Color? color;
+  final String? label;
 }
 
 class _StatspageState extends State<Statspage> {
@@ -276,11 +277,7 @@ class _StatspageState extends State<Statspage> {
       defaultValue: DateTime(2024, 9, 1),
     );
     num mntsaving = prefsdata.get("mntsaving", defaultValue: 1000);
-    DateTime today = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+    DateTime today = DateTime.now();
 
     double currentWealth =
         (nownetcredit -
@@ -306,8 +303,14 @@ class _StatspageState extends State<Statspage> {
         'nov',
         'dec',
       ][date.month - 1];
+
       projection.add(
-        ChartData("${monthKey.tr} ${date.year}", currentWealth + (netAvg * i)),
+        ChartData(
+          "${monthKey.tr} ${date.year}",
+          currentWealth + (netAvg * i),
+          null,
+          i == 0 ? "today".tr : null,
+        ),
       );
     }
     return projection;
@@ -558,7 +561,7 @@ class _StatspageState extends State<Statspage> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
           body: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            //padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
             physics: const BouncingScrollPhysics(),
             children: [
               _buildSummaryRow(
@@ -749,10 +752,26 @@ class _StatspageState extends State<Statspage> {
     required Color secondaryTextColor,
   }) {
     bool isAr = Get.locale?.languageCode == 'ar';
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -849,12 +868,29 @@ class _StatspageState extends State<Statspage> {
     Color textColor,
     Color secondaryTextColor,
   ) {
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: SizedBox(
-        height: 250,
+    return Container(
+      height: 250,
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(0),
         child: ExcludeSemantics(
           child: chart.SfCircularChart(
             palette: [
@@ -942,12 +978,29 @@ class _StatspageState extends State<Statspage> {
     required Color secondaryTextColor,
   }) {
     double gaugeValue = (dispersion * 100).clamp(0, 100).toDouble();
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: SizedBox(
-        height: 180,
+    return Container(
+      height: 180,
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(0),
         child: ExcludeSemantics(
           child: gauge.SfRadialGauge(
             key: ValueKey('stabilityGauge_$title'),
@@ -1052,89 +1105,103 @@ class _StatspageState extends State<Statspage> {
         )
         .toList();
 
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        height: 250,
-        padding: const EdgeInsets.all(8),
-        child: ExcludeSemantics(
-          child: chart.SfCartesianChart(
-            key: const ValueKey('unstableTrendChart'),
-            plotAreaBorderWidth: 0,
-            margin: EdgeInsets.zero,
-            title: chart.ChartTitle(
-              text: 'unstable_trends'.tr,
-              textStyle: GoogleFonts.elMessiri(
-                color: textColor,
-                fontSize: fontSize1 - 0,
-                fontWeight: FontWeight.bold,
-              ),
-              alignment: chart.ChartAlignment.center,
-            ),
-            legend: chart.Legend(
-              isVisible: true,
-              position: chart.LegendPosition.bottom,
-              textStyle: GoogleFonts.elMessiri(
-                color: secondaryTextColor,
-                fontSize: fontSize1 - 5,
-              ),
-            ),
-            primaryXAxis: chart.CategoryAxis(
-              majorGridLines: const chart.MajorGridLines(width: 0),
-              labelStyle: GoogleFonts.elMessiri(
-                color: secondaryTextColor,
-                fontSize: fontSize1 - 5,
-              ),
-            ),
-            primaryYAxis: chart.NumericAxis(
-              majorGridLines: chart.MajorGridLines(
-                width: 1,
-                color: isDark ? Colors.white10 : Colors.black12,
-                dashArray: const [5, 5],
-              ),
-              axisLine: const chart.AxisLine(width: 0),
-              labelStyle: GoogleFonts.elMessiri(
-                color: secondaryTextColor,
-                fontSize: fontSize1 - 5,
-              ),
-            ),
-            series: <chart.CartesianSeries<ChartData, String>>[
-              chart.SplineSeries<ChartData, String>(
-                name: 'total_income'.tr,
-                dataSource: totalIncomeData,
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: Colors.blueAccent,
-                width: 2,
-                dashArray: const <double>[5, 5],
-                markerSettings: const chart.MarkerSettings(isVisible: true),
-                animationDuration: 0,
-              ),
-              chart.SplineSeries<ChartData, String>(
-                name: 'unstable_income'.tr,
-                dataSource: earningData,
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: Colors.greenAccent,
-                width: 3,
-                markerSettings: const chart.MarkerSettings(isVisible: true),
-                animationDuration: 0,
-              ),
-              chart.SplineSeries<ChartData, String>(
-                name: 'unstable_spending'.tr,
-                dataSource: expenseData,
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: Colors.redAccent,
-                width: 3,
-                markerSettings: const chart.MarkerSettings(isVisible: true),
-                animationDuration: 0,
-              ),
-            ],
-            tooltipBehavior: chart.TooltipBehavior(enable: true),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
           ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      height: 250,
+      padding: const EdgeInsets.all(8),
+      child: ExcludeSemantics(
+        child: chart.SfCartesianChart(
+          key: const ValueKey('unstableTrendChart'),
+          plotAreaBorderWidth: 0,
+          margin: EdgeInsets.zero,
+          title: chart.ChartTitle(
+            text: 'unstable_trends'.tr,
+            textStyle: GoogleFonts.elMessiri(
+              color: textColor,
+              fontSize: fontSize1 - 0,
+              fontWeight: FontWeight.bold,
+            ),
+            alignment: chart.ChartAlignment.center,
+          ),
+          legend: chart.Legend(
+            isVisible: true,
+            position: chart.LegendPosition.bottom,
+            textStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: fontSize1 - 5,
+            ),
+          ),
+          primaryXAxis: chart.CategoryAxis(
+            majorGridLines: const chart.MajorGridLines(width: 0),
+            labelStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: fontSize1 - 5,
+            ),
+          ),
+          primaryYAxis: chart.NumericAxis(
+            majorGridLines: chart.MajorGridLines(
+              width: 1,
+              color: isDark ? Colors.white10 : Colors.black12,
+              dashArray: const [5, 5],
+            ),
+            axisLine: const chart.AxisLine(width: 0),
+            labelStyle: GoogleFonts.elMessiri(
+              color: secondaryTextColor,
+              fontSize: fontSize1 - 5,
+            ),
+          ),
+          series: <chart.CartesianSeries<ChartData, String>>[
+            chart.SplineSeries<ChartData, String>(
+              name: 'total_income'.tr,
+              dataSource: totalIncomeData,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              color: Colors.blueAccent,
+              width: 2,
+              dashArray: const <double>[5, 5],
+              markerSettings: const chart.MarkerSettings(isVisible: true),
+              animationDuration: 0,
+            ),
+            chart.SplineSeries<ChartData, String>(
+              name: 'unstable_income'.tr,
+              dataSource: earningData,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              color: Colors.greenAccent,
+              width: 3,
+              markerSettings: const chart.MarkerSettings(isVisible: true),
+              animationDuration: 0,
+            ),
+            chart.SplineSeries<ChartData, String>(
+              name: 'unstable_spending'.tr,
+              dataSource: expenseData,
+              xValueMapper: (ChartData data, _) => data.x,
+              yValueMapper: (ChartData data, _) => data.y,
+              color: Colors.redAccent,
+              width: 3,
+              markerSettings: const chart.MarkerSettings(isVisible: true),
+              animationDuration: 0,
+            ),
+          ],
+          tooltipBehavior: chart.TooltipBehavior(enable: true),
         ),
       ),
     );
@@ -1161,12 +1228,29 @@ class _StatspageState extends State<Statspage> {
         .map((e) => ChartData(e.key, e.value))
         .toList();
 
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: SizedBox(
-        height: 250,
+    return Container(
+      height: 250,
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(0),
         child: ExcludeSemantics(
           child: chart.SfCircularChart(
             palette: [
@@ -1339,10 +1423,26 @@ class _StatspageState extends State<Statspage> {
     Color secondaryTextColor,
   ) {
     bool isAr = Get.locale?.languageCode == 'ar';
-    return Card(
-      elevation: 2,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -1424,12 +1524,28 @@ class _StatspageState extends State<Statspage> {
     Size size,
     double fontSize1,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: cardColor,
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -1727,13 +1843,28 @@ class _StatspageState extends State<Statspage> {
       dispersion,
     );
 
-    return Card(
-      elevation: 4,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
         child: Column(
           children: [
             Row(
@@ -1898,6 +2029,7 @@ class _StatspageState extends State<Statspage> {
               projectionData[months].x,
               projectionData[months].y,
               Colors.amber,
+              goal.title,
             ),
           );
           upcomingMilestones.add(goal);
@@ -1905,13 +2037,28 @@ class _StatspageState extends State<Statspage> {
       }
     }
 
-    return Card(
-      elevation: 4,
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Padding(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(24)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2094,9 +2241,32 @@ class _StatspageState extends State<Statspage> {
                     animationDuration: 1500,
                   ),
                   chart.ScatterSeries<ChartData, String>(
+                    dataSource: [projectionData.first],
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    markerSettings: const chart.MarkerSettings(
+                      height: 12,
+                      width: 12,
+                      shape: chart.DataMarkerType.circle,
+                      color: Colors.cyanAccent,
+                      borderWidth: 2,
+                      borderColor: Colors.white,
+                    ),
+                    dataLabelSettings: chart.DataLabelSettings(
+                      isVisible: true,
+                      labelAlignment: chart.ChartDataLabelAlignment.top,
+                      textStyle: GoogleFonts.elMessiri(
+                        color: textColor,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  chart.ScatterSeries<ChartData, String>(
                     dataSource: goalMarkers,
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
+                    dataLabelMapper: (ChartData data, _) => data.label,
                     markerSettings: const chart.MarkerSettings(
                       height: 15,
                       width: 15,
@@ -2105,74 +2275,23 @@ class _StatspageState extends State<Statspage> {
                       borderWidth: 2,
                       borderColor: Colors.white,
                     ),
+                    dataLabelSettings: chart.DataLabelSettings(
+                      isVisible: true,
+                      labelAlignment: chart.ChartDataLabelAlignment.top,
+                      textStyle: GoogleFonts.elMessiri(
+                        color: Colors.amber,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
                 tooltipBehavior: chart.TooltipBehavior(
                   enable: true,
-                  header: "achievement".tr,
                   format: "point.x : point.y",
                 ),
               ),
             ),
-            if (upcomingMilestones.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                "upcoming_achievements".tr,
-                style: GoogleFonts.elMessiri(
-                  color: textColor,
-                  fontSize: fontSize1 - 1,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: upcomingMilestones.length,
-                  itemBuilder: (context, index) {
-                    final goal = upcomingMilestones[index];
-                    return Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            goal.category == 'home'
-                                ? Icons.home_rounded
-                                : goal.category == 'car'
-                                ? Icons.directions_car_rounded
-                                : goal.category == 'vacation'
-                                ? Icons.beach_access_rounded
-                                : Icons.star_rounded,
-                            size: 14,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            goal.title,
-                            style: GoogleFonts.elMessiri(
-                              color: textColor,
-                              fontSize: fontSize1 - 4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
             if (netAvg < 0)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
@@ -2303,8 +2422,21 @@ class _StatspageState extends State<Statspage> {
     Color textColor,
     Color secondaryTextColor,
   ) {
-    double progress = (goal.currentAmount / goal.targetAmount).clamp(0, 1);
-    double remaining = goal.targetAmount - goal.currentAmount;
+    final DateTime startDate = prefsdata.get(
+      "startDate",
+      defaultValue: DateTime(2024, 9, 1),
+    );
+    // Calculate months passed since app start
+    int monthsPassed = DateTime.now().difference(startDate).inDays ~/ 30;
+    if (monthsPassed < 0) monthsPassed = 0;
+
+    // effectiveCurrentAmount is based on net saving avg multiplied by months passed
+    double effectiveAmount =
+        (netSavingAvg > 0 ? (monthsPassed * netSavingAvg).toDouble() : 0.0) +
+        goal.currentAmount;
+
+    double progress = (effectiveAmount / goal.targetAmount).clamp(0, 1);
+    double remaining = max(0, goal.targetAmount - effectiveAmount).toDouble();
 
     // Evaluation Logic
     double monthsUntilDeadline =
@@ -2321,12 +2453,28 @@ class _StatspageState extends State<Statspage> {
 
     bool isOnTrack =
         monthsToAchieve != -1 && projectedAchieveDate.isBefore(goal.deadline);
-    double boostNeeded = monthlyReq - netSavingAvg;
+    double boostNeeded = max(0, monthlyReq - netSavingAvg).toDouble();
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      decoration: BoxDecoration(
+        color: prefsdata.get(
+          "cardcolor",
+          defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -2365,6 +2513,20 @@ class _StatspageState extends State<Statspage> {
                       ),
                       Text(
                         "${"target".tr}: ${goal.targetAmount.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
+                        style: GoogleFonts.elMessiri(
+                          color: secondaryTextColor,
+                          fontSize: fontSize1 - 3,
+                        ),
+                      ),
+                      Text(
+                        "${"raised".tr}: ${effectiveAmount.toStringAsFixed(0)} ${LanguageController.to.currency.value}",
+                        style: GoogleFonts.elMessiri(
+                          color: secondaryTextColor,
+                          fontSize: fontSize1 - 3,
+                        ),
+                      ),
+                      Text(
+                        "${"deadline".tr}: ${DateFormat('yyyy-MM-dd').format(goal.deadline)}",
                         style: GoogleFonts.elMessiri(
                           color: secondaryTextColor,
                           fontSize: fontSize1 - 3,

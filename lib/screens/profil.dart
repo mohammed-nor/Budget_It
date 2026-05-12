@@ -853,8 +853,8 @@ class _ProfilpageState extends State<Profilpage> {
                     Slider(
                       value: _notifLowBudgetThreshold,
                       min: 100,
-                      max: 5000,
-                      divisions: 49,
+                      max: 50000,
+                      divisions: 500,
                       activeColor: Colors.redAccent,
                       inactiveColor: Colors.red.withValues(alpha: 0.2),
                       label: _notifLowBudgetThreshold.toStringAsFixed(0),

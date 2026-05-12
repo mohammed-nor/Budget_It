@@ -322,7 +322,6 @@ class _WalletPageState extends State<WalletPage> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: ListView(
-            padding: const EdgeInsets.all(8),
             children: [
               ValueListenableBuilder(
                 valueListenable: budgetsBox.listenable(),
@@ -330,12 +329,22 @@ class _WalletPageState extends State<WalletPage> {
                   double totalSum = 0;
                   final List<ChartData> chartData = [];
 
+                  final now = DateTime.now();
+                  final today = DateTime(now.year, now.month, now.day);
+                  final payDay =
+                      prefsdata.get("payingDay", defaultValue: 30) as int;
+                  final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+                  DateTime paydayDate = now.day < payDay
+                      ? DateTime(now.year, now.month, payDay)
+                      : DateTime(now.year, now.month + 1, payDay);
+                  int daysLeft = paydayDate.difference(today).inDays;
+                  if (daysLeft <= 0) daysLeft = 1;
+
                   for (int i = 0; i < categories.length; i++) {
                     double currentVal = getCurrentBudget(i);
+                    double targetVal = (currentVal / daysInMonth) * daysLeft;
                     totalSum += currentVal;
-                    chartData.add(
-                      ChartData(categories[i].title.tr, currentVal),
-                    );
+                    chartData.add(ChartData(categories[i].title.tr, targetVal));
                   }
 
                   chartData.sort((a, b) => b.y.compareTo(a.y));
@@ -348,11 +357,25 @@ class _WalletPageState extends State<WalletPage> {
                     defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
                   );
 
-                  return Card(
-                    color: cardColor,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                  return Container(
+                    margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: prefsdata.get(
+                        "cardcolor",
+                        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          offset: const Offset(0, 2),
+                          blurRadius: 5,
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.15),
+                        width: 1.5,
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -369,7 +392,9 @@ class _WalletPageState extends State<WalletPage> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.15),
+                                      color: Colors.green.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
@@ -459,6 +484,8 @@ class _WalletPageState extends State<WalletPage> {
                                   dataSource: chartData,
                                   xValueMapper: (ChartData data, _) => data.x,
                                   yValueMapper: (ChartData data, _) => data.y,
+                                  dataLabelMapper: (ChartData data, _) =>
+                                      data.y.toStringAsFixed(0),
                                   innerRadius: '65%',
                                   explode: true,
                                   dataLabelSettings: chart.DataLabelSettings(
@@ -572,12 +599,26 @@ class _WalletPageState extends State<WalletPage> {
                 );
               }),
               // AI Financial Advisor Section
-              Card(
-                color: prefsdata.get(
-                  "cardcolor",
-                  defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                decoration: BoxDecoration(
+                  color: prefsdata.get(
+                    "cardcolor",
+                    defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.25),
+                      offset: const Offset(0, 2),
+                      blurRadius: 5,
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    width: 1.5,
+                  ),
                 ),
-                margin: const EdgeInsets.symmetric(vertical: 12),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -1047,29 +1088,28 @@ class BudgetCard extends StatelessWidget {
 
     final List<double> incrementRatios = [0.55, 0.20, 0.10, 0.05, 0.05, 0.05];
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
       decoration: BoxDecoration(
         color: prefsdata.get(
           "cardcolor",
           defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
         ),
-        //gradient: const LinearGradient(colors: [Color(0xFF232323), Color(0xFF1A1A1A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.25),
-            offset: const Offset(0, 4),
-            blurRadius: 10,
+            offset: const Offset(0, 2),
+            blurRadius: 5,
           ),
         ],
-        border: Border.all(color: Colors.green.withOpacity(0.15), width: 1.5),
+        border: Border.all(
+          color: Colors.green.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
         child: Column(
-          mainAxisAlignment: Get.locale?.languageCode == 'ar'
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.end,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1097,7 +1137,7 @@ class BudgetCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: getTextColor(),
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                      fontSize: fontSize1 + 3,
                     ),
                   ),
                 ),
@@ -1111,7 +1151,7 @@ class BudgetCard extends StatelessWidget {
                   : TextAlign.left,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: getSecondaryTextColor(),
-                fontSize: fontSize1 - 0,
+                fontSize: fontSize1,
               ),
             ),
             const SizedBox(height: 12),
@@ -1255,7 +1295,7 @@ class BudgetCard extends StatelessWidget {
                 floatingLabelAlignment: FloatingLabelAlignment.center,
                 suffixText: LanguageController.to.currency.value,
                 filled: true,
-                fillColor: Colors.black.withOpacity(0.15),
+                fillColor: Colors.black.withValues(alpha: 0.15),
               ),
               style: TextStyle(
                 color: getTextColor(),
