@@ -50,6 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -70,8 +71,8 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       // Decorative circle background for icon
                       Container(
-                        width: double.infinity,
-                        height: 140,
+                        width: size.width * 0.5,
+                        height: size.width * 0.5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -88,20 +89,25 @@ class _SplashScreenState extends State<SplashScreen>
                           ],
                         ),
                         child: Center(
-                          child: Image.asset(
-                            'images/ICON.png',
-                            width: 110,
-                            height: 110,
-                            fit: BoxFit.contain,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              size.width * 0.02,
+                            ),
+                            child: Image.asset(
+                              'images/ICON.png',
+                              width: size.width * 0.35,
+                              height: size.width * 0.35,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(height: size.height * 0.05),
                       // App Name
                       Text(
                         'app_name'.tr,
                         style: GoogleFonts.lato(
-                          fontSize: fontSize1 + 20,
+                          fontSize: fontSize1 + size.width * 0.05,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: 1.2,

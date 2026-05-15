@@ -170,7 +170,7 @@ class _BudgetpageState extends State<Budgetpage> {
       today.year,
       today.month,
       1,
-    ).subtract(const Duration(days: 140));
+    ).subtract(Duration(days: 140 + bbPeriod));
     DateTime lastDay = DateTime(
       today.year,
       today.month + 1,
@@ -601,8 +601,8 @@ class _BudgetpageState extends State<Budgetpage> {
                                 ),
                                 Text(
                                   daysUntil < 0
-                                      ? "${"delayed_by".tr} ${-daysUntil} ${"day".tr}"
-                                      : "${"remaining_alt".tr} $daysUntil ${"day".tr}",
+                                      ? "${"days_ago".trArgs([(-daysUntil).toString()])}"
+                                      : "$daysUntil ${"days_left".tr}",
                                   style: themedTextStyle(
                                     fontSize: fontSize1 * 0.85,
                                     color: daysUntil < 0
@@ -1450,6 +1450,48 @@ class _BudgetpageState extends State<Budgetpage> {
       defaultValue: 'custom_event'.tr,
     );
 
+    DateTime customDate2 = prefsdata.get(
+      'customEventDate2',
+      defaultValue: DateTime(today.year, 1, 1),
+    );
+    DateTime customEvent2 = DateTime(
+      today.year,
+      customDate2.month,
+      customDate2.day,
+    );
+    if (today.isAfter(customEvent2)) {
+      customEvent2 = DateTime(
+        today.year + 1,
+        customDate2.month,
+        customDate2.day,
+      );
+    }
+    String customEventName2 = prefsdata.get(
+      'customEventName2',
+      defaultValue: 'custom_event_2'.tr,
+    );
+
+    DateTime customDate3 = prefsdata.get(
+      'customEventDate3',
+      defaultValue: DateTime(today.year, 1, 1),
+    );
+    DateTime customEvent3 = DateTime(
+      today.year,
+      customDate3.month,
+      customDate3.day,
+    );
+    if (today.isAfter(customEvent3)) {
+      customEvent3 = DateTime(
+        today.year + 1,
+        customDate3.month,
+        customDate3.day,
+      );
+    }
+    String customEventName3 = prefsdata.get(
+      'customEventName3',
+      defaultValue: 'custom_event_3'.tr,
+    );
+
     final defaultEvents = {
       'ramadan_start': true,
       'eid_al_fitr': true,
@@ -1459,6 +1501,8 @@ class _BudgetpageState extends State<Budgetpage> {
       'wedding_anniversary': false,
       'wife_birthday': false,
       'custom_event': false,
+      'custom_event_2': false,
+      'custom_event_3': false,
     };
 
     Map<String, bool> enabledEvents = {};
@@ -1525,7 +1569,14 @@ class _BudgetpageState extends State<Budgetpage> {
                   style: darktextstyle.copyWith(
                     fontSize: fontSize1,
                     fontWeight: FontWeight.bold,
-                    color: bal1 > 5000
+                    color:
+                        bal1 >
+                            (prefsdata.get(
+                                      'notif_low_budget_threshold',
+                                      defaultValue: 500,
+                                    )
+                                    as num)
+                                .toDouble()
                         ? const Color(0xF4C3FFBE)
                         : const Color(0xFAFDBFBF),
                   ),
@@ -1552,9 +1603,15 @@ class _BudgetpageState extends State<Budgetpage> {
               ],
             ),
             onLongPress: () async {
-              if (titleKey == 'custom_event') {
+              if (titleKey == 'custom_event' ||
+                  titleKey == 'custom_event_2' ||
+                  titleKey == 'custom_event_3') {
                 final nameController = TextEditingController(
-                  text: customEventName,
+                  text: titleKey == 'custom_event'
+                      ? customEventName
+                      : titleKey == 'custom_event_2'
+                      ? customEventName2
+                      : customEventName3,
                 );
                 await showDialog(
                   context: context,
@@ -1578,7 +1635,11 @@ class _BudgetpageState extends State<Budgetpage> {
                         onPressed: () {
                           setState(() {
                             prefsdata.put(
-                              'customEventName',
+                              titleKey == 'custom_event'
+                                  ? 'customEventName'
+                                  : titleKey == 'custom_event_2'
+                                  ? 'customEventName2'
+                                  : 'customEventName3',
                               nameController.text,
                             );
                           });
@@ -1605,6 +1666,10 @@ class _BudgetpageState extends State<Budgetpage> {
                     prefsdata.put('wifeBirthDate', picked);
                   } else if (titleKey == 'custom_event') {
                     prefsdata.put('customEventDate', picked);
+                  } else if (titleKey == 'custom_event_2') {
+                    prefsdata.put('customEventDate2', picked);
+                  } else if (titleKey == 'custom_event_3') {
+                    prefsdata.put('customEventDate3', picked);
                   }
                 });
               }
@@ -2081,40 +2146,30 @@ class _BudgetpageState extends State<Budgetpage> {
                                     .map((c) => c.close.toDouble())
                                     .toList();
                                 for (int i = 0; i < candleData.length; i++) {
-                                  if (i >= bbP - 1) {
-                                    final window = closesFull.sublist(
-                                      i - (bbP - 1),
-                                      i + 1,
-                                    );
-                                    final mean =
-                                        window.reduce((a, b) => a + b) /
-                                        window.length;
-                                    final variance =
-                                        window
-                                            .map((v) => (v - mean) * (v - mean))
-                                            .reduce((a, b) => a + b) /
-                                        window.length;
-                                    final sd = math.sqrt(variance);
-                                    final up = mean + bbM * sd;
-                                    final low = mean - bbM * sd;
-                                    fullBandData.add(
-                                      _BandPoint(
-                                        candleData[i].x,
-                                        mean,
-                                        up,
-                                        low,
-                                      ),
-                                    );
-                                  } else {
-                                    fullBandData.add(
-                                      _BandPoint(
-                                        candleData[i].x,
-                                        null,
-                                        null,
-                                        null,
-                                      ),
-                                    );
-                                  }
+                                  // Use an expanding window for the first few points, then a sliding window
+                                  final int currentWindowSize = math.min(
+                                    i + 1,
+                                    bbP,
+                                  );
+                                  final window = closesFull.sublist(
+                                    i - (currentWindowSize - 1),
+                                    i + 1,
+                                  );
+
+                                  final mean =
+                                      window.reduce((a, b) => a + b) /
+                                      window.length;
+                                  final variance =
+                                      window
+                                          .map((v) => (v - mean) * (v - mean))
+                                          .reduce((a, b) => a + b) /
+                                      window.length;
+                                  final sd = math.sqrt(variance);
+                                  final up = mean + bbM * sd;
+                                  final low = mean - bbM * sd;
+                                  fullBandData.add(
+                                    _BandPoint(candleData[i].x, mean, up, low),
+                                  );
                                 }
                               }
 
@@ -2166,8 +2221,14 @@ class _BudgetpageState extends State<Budgetpage> {
                                                 ),
                                             edgeLabelPlacement:
                                                 EdgeLabelPlacement.shift,
+                                            labelStyle: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.7,
+                                            ),
                                           ),
                                           primaryYAxis: NumericAxis(
+                                            labelStyle: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.7,
+                                            ),
                                             minimum:
                                                 displayCandles
                                                     .map((c) => c.low)
@@ -2189,6 +2250,9 @@ class _BudgetpageState extends State<Budgetpage> {
                                           ),
                                           tooltipBehavior: TooltipBehavior(
                                             enable: true,
+                                            textStyle: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.8,
+                                            ),
                                           ),
                                           series: <CartesianSeries<dynamic, DateTime>>[
                                             // original candle series (unchanged)
@@ -2870,6 +2934,18 @@ class _BudgetpageState extends State<Budgetpage> {
                               customEvent,
                               customTitle: customEventName,
                             ),
+                          if (enabledEvents['custom_event_2'] ?? false)
+                            _buildEventTile(
+                              'custom_event_2',
+                              customEvent2,
+                              customTitle: customEventName2,
+                            ),
+                          if (enabledEvents['custom_event_3'] ?? false)
+                            _buildEventTile(
+                              'custom_event_3',
+                              customEvent3,
+                              customTitle: customEventName3,
+                            ),
                         ],
                       ),
 
@@ -3503,7 +3579,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20),
                       Text(
                         "manage_your_resources".tr,
                         style: darktextstyle.copyWith(fontSize: fontSize1),
@@ -3740,7 +3815,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20),
                       Text(
                         "personal_expenses_structure".tr,
                         style: darktextstyle.copyWith(fontSize: fontSize1),
@@ -4123,7 +4197,6 @@ class _BudgetpageState extends State<Budgetpage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 20),
                       Text(
                         "personal_income_structure".tr,
                         style: darktextstyle.copyWith(fontSize: fontSize1),

@@ -263,6 +263,9 @@ class Messages extends Translations {
       'salary_day_title': 'New Cycle, New Opportunities ✨',
       'salary_day_body':
           'Your funds have arrived! Set your priorities early and make this month your best one yet.',
+      'important_days': 'Important Days',
+      'custom_event_2': 'Custom Event 2',
+      'custom_event_3': 'Custom Event 3',
       'low_balance_title': 'Action Required: Budget Alert ⚠️',
       'low_balance_body':
           'You\'ve reached your lower limit (%s). It\'s time to pause and prioritize essential spending only.',
@@ -624,6 +627,9 @@ class Messages extends Translations {
       'salary_day_title': 'بداية دورة جديدة ✨',
       'salary_day_body':
           'وصلت ميزانيتك! حدد أولوياتك مبكراً واجعل هذا الشهر الأفضل ماليًا.',
+      'important_days': 'الأيام المهمة',
+      'custom_event_2': 'حدث مخصص 2',
+      'custom_event_3': 'حدث مخصص 3',
       'low_balance_title': 'تنبيه: ميزانيتك في خطر ⚠️',
       'low_balance_body':
           'لقد وصلت إلى الحد الأدنى (%s). حان الوقت لإعادة النظر في مصاريفك وتحديد الأساسيات فقط.',
@@ -962,6 +968,9 @@ class Messages extends Translations {
       'salary_day_title': 'Nouveau cycle, nouvelles opportunités ✨',
       'salary_day_body':
           'Vos fonds sont arrivés ! Fixez vos priorités tôt et faites de ce mois votre meilleur à ce jour.',
+      'important_days': 'Jours importants',
+      'custom_event_2': 'Événement personnalisé 2',
+      'custom_event_3': 'Événement personnalisé 3',
       'low_balance_title': 'Action requise : Alerte budget ⚠️',
       'low_balance_body':
           'Vous avez atteint votre limite basse (%s). Il est temps de faire une pause et de prioriser uniquement les dépenses essentielles.',
