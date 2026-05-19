@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:hijri/hijri_calendar.dart';
 
 class Statspage extends StatefulWidget {
   const Statspage({super.key});
@@ -2018,24 +2019,266 @@ class _StatspageState extends State<Statspage> {
     List<ChartData> goalMarkers = [];
     List<FinancialGoal> upcomingMilestones = [];
 
+    // Map to group labels and colors by month index (0 to 12)
+    final Map<int, List<MapEntry<String, Color>>> groupedMarkers = {};
+
     if (netAvg > 0) {
       for (var goal in financialGoals) {
         double remaining = goal.targetAmount - goal.currentAmount;
         int months = (remaining / netAvg).ceil();
         if (months >= 0 && months <= 12) {
-          // Add to markers
-          goalMarkers.add(
-            ChartData(
-              projectionData[months].x,
-              projectionData[months].y,
-              Colors.amber,
-              goal.title,
-            ),
-          );
+          groupedMarkers.putIfAbsent(months, () => []).add(MapEntry(goal.title, Colors.amber));
           upcomingMilestones.add(goal);
         }
       }
     }
+
+    // ── Important Days from Budget page ──────────────────────────────────────
+    final now = DateTime.now();
+
+    // Rebuild all event dates using the same logic as budget.dart
+    final DateTime ramadanStart =
+        HijriCalendar()
+                .hijriToGregorian(HijriCalendar.now().hYear, 9, 1)
+                .difference(
+                  HijriCalendar().hijriToGregorian(
+                    HijriCalendar.now().hYear,
+                    HijriCalendar.now().hMonth,
+                    HijriCalendar.now().hDay,
+                  ),
+                )
+                .inDays >
+            1
+        ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 9, 1)
+        : HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear + 1, 9, 1);
+
+    final DateTime aidFitr =
+        HijriCalendar()
+                .hijriToGregorian(HijriCalendar.now().hYear, 10, 1)
+                .difference(
+                  HijriCalendar().hijriToGregorian(
+                    HijriCalendar.now().hYear,
+                    HijriCalendar.now().hMonth,
+                    HijriCalendar.now().hDay,
+                  ),
+                )
+                .inDays >
+            1
+        ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 10, 1)
+        : HijriCalendar().hijriToGregorian(
+            HijriCalendar.now().hYear + 1,
+            10,
+            1,
+          );
+
+    final DateTime aidAdha =
+        HijriCalendar()
+                .hijriToGregorian(HijriCalendar.now().hYear, 12, 10)
+                .difference(
+                  HijriCalendar().hijriToGregorian(
+                    HijriCalendar.now().hYear,
+                    HijriCalendar.now().hMonth,
+                    HijriCalendar.now().hDay,
+                  ),
+                )
+                .inDays >
+            1
+        ? HijriCalendar().hijriToGregorian(HijriCalendar.now().hYear, 12, 10)
+        : HijriCalendar().hijriToGregorian(
+            HijriCalendar.now().hYear + 1,
+            12,
+            10,
+          );
+
+    DateTime christmas = DateTime(now.year, 12, 25);
+    if (now.isAfter(christmas)) christmas = DateTime(now.year + 1, 12, 25);
+    final DateTime newYear = DateTime(now.year + 1, 1, 1);
+
+    final DateTime weddingDate = prefsdata.get(
+      'weddingDate',
+      defaultValue: DateTime(now.year, 1, 1),
+    );
+    DateTime weddingAnniversary = DateTime(
+      now.year,
+      weddingDate.month,
+      weddingDate.day,
+    );
+    if (now.isAfter(weddingAnniversary))
+      weddingAnniversary = DateTime(
+        now.year + 1,
+        weddingDate.month,
+        weddingDate.day,
+      );
+
+    final DateTime wifeBirthDate = prefsdata.get(
+      'wifeBirthDate',
+      defaultValue: DateTime(now.year, 1, 1),
+    );
+    DateTime wifeBirthday = DateTime(
+      now.year,
+      wifeBirthDate.month,
+      wifeBirthDate.day,
+    );
+    if (now.isAfter(wifeBirthday))
+      wifeBirthday = DateTime(
+        now.year + 1,
+        wifeBirthDate.month,
+        wifeBirthDate.day,
+      );
+
+    final DateTime customDate1 = prefsdata.get(
+      'customEventDate',
+      defaultValue: DateTime(now.year, 1, 1),
+    );
+    DateTime customEvent1 = DateTime(
+      now.year,
+      customDate1.month,
+      customDate1.day,
+    );
+    if (now.isAfter(customEvent1))
+      customEvent1 = DateTime(now.year + 1, customDate1.month, customDate1.day);
+    final String customEventName1 = prefsdata.get(
+      'customEventName',
+      defaultValue: 'custom_event'.tr,
+    );
+
+    final DateTime customDate2 = prefsdata.get(
+      'customEventDate2',
+      defaultValue: DateTime(now.year, 1, 1),
+    );
+    DateTime customEvent2 = DateTime(
+      now.year,
+      customDate2.month,
+      customDate2.day,
+    );
+    if (now.isAfter(customEvent2))
+      customEvent2 = DateTime(now.year + 1, customDate2.month, customDate2.day);
+    final String customEventName2 = prefsdata.get(
+      'customEventName2',
+      defaultValue: 'custom_event_2'.tr,
+    );
+
+    final DateTime customDate3 = prefsdata.get(
+      'customEventDate3',
+      defaultValue: DateTime(now.year, 1, 1),
+    );
+    DateTime customEvent3 = DateTime(
+      now.year,
+      customDate3.month,
+      customDate3.day,
+    );
+    if (now.isAfter(customEvent3))
+      customEvent3 = DateTime(now.year + 1, customDate3.month, customDate3.day);
+    final String customEventName3 = prefsdata.get(
+      'customEventName3',
+      defaultValue: 'custom_event_3'.tr,
+    );
+
+    // Read enabledEvents from prefs (same defaults as budget.dart)
+    final Map<String, bool> defaultEvents = {
+      'ramadan_start': true,
+      'eid_al_fitr': true,
+      'eid_al_adha': true,
+      'christmas': false,
+      'new_year': false,
+      'wedding_anniversary': false,
+      'wife_birthday': false,
+      'custom_event': false,
+      'custom_event_2': false,
+      'custom_event_3': false,
+    };
+    final Map<String, bool> enabledEvents = Map<String, bool>.from(
+      defaultEvents,
+    );
+    final storedEvents = prefsdata.get('enabledEvents');
+    if (storedEvents is Map) {
+      storedEvents.forEach((key, value) {
+        final k = key == 'marriage_anniversary'
+            ? 'wedding_anniversary'
+            : key.toString();
+        enabledEvents[k] = value as bool;
+      });
+    }
+
+    // Map each event key → its date and label
+    final importantDayEntries = <MapEntry<String, dynamic>>[
+      MapEntry('ramadan_start', {
+        'date': ramadanStart,
+        'label': 'ramadan_start'.tr,
+      }),
+      MapEntry('eid_al_fitr', {'date': aidFitr, 'label': 'eid_al_fitr'.tr}),
+      MapEntry('eid_al_adha', {'date': aidAdha, 'label': 'eid_al_adha'.tr}),
+      MapEntry('christmas', {'date': christmas, 'label': 'christmas'.tr}),
+      MapEntry('new_year', {'date': newYear, 'label': 'new_year'.tr}),
+      MapEntry('wedding_anniversary', {
+        'date': weddingAnniversary,
+        'label': 'wedding_anniversary'.tr,
+      }),
+      MapEntry('wife_birthday', {
+        'date': wifeBirthday,
+        'label': 'wife_birthday'.tr,
+      }),
+      MapEntry('custom_event', {
+        'date': customEvent1,
+        'label': customEventName1,
+      }),
+      MapEntry('custom_event_2', {
+        'date': customEvent2,
+        'label': customEventName2,
+      }),
+      MapEntry('custom_event_3', {
+        'date': customEvent3,
+        'label': customEventName3,
+      }),
+    ];
+
+    for (final entry in importantDayEntries) {
+      if (enabledEvents[entry.key] != true) continue;
+      final DateTime eventDate = entry.value['date'] as DateTime;
+      final String eventLabel = entry.value['label'] as String;
+      // Compute month offset from now (index into projectionData)
+      final int monthOffset =
+          (eventDate.year - now.year) * 12 + (eventDate.month - now.month);
+      if (monthOffset >= 0 && monthOffset <= 12) {
+        groupedMarkers.putIfAbsent(monthOffset, () => []).add(MapEntry(eventLabel, Colors.cyanAccent));
+      }
+    }
+
+    // Convert grouped entries into a single ChartData point per month offset
+    groupedMarkers.forEach((months, entries) {
+      if (months >= 0 && months < projectionData.length) {
+        final xVal = projectionData[months].x;
+        final yVal = projectionData[months].y;
+        
+        // Group all event/goal names using newline \n
+        final String combinedLabel = entries.map((e) => e.key).join('\n');
+        
+        // Determine the point color:
+        // - Colors.amber if all are goals
+        // - Colors.cyanAccent if all are events
+        // - Colors.pinkAccent if it contains both goals and events
+        Color pointColor = Colors.amber;
+        final bool hasGoal = entries.any((e) => e.value == Colors.amber);
+        final bool hasEvent = entries.any((e) => e.value == Colors.cyanAccent);
+        if (hasGoal && hasEvent) {
+          pointColor = Colors.pinkAccent;
+        } else if (hasEvent) {
+          pointColor = Colors.cyanAccent;
+        } else {
+          pointColor = Colors.amber;
+        }
+
+        goalMarkers.add(
+          ChartData(
+            xVal,
+            yVal,
+            pointColor,
+            combinedLabel,
+          ),
+        );
+      }
+    });
+    // ─────────────────────────────────────────────────────────────────────────
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
@@ -2207,6 +2450,7 @@ class _StatspageState extends State<Statspage> {
                 ),
                 series: <chart.CartesianSeries<ChartData, String>>[
                   chart.SplineAreaSeries<ChartData, String>(
+                    name: 'wealth_forecast_12m'.tr,
                     dataSource: projectionData,
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
@@ -2227,7 +2471,7 @@ class _StatspageState extends State<Statspage> {
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
                     color: Colors.greenAccent.withValues(alpha: 0.3),
-                    width: 1,
+                    width: 2,
                     dashArray: const <double>[5, 5],
                     animationDuration: 1500,
                   ),
@@ -2236,7 +2480,7 @@ class _StatspageState extends State<Statspage> {
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
                     color: Colors.redAccent.withValues(alpha: 0.3),
-                    width: 1,
+                    width: 2,
                     dashArray: const <double>[5, 5],
                     animationDuration: 1500,
                   ),
@@ -2254,7 +2498,7 @@ class _StatspageState extends State<Statspage> {
                     ),
                     dataLabelSettings: chart.DataLabelSettings(
                       isVisible: true,
-                      labelAlignment: chart.ChartDataLabelAlignment.top,
+                      labelAlignment: chart.ChartDataLabelAlignment.auto,
                       textStyle: GoogleFonts.elMessiri(
                         color: textColor,
                         fontSize: 9,
@@ -2267,20 +2511,24 @@ class _StatspageState extends State<Statspage> {
                     xValueMapper: (ChartData data, _) => data.x,
                     yValueMapper: (ChartData data, _) => data.y,
                     dataLabelMapper: (ChartData data, _) => data.label,
+                    // Each ChartData carries its own color:
+                    //   - Colors.amber       → financial goal
+                    //   - Colors.cyanAccent  → important day
+                    pointColorMapper: (ChartData data, _) =>
+                        data.color ?? Colors.amber,
                     markerSettings: const chart.MarkerSettings(
-                      height: 15,
-                      width: 15,
+                      height: 5,
+                      width: 5,
                       shape: chart.DataMarkerType.diamond,
-                      color: Colors.amber,
                       borderWidth: 2,
                       borderColor: Colors.white,
                     ),
                     dataLabelSettings: chart.DataLabelSettings(
                       isVisible: true,
-                      labelAlignment: chart.ChartDataLabelAlignment.top,
+                      labelAlignment: chart.ChartDataLabelAlignment.auto,
                       textStyle: GoogleFonts.elMessiri(
-                        color: Colors.amber,
-                        fontSize: 10,
+                        color: Colors.white70,
+                        fontSize: 7,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2300,7 +2548,7 @@ class _StatspageState extends State<Statspage> {
                     const Icon(
                       Icons.warning_amber_rounded,
                       color: Colors.redAccent,
-                      size: 14,
+                      size: 1,
                     ),
                     const SizedBox(width: 8),
                     Expanded(

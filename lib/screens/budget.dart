@@ -123,7 +123,8 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
 
   void _ondayselected(DateTime day, DateTime focusedDay) {
     setState(() {
-      today = day;
+      // Normalize to local midnight to avoid UTC-offset causing inDays to be off by 1
+      today = DateTime(day.year, day.month, day.day);
     });
   }
 
@@ -1935,7 +1936,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                             ),
                                           ),
                                           Text(
-                                            "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} ${LanguageController.to.currency.value}",
+                                            "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth())).round()} ${LanguageController.to.currency.value}",
                                             style: themedTextStyle(
                                               fontSize: fontSize1 * 1.7,
                                               fontWeight: FontWeight.bold,

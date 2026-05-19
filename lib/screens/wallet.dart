@@ -26,6 +26,7 @@ class _WalletPageState extends State<WalletPage> {
   bool _isLoadingAdvice = false;
   String? _adviceError;
   DateTime? _lastAdviceTime;
+  final Set<int> _hiddenPointIndices = {};
 
   final List<SpendingCategory> categories = [
     SpendingCategory(
@@ -349,6 +350,13 @@ class _WalletPageState extends State<WalletPage> {
 
                   chartData.sort((a, b) => b.y.compareTo(a.y));
 
+                  double toggledOnSum = 0;
+                  for (int idx = 0; idx < chartData.length; idx++) {
+                    if (!_hiddenPointIndices.contains(idx)) {
+                      toggledOnSum += chartData[idx].y;
+                    }
+                  }
+
                   final bool isAr = Get.locale?.languageCode == 'ar';
                   final Color textColor = _getTextColor();
                   final Color secondaryTextColor = _getSecondaryTextColor();
@@ -360,10 +368,7 @@ class _WalletPageState extends State<WalletPage> {
                   return Container(
                     margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
                     decoration: BoxDecoration(
-                      color: prefsdata.get(
-                        "cardcolor",
-                        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),
-                      ),
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
@@ -458,7 +463,7 @@ class _WalletPageState extends State<WalletPage> {
                               ),
                             ),
                           ),
-                          SizedBox(
+                           SizedBox(
                             height: 220,
                             child: chart.SfCircularChart(
                               margin: EdgeInsets.zero,
@@ -479,6 +484,18 @@ class _WalletPageState extends State<WalletPage> {
                                   fontSize: fontSize1 - 5,
                                 ),
                               ),
+                              onLegendTapped: (chart.LegendTapArgs args) {
+                                setState(() {
+                                  final int? pointIndex = args.pointIndex;
+                                  if (pointIndex != null) {
+                                    if (_hiddenPointIndices.contains(pointIndex)) {
+                                      _hiddenPointIndices.remove(pointIndex);
+                                    } else {
+                                      _hiddenPointIndices.add(pointIndex);
+                                    }
+                                  }
+                                });
+                              },
                               series: <chart.CircularSeries<ChartData, String>>[
                                 chart.DoughnutSeries<ChartData, String>(
                                   dataSource: chartData,
@@ -508,50 +525,8 @@ class _WalletPageState extends State<WalletPage> {
                                     children: [
                                       Builder(
                                         builder: (context) {
-                                          final now = DateTime.now();
-                                          final today = DateTime(
-                                            now.year,
-                                            now.month,
-                                            now.day,
-                                          );
-                                          final payDay =
-                                              prefsdata.get(
-                                                    "payingDay",
-                                                    defaultValue: 30,
-                                                  )
-                                                  as int;
-                                          final daysInMonth = DateTime(
-                                            now.year,
-                                            now.month + 1,
-                                            0,
-                                          ).day;
-
-                                          DateTime paydayDate;
-                                          if (now.day < payDay) {
-                                            paydayDate = DateTime(
-                                              now.year,
-                                              now.month,
-                                              payDay,
-                                            );
-                                          } else {
-                                            paydayDate = DateTime(
-                                              now.year,
-                                              now.month + 1,
-                                              payDay,
-                                            );
-                                          }
-
-                                          int daysLeft = paydayDate
-                                              .difference(today)
-                                              .inDays;
-                                          if (daysLeft <= 0) daysLeft = 1;
-
-                                          final targetTotal =
-                                              (totalSum / daysInMonth) *
-                                              daysLeft;
-
                                           return Text(
-                                            targetTotal.toStringAsFixed(0),
+                                            toggledOnSum.toStringAsFixed(0),
                                             style: GoogleFonts.elMessiri(
                                               color: textColor,
                                               fontWeight: FontWeight.bold,
