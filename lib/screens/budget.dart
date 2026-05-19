@@ -45,7 +45,7 @@ class _BandPoint {
   _BandPoint(this.x, this.mid, this.upper, this.lower);
 }
 
-class _BudgetpageState extends State<Budgetpage> {
+class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
   late ThemeController themeController;
   Color cardcolor = prefsdata.get(
     "cardcolor",
@@ -86,6 +86,7 @@ class _BudgetpageState extends State<Budgetpage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     themeController = Get.find<ThemeController>();
     cardcolor = prefsdata.get(
       "cardcolor",
@@ -96,6 +97,28 @@ class _BudgetpageState extends State<Budgetpage> {
     _initUpcomingSpendingBox();
     _initUnexpectedEarningsBox();
     _initChartSettings();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final DateTime now = DateTime.now();
+      final DateTime currentToday = DateTime(now.year, now.month, now.day);
+      if (today != currentToday) {
+        setState(() {
+          today = currentToday;
+        });
+        _loadBudgetHistory();
+        _loadUpcomingSpending();
+        _loadUnexpectedEarnings();
+      }
+    }
   }
 
   void _ondayselected(DateTime day, DateTime focusedDay) {
@@ -623,19 +646,12 @@ class _BudgetpageState extends State<Budgetpage> {
                                 color: const Color.fromRGBO(30, 30, 30, 1.0),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Obx(
-                                () => Text(
-                                  "${item.amount} ${LanguageController.to.currency.value}",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      253,
-                                      95,
-                                      95,
-                                      1.0,
-                                    ),
-                                  ),
+                              child: Text(
+                                "${item.amount} ${LanguageController.to.currency.value}",
+                                style: themedTextStyle(
+                                  fontSize: fontSize1,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color.fromRGBO(253, 95, 95, 1.0),
                                 ),
                               ),
                             ),
@@ -1015,18 +1031,16 @@ class _BudgetpageState extends State<Budgetpage> {
                                 color: const Color.fromRGBO(30, 50, 30, 1.0),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Obx(
-                                () => Text(
-                                  "${item.amount} ${LanguageController.to.currency.value}",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color.fromRGBO(
-                                      106,
-                                      253,
-                                      95,
-                                      1.0,
-                                    ),
+                              child: Text(
+                                "${item.amount} ${LanguageController.to.currency.value}",
+                                style: themedTextStyle(
+                                  fontSize: fontSize1,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color.fromRGBO(
+                                    106,
+                                    253,
+                                    95,
+                                    1.0,
                                   ),
                                 ),
                               ),
@@ -1299,7 +1313,7 @@ class _BudgetpageState extends State<Budgetpage> {
         targetDayThisMonth,
       );
 
-      if (!today.isAfter(targetDateThisMonth)) {
+      if (today.isBefore(targetDateThisMonth)) {
         return targetDateThisMonth.difference(today).inDays;
       } else {
         // Target for the next month
@@ -1898,13 +1912,11 @@ class _BudgetpageState extends State<Budgetpage> {
                                                   fontSize: fontSize1 * 0.7,
                                                 ),
                                               ),
-                                              Obx(
-                                                () => Text(
-                                                  "${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} ${LanguageController.to.currency.value}",
-                                                  style: themedTextStyle(
-                                                    fontSize: fontSize1 * 1.7,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                              Text(
+                                                "${((((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)))).round()} ${LanguageController.to.currency.value}",
+                                                style: themedTextStyle(
+                                                  fontSize: fontSize1 * 1.7,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                             ],
@@ -1922,13 +1934,11 @@ class _BudgetpageState extends State<Budgetpage> {
                                               fontSize: fontSize1 * 0.7,
                                             ),
                                           ),
-                                          Obx(
-                                            () => Text(
-                                              "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} ${LanguageController.to.currency.value}",
-                                              style: themedTextStyle(
-                                                fontSize: fontSize1 * 1.7,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                          Text(
+                                            "${((((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth) * (daysleftInCurrentMonth() + 1)).round()} ${LanguageController.to.currency.value}",
+                                            style: themedTextStyle(
+                                              fontSize: fontSize1 * 1.7,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ],
@@ -2087,23 +2097,21 @@ class _BudgetpageState extends State<Budgetpage> {
                                       ? TextAlign.right
                                       : TextAlign.left,
                                 ),
-                                subtitle: Obx(
-                                  () => Text(
-                                    "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} ${LanguageController.to.currency.value}",
-                                    style: themedTextStyle(
-                                      fontSize: fontSize1 * 1.2,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color.fromARGB(
-                                        255,
-                                        154,
-                                        156,
-                                        255,
-                                      ),
+                                subtitle: Text(
+                                  "${((nowcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + (daysdiff(startDate, today)) * (-(((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - (mntexp + annexp / 12) - (mntsaving)) / daysInCurrentMonth)) + count30thsPassed(startDate, today) * ((mntinc + mntnstblinc * (1 - 0.01 * mntperinc)) * (1 - freemnt / 12) - mntexp))).round()} ${LanguageController.to.currency.value}",
+                                  style: themedTextStyle(
+                                    fontSize: fontSize1 * 1.2,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      154,
+                                      156,
+                                      255,
                                     ),
-                                    textAlign: Get.locale?.languageCode == 'ar'
-                                        ? TextAlign.right
-                                        : TextAlign.left,
                                   ),
+                                  textAlign: Get.locale?.languageCode == 'ar'
+                                      ? TextAlign.right
+                                      : TextAlign.left,
                                 ),
                                 trailing: Container(
                                   padding: const EdgeInsets.all(12),
@@ -2250,7 +2258,9 @@ class _BudgetpageState extends State<Budgetpage> {
                                           ),
                                           tooltipBehavior: TooltipBehavior(
                                             enable: true,
+                                            header: 'limits'.tr,
                                             textStyle: darktextstyle.copyWith(
+                                              color: Colors.black,
                                               fontSize: fontSize1 * 0.8,
                                             ),
                                           ),
@@ -2543,18 +2553,16 @@ class _BudgetpageState extends State<Budgetpage> {
                                         fontSize: fontSize1,
                                       ),
                                     ),
-                                    subtitle: Obx(
-                                      () => Text(
-                                        "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 1.2,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color.fromRGBO(
-                                            106,
-                                            253,
-                                            95,
-                                            1.0,
-                                          ),
+                                    subtitle: Text(
+                                      "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.2,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color.fromRGBO(
+                                          106,
+                                          253,
+                                          95,
+                                          1.0,
                                         ),
                                       ),
                                     ),
@@ -2660,9 +2668,30 @@ class _BudgetpageState extends State<Budgetpage> {
                                         fontSize: fontSize1,
                                       ),
                                     ),
-                                    subtitle: Obx(
-                                      () => Text(
-                                        totsaving -
+                                    subtitle: Text(
+                                      totsaving -
+                                                  calculateSpendingBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) +
+                                                  calculateEarningsBetweenDates(
+                                                    startDate,
+                                                    today,
+                                                  ) -
+                                                  nownetcredit -
+                                                  count30thsPassed(
+                                                        startDate,
+                                                        today,
+                                                      ) *
+                                                      (mntsaving) >
+                                              0
+                                          ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
+                                          : "target_achieved_msg".tr,
+                                      style: darktextstyle.copyWith(
+                                        fontSize: fontSize1 * 1.2,
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            totsaving -
                                                     calculateSpendingBetweenDates(
                                                       startDate,
                                                       today,
@@ -2678,47 +2707,25 @@ class _BudgetpageState extends State<Budgetpage> {
                                                         ) *
                                                         (mntsaving) >
                                                 0
-                                            ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
-                                            : "target_achieved_msg".tr,
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 1.2,
-                                          fontWeight: FontWeight.bold,
-                                          color:
-                                              totsaving -
-                                                      calculateSpendingBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) +
-                                                      calculateEarningsBetweenDates(
-                                                        startDate,
-                                                        today,
-                                                      ) -
-                                                      nownetcredit -
-                                                      count30thsPassed(
-                                                            startDate,
-                                                            today,
-                                                          ) *
-                                                          (mntsaving) >
-                                                  0
-                                              ? const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  1.0,
-                                                )
-                                              : const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
-                                        ),
-                                        textAlign:
-                                            Get.locale?.languageCode == 'ar'
-                                            ? TextAlign.right
-                                            : TextAlign.left,
+                                            ? const Color.fromRGBO(
+                                                253,
+                                                95,
+                                                95,
+                                                1.0,
+                                              )
+                                            : const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
+                                              ),
                                       ),
+                                      textAlign:
+                                          Get.locale?.languageCode == 'ar'
+                                          ? TextAlign.right
+                                          : TextAlign.left,
                                     ),
+
                                     trailing: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
@@ -3123,21 +3130,20 @@ class _BudgetpageState extends State<Budgetpage> {
                                             size: 22,
                                           ),
                                           const SizedBox(height: 8),
-                                          Obx(
-                                            () => Text(
-                                              '${totalSpendingMonth.round()} ${LanguageController.to.currency.value}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.0,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color.fromRGBO(
-                                                  253,
-                                                  95,
-                                                  95,
-                                                  1.0,
-                                                ),
+                                          Text(
+                                            '${totalSpendingMonth.round()} ${LanguageController.to.currency.value}',
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 1.0,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color.fromRGBO(
+                                                253,
+                                                95,
+                                                95,
+                                                1.0,
                                               ),
                                             ),
                                           ),
+
                                           const SizedBox(height: 4),
                                           Text(
                                             "total_expenses".tr,
@@ -3197,18 +3203,17 @@ class _BudgetpageState extends State<Budgetpage> {
                                             size: 22,
                                           ),
                                           const SizedBox(height: 8),
-                                          Obx(
-                                            () => Text(
-                                              '${netMonth.round()} ${LanguageController.to.currency.value}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.15,
-                                                fontWeight: FontWeight.bold,
-                                                color: netMonth >= 0
-                                                    ? Colors.green[300]
-                                                    : Colors.red[300],
-                                              ),
+                                          Text(
+                                            '${netMonth.round()} ${LanguageController.to.currency.value}',
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 1.15,
+                                              fontWeight: FontWeight.bold,
+                                              color: netMonth >= 0
+                                                  ? Colors.green[300]
+                                                  : Colors.red[300],
                                             ),
                                           ),
+
                                           const SizedBox(height: 4),
                                           Text(
                                             "net_balance".tr,
@@ -3264,21 +3269,20 @@ class _BudgetpageState extends State<Budgetpage> {
                                             size: 22,
                                           ),
                                           const SizedBox(height: 8),
-                                          Obx(
-                                            () => Text(
-                                              '${totalIncomeMonth.round()} ${LanguageController.to.currency.value}',
-                                              style: darktextstyle.copyWith(
-                                                fontSize: fontSize1 * 1.0,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color.fromRGBO(
-                                                  106,
-                                                  253,
-                                                  95,
-                                                  1.0,
-                                                ),
+                                          Text(
+                                            '${totalIncomeMonth.round()} ${LanguageController.to.currency.value}',
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 1.0,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color.fromRGBO(
+                                                106,
+                                                253,
+                                                95,
+                                                1.0,
                                               ),
                                             ),
                                           ),
+
                                           const SizedBox(height: 4),
                                           Text(
                                             "total_income".tr,

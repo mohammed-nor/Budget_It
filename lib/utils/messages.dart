@@ -368,6 +368,8 @@ class Messages extends Translations {
           'This forecast is based on your average net income (total income minus spending) over past months, applied linearly. Actual results may vary due to changes in income or spending habits.',
       'goal_calculation_hint':
           'Based on average net savings (fixed saving + monthly variation). "Monthly Required" is what you need to save starting now to reach the goal by the deadline.',
+      'new_version_available': 'A new version is available!',
+      'update': 'Update',
     },
     'ar': {
       'app_name': 'Budget It',
@@ -729,6 +731,8 @@ class Messages extends Translations {
           'هذا التوقع مبني على معدل الدخل الصافي (إجمالي الدخل ناقص المصاريف) عبر الأشهر السابقة، مع افتراض استمرار نفس النمط. النتائج الفعلية قد تختلف حسب التغيرات في الدخل أو الإنفاق.',
       'goal_calculation_hint':
           'الحسابات مبنية على متوسط صافي الادخار (الادخار القار + التقلبات الشهرية). "المبلغ المطلوب" هو ما يجب توفيره بدءاً من الآن للوصول للهدف في الموعد.',
+      'new_version_available': 'يتوفر إصدار جديد!',
+      'update': 'تحديث',
     },
 
     'fr': {
@@ -1073,6 +1077,8 @@ class Messages extends Translations {
           'Cette prévision est basée sur votre revenu net moyen (revenu total moins dépenses) au cours des mois passés, appliqué linéairement. Les résultats réels peuvent varier en fonction des changements de revenus ou d\'habitudes de dépenses.',
       'goal_calculation_hint':
           'Basé sur l\'épargne nette moyenne (épargne fixe + variation mensuelle). "Requis mensuel" est ce que vous devez épargner à partir de maintenant pour atteindre l\'objectif d\'ici l\'échéance.',
+      'new_version_available': 'Une nouvelle version est disponible !',
+      'update': 'Mettre à jour',
     },
   };
 }

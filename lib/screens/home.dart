@@ -7,6 +7,7 @@ import 'package:budget_it/screens/wallet.dart';
 import 'package:budget_it/services/notification_service.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:upgrader/upgrader.dart';
 
 final prefsdata = Hive.box('data');
 
@@ -31,7 +32,37 @@ class _MyhomeState extends State<Myhome> {
       if (notifEnabled) {
         await NotificationService.instance.requestPermissions();
       }
+
+      // Check for updates
+      _checkForUpdate();
     });
+  }
+
+  Future<void> _checkForUpdate() async {
+    final upgrader = Upgrader();
+    await upgrader.initialize();
+
+    if (upgrader.shouldDisplayUpgrade()) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "new_version_available".tr,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blueAccent,
+          duration: const Duration(seconds: 10),
+          action: SnackBarAction(
+            label: "update".tr,
+            textColor: Colors.yellow,
+            onPressed: () {
+              upgrader.sendUserToAppStore();
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override

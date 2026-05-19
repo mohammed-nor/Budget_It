@@ -853,7 +853,9 @@ class _ProfilpageState extends State<Profilpage> {
                     Slider(
                       value: _notifLowBudgetThreshold,
                       min: 100,
-                      max: 50000,
+                      max: (prefsdata.get("totsaving", defaultValue: 50000) as num)
+                              .toDouble() *
+                          2,
                       divisions: 500,
                       activeColor: Colors.redAccent,
                       inactiveColor: Colors.red.withValues(alpha: 0.2),

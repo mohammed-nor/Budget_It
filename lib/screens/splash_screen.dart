@@ -71,8 +71,12 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       // Decorative circle background for icon
                       Container(
-                        width: size.width * 0.5,
-                        height: size.width * 0.5,
+                        width: size.height > size.width
+                            ? size.width * 0.5
+                            : size.height * 0.5,
+                        height: size.height > size.width
+                            ? size.width * 0.5
+                            : size.height * 0.5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -95,8 +99,12 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             child: Image.asset(
                               'images/ICON.png',
-                              width: size.width * 0.35,
-                              height: size.width * 0.35,
+                              width: size.height > size.width
+                                  ? size.width * 0.35
+                                  : size.height * 0.35,
+                              height: size.height > size.width
+                                  ? size.width * 0.35
+                                  : size.height * 0.35,
                               fit: BoxFit.contain,
                             ),
                           ),

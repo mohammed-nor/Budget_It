@@ -61,6 +61,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   share_plus: ^13.1.0
+  upgrader: ^13.2.0
 
 dev_dependencies:
   flutter_test:
