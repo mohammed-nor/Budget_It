@@ -88,19 +88,32 @@ class _MyhomeState extends State<Myhome> {
       child: Scaffold(
         backgroundColor: const Color.fromRGBO(20, 20, 20, 1.0),
         body: getbody(),
-        bottomNavigationBar: Directionality(
-          textDirection: TextDirection.ltr,
-          child: Theme(
-            data: ThemeData(
-              splashColor: Colors.black,
-              highlightColor: Colors.transparent,
+        bottomNavigationBar: Theme(
+          data: ThemeData(
+            splashColor: Colors.black,
+            highlightColor: Colors.transparent,
+          ),
+          child: ValueListenableBuilder(
+            valueListenable: prefsdata.listenable(
+              keys: ['fontsize1', 'cardcolor'],
             ),
-            child: ValueListenableBuilder(
-              valueListenable: prefsdata.listenable(
-                keys: ['fontsize1', 'cardcolor'],
-              ),
-              builder: (context, box, child) {
-                return BottomNavigationBar(
+            builder: (context, box, child) {
+              return Container(
+                decoration: BoxDecoration(
+                  /* boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(1),
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                      offset: const Offset(0, -6),
+                    ),
+                  ], */
+                  border: Border.all(
+                    color: Colors.green.withOpacity(0.15),
+                    width: 1.5,
+                  ),
+                ),
+                child: BottomNavigationBar(
                   currentIndex: pageindex,
                   type: BottomNavigationBarType.fixed,
                   backgroundColor: Colors.black,
@@ -129,7 +142,7 @@ class _MyhomeState extends State<Myhome> {
                   iconSize: 26,
                   selectedIconTheme: const IconThemeData(size: 30),
                   selectedFontSize: fontSize1 - 3,
-                  unselectedFontSize: fontSize1 - 5,
+                  unselectedFontSize: fontSize1 - 3,
                   items: List.generate(listactions.length, (index) {
                     return BottomNavigationBarItem(
                       icon: ExcludeSemantics(
@@ -147,9 +160,9 @@ class _MyhomeState extends State<Myhome> {
                   onTap: (index) {
                     setTabs(index);
                   },
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),

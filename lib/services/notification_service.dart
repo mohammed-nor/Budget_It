@@ -15,6 +15,8 @@ const String kNotifDailyMinute = 'notif_daily_minute';
 const String kNotifSalaryEnabled = 'notif_salary_enabled';
 const String kNotifLowBudgetEnabled = 'notif_low_budget_enabled';
 const String kNotifLowBudgetThreshold = 'notif_low_budget_threshold';
+const String kNotifInsightsEnabled = 'notif_insights_enabled';
+const String kNotifInsightsHours = 'notif_insights_hours';
 
 class NotificationService {
   NotificationService._();
@@ -224,11 +226,103 @@ class NotificationService {
   Future<void> cancelDailyReminder() async => _plugin.cancel(1);
   Future<void> cancelSalaryNotification() async => _plugin.cancel(2);
 
+  Future<void> cancelBudgetInsights() async {
+    for (int h = 0; h < 24; h++) {
+      await _plugin.cancel(100 + h);
+    }
+  }
+
+  // ──────────────────────────────────────────────── periodic insights ────────
+  Future<void> scheduleBudgetInsights() async {
+    if (!_isSupported()) return;
+    final box = Hive.box('data');
+
+    // Clear all previous periodic insight notifications (IDs 100 to 124)
+    for (int h = 0; h < 24; h++) {
+      await _plugin.cancel(100 + h);
+    }
+    // Safety delay to ensure the OS has cleared the previous notifications
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (!(box.get(kNotifEnabled, defaultValue: true) as bool)) return;
+    if (!(box.get(kNotifInsightsEnabled, defaultValue: false) as bool)) return;
+
+    final intervalHours = box.get(kNotifInsightsHours, defaultValue: 4) as int;
+    final totsaving = (box.get("totsaving", defaultValue: 50000.0) as num).toDouble();
+    final nownetcredit = (box.get("nownetcredit", defaultValue: 2000.0) as num).toDouble();
+    final mntsaving = (box.get("mntsaving", defaultValue: 1000.0) as num).toDouble();
+    final currency = box.get("currency", defaultValue: "DH") as String;
+
+    final progress = totsaving > 0 ? (nownetcredit / totsaving) * 100 : 0.0;
+    final remainingVal = (totsaving - nownetcredit).clamp(0.0, double.infinity);
+    final monthsLeft = mntsaving > 0 ? remainingVal / mntsaving : 0.0;
+
+    // Generate scheduled hours based on the interval
+    for (int hour = 0; hour < 24; hour += intervalHours) {
+      String title = "";
+      String body = "";
+
+      // Choose different insight types depending on the hour to keep notifications fresh
+      int categoryIndex = (hour ~/ intervalHours) % 5;
+      switch (categoryIndex) {
+        case 0:
+          title = _tr('insight_title_progress');
+          body = _tr('insight_body_progress')
+              .replaceFirst('%p', progress.toStringAsFixed(1))
+              .replaceFirst('%t', totsaving.toStringAsFixed(0))
+              .replaceFirst('%c', currency);
+          break;
+        case 1:
+          title = _tr('insight_title_velocity');
+          body = _tr('insight_body_velocity')
+              .replaceFirst('%m', monthsLeft.toStringAsFixed(1))
+              .replaceFirst('%r', remainingVal.toStringAsFixed(0))
+              .replaceFirst('%c', currency);
+          break;
+        case 2:
+          title = _tr('insight_title_balance');
+          body = _tr('insight_body_balance')
+              .replaceFirst('%n', nownetcredit.toStringAsFixed(0))
+              .replaceFirst('%c', currency);
+          break;
+        case 3:
+          title = _tr('insight_title_habit');
+          body = _tr('insight_body_habit');
+          break;
+        case 4:
+        default:
+          title = _tr('insight_title_fixed');
+          final mntinc = (box.get("mntinc", defaultValue: 4300.0) as num).toDouble();
+          final mntexp = (box.get("mntexp", defaultValue: 2000.0) as num).toDouble();
+          final annexp = (box.get("annexp", defaultValue: 7000.0) as num).toDouble();
+          final totalFixedExp = mntexp + (annexp / 12);
+          body = _tr('insight_body_fixed')
+              .replaceFirst('%f', totalFixedExp.toStringAsFixed(0))
+              .replaceFirst('%i', mntinc.toStringAsFixed(0))
+              .replaceFirst('%c', currency);
+          break;
+      }
+
+      await _plugin.zonedSchedule(
+        100 + hour,
+        title,
+        body,
+        _nextInstanceOfTime(hour, 0),
+        _buildDetails(),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'budget_insights_$hour',
+      );
+      debugPrint('Budget insight scheduled at $hour:00 with ID ${100 + hour}');
+    }
+  }
+
   // ──────────────────────────────────────────────────── reschedule all ──────
   /// Call whenever settings change.
   Future<void> rescheduleAll() async {
     await scheduleDailyReminder();
     await scheduleSalaryDayNotification();
+    await scheduleBudgetInsights();
   }
 
   // ────────────────────────────────────────────────────── private helpers ───

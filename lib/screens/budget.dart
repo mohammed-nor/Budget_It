@@ -56,6 +56,11 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     DateTime.now().month,
     DateTime.now().day,
   );
+  DateTime _focusedDay = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
   Box<BudgetHistory>? historyBox;
   List<BudgetHistory> budgetHistory = [];
   // Candle chart related state
@@ -125,6 +130,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     setState(() {
       // Normalize to local midnight to avoid UTC-offset causing inDays to be off by 1
       today = DateTime(day.year, day.month, day.day);
+      _focusedDay = focusedDay;
     });
   }
 
@@ -144,8 +150,8 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     chartSettingsBox?.put(key, value);
   }
 
-  Future<void> _initHistoryBox() async {
-    historyBox = await Hive.openBox<BudgetHistory>('budget_history');
+  void _initHistoryBox() {
+    historyBox = Hive.box<BudgetHistory>('budget_history');
   }
 
   void _loadBudgetHistory() {
@@ -342,10 +348,8 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _initUpcomingSpendingBox() async {
-    upcomingSpendingBox = await Hive.openBox<UpcomingSpending>(
-      'upcoming_spending',
-    );
+  void _initUpcomingSpendingBox() {
+    upcomingSpendingBox = Hive.box<UpcomingSpending>('upcoming_spending');
     _loadUpcomingSpending();
   }
 
@@ -361,10 +365,8 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _initUnexpectedEarningsBox() async {
-    unexpectedEarningsBox = await Hive.openBox<UnexpectedEarning>(
-      'unexpected_earnings',
-    );
+  void _initUnexpectedEarningsBox() {
+    unexpectedEarningsBox = Hive.box<UnexpectedEarning>('unexpected_earnings');
     _loadUnexpectedEarnings();
   }
 
@@ -523,7 +525,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                     onPressed: _showAddSpendingDialog,
                     icon: const Icon(Icons.add, color: Colors.white),
                     label: Text(
-                      "",
+                      "add".tr,
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -907,7 +909,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                     onPressed: _showAddEarningDialog,
                     icon: const Icon(Icons.add, color: Colors.white),
                     label: Text(
-                      "",
+                      "add".tr,
                       style: darktextstyle.copyWith(fontSize: fontSize1),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -1386,9 +1388,9 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
       calendarFirstDay = transactionDates.first;
     }
 
-    final DateTime calendarFocusedDay = today.isBefore(calendarFirstDay)
+    final DateTime calendarFocusedDay = _focusedDay.isBefore(calendarFirstDay)
         ? calendarFirstDay
-        : today;
+        : _focusedDay;
 
     DateTime ramadane =
         HijriCalendar()
@@ -2048,8 +2050,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                           ),
                           TableCalendar(
                             locale: Get.locale?.toString() ?? 'en_US',
-                            //focusedDay: calendarFocusedDay,
-                            focusedDay: today,
+                            focusedDay: calendarFocusedDay,
                             rowHeight: 45,
                             firstDay: calendarFirstDay,
                             lastDay: DateTime(2050, 12, 31),
@@ -2155,6 +2156,11 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               },
                             ),
                             onDaySelected: _ondayselected,
+                            onPageChanged: (focusedDay) {
+                              setState(() {
+                                _focusedDay = focusedDay;
+                              });
+                            },
                             calendarStyle: CalendarStyle(
                               markersMaxCount: 3,
                               markerDecoration: const BoxDecoration(

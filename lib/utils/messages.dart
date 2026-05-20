@@ -4,6 +4,7 @@ class Messages extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
     'en': {
+      'add': 'Add',
       'app_name': 'Budget It',
       // Navigation
       'budget': 'Budget',
@@ -379,8 +380,30 @@ class Messages extends Translations {
           'Based on average net savings (fixed saving + monthly variation). "Monthly Required" is what you need to save starting now to reach the goal by the deadline.',
       'new_version_available': 'A new version is available!',
       'update': 'Update',
+      // Budget Insights
+      'insight_title_progress': 'Savings Progress 🎯',
+      'insight_body_progress':
+          'You have achieved %p% of your %t %c target! Keep your momentum going!',
+      'insight_title_velocity': 'Savings Forecast 📅',
+      'insight_body_velocity':
+          'At your current savings rate, you will reach your target in %m months (remaining: %r %c).',
+      'insight_title_balance': 'Balance Status 💰',
+      'insight_body_balance':
+          'Your current net savings balance is %n %c. Monitor your daily budget to stay on track!',
+      'insight_title_habit': 'Smart Habit Tip 💡',
+      'insight_body_habit':
+          'Consider pausing before non-essential purchases. Small savings today build wealth tomorrow.',
+      'insight_title_fixed': 'Obligations Check 🔒',
+      'insight_body_fixed':
+          'Your fixed expenses are %f %c out of %i %c monthly income. Always secure your commitments first.',
+      'budget_insights': 'Budget Insights',
+      'enable_insights': 'Periodic Budget Insights',
+      'insights_frequency': 'Insights Frequency',
+      'hours_label': 'Hours',
+      'every_x_hours': 'Every %s Hours',
     },
     'ar': {
+      'add': 'أضف',
       'app_name': 'Budget It',
       // Navigation
       'budget': 'الميزانية',
@@ -749,9 +772,31 @@ class Messages extends Translations {
           'الحسابات مبنية على متوسط صافي الادخار (الادخار القار + التقلبات الشهرية). "المبلغ المطلوب" هو ما يجب توفيره بدءاً من الآن للوصول للهدف في الموعد.',
       'new_version_available': 'يتوفر إصدار جديد!',
       'update': 'تحديث',
+      // Budget Insights
+      'insight_title_progress': 'تقدم الادخار 🎯',
+      'insight_body_progress':
+          'لقد حققت %p% من هدفك البالغ %t %c! واصل هذا التقدم المتميز!',
+      'insight_title_velocity': 'توقعات الادخار 📅',
+      'insight_body_velocity':
+          'بمعدل ادخارك الحالي، ستصل إلى هدفك خلال %m أشهر (المتبقي: %r %c).',
+      'insight_title_balance': 'حالة الرصيد 💰',
+      'insight_body_balance':
+          'رصيد ادخارك الصافي الحالي هو %n %c. راقب ميزانيتك اليومية لتظل في المسار الصحيح!',
+      'insight_title_habit': 'نصيحة مالية ذكية 💡',
+      'insight_body_habit':
+          'فكر جيداً قبل الشراء غير الضروري. الادخار الصغير اليوم يبني ثروة الغد.',
+      'insight_title_fixed': 'متابعة الالتزامات 🔒',
+      'insight_body_fixed':
+          'مصاريفك القارة تبلغ %f %c من دخلك الشهري البالغ %i %c. أمن التزاماتك أولاً دائماً.',
+      'budget_insights': 'تحليلات الميزانية',
+      'enable_insights': 'تحليلات دورية للميزانية',
+      'insights_frequency': 'تكرار التحليلات',
+      'hours_label': 'ساعة',
+      'every_x_hours': 'كل %s ساعات',
     },
 
     'fr': {
+      'add': 'Ajouter',
       'app_name': 'Budget It',
       // Navigation
       'budget': 'Budget',
@@ -1104,6 +1149,27 @@ class Messages extends Translations {
           'Basé sur l\'épargne nette moyenne (épargne fixe + variation mensuelle). "Requis mensuel" est ce que vous devez épargner à partir de maintenant pour atteindre l\'objectif d\'ici l\'échéance.',
       'new_version_available': 'Une nouvelle version est disponible !',
       'update': 'Mettre à jour',
+      // Budget Insights
+      'insight_title_progress': 'Progression de l\'Épargne 🎯',
+      'insight_body_progress':
+          'Vous avez atteint %p% de votre objectif de %t %c! Continuez ainsi!',
+      'insight_title_velocity': 'Prévisions d\'Épargne 📅',
+      'insight_body_velocity':
+          'À votre rythme actuel, vous atteindrez votre objectif dans %m mois (restant: %r %c).',
+      'insight_title_balance': 'Statut du Solde 💰',
+      'insight_body_balance':
+          'Votre solde net actuel est de %n %c. Surveillez votre budget quotidien pour rester sur la bonne voie!',
+      'insight_title_habit': 'Astuce Budget 💡',
+      'insight_body_habit':
+          'Prenez un moment de réflexion avant tout achat non essentiel. Les petites économies font les grands patrimoines.',
+      'insight_title_fixed': 'Vérification des Engagements 🔒',
+      'insight_body_fixed':
+          'Vos dépenses fixes s\'élèvent à %f %c sur %i %c de revenus mensuels. Sécurisez toujours vos engagements en priorité.',
+      'budget_insights': 'Analyses du Budget',
+      'enable_insights': 'Analyses Périodiques du Budget',
+      'insights_frequency': 'Fréquence des Analyses',
+      'hours_label': 'Heures',
+      'every_x_hours': 'Toutes les %s Heures',
     },
   };
 }

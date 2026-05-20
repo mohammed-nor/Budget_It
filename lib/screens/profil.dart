@@ -45,6 +45,8 @@ class _ProfilpageState extends State<Profilpage> {
   late bool _notifSalaryEnabled;
   late bool _notifLowBudgetEnabled;
   late double _notifLowBudgetThreshold;
+  late bool _notifInsightsEnabled;
+  late int _notifInsightsHours;
 
   bool get _notifSupported =>
       !kIsWeb && (Platform.isAndroid || Platform.isWindows);
@@ -65,6 +67,9 @@ class _ProfilpageState extends State<Profilpage> {
     _notifLowBudgetThreshold =
         (box.get(kNotifLowBudgetThreshold, defaultValue: 500) as num)
             .toDouble();
+    _notifInsightsEnabled =
+        box.get(kNotifInsightsEnabled, defaultValue: false) as bool;
+    _notifInsightsHours = box.get(kNotifInsightsHours, defaultValue: 4) as int;
   }
 
   Future<void> _launchURL(String urlString) async {
@@ -916,6 +921,108 @@ class _ProfilpageState extends State<Profilpage> {
                 ),
               ),
             ],
+
+            const Divider(height: 20, color: Colors.white10),
+
+            // ── Periodic budget insights ──────────────────────────
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _notifInsightsEnabled,
+              activeThumbColor: accentColor,
+              title: Text(
+                "enable_insights".tr,
+                textAlign: Get.locale?.languageCode == 'ar'
+                    ? TextAlign.right
+                    : TextAlign.left,
+                style: GoogleFonts.elMessiri(
+                  color: Colors.white70,
+                  fontSize: fontSize1 - 1,
+                ),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.green,
+                  size: 20,
+                ),
+              ),
+              onChanged: (val) {
+                setState(() => _notifInsightsEnabled = val);
+                save(kNotifInsightsEnabled, val);
+                if (!val) {
+                  NotificationService.instance.cancelBudgetInsights();
+                }
+              },
+            ),
+
+            if (_notifInsightsEnabled) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "insights_frequency".tr,
+                        style: GoogleFonts.elMessiri(
+                          color: Colors.green.shade300,
+                          fontSize: fontSize1 - 1,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButton<int>(
+                          value: _notifInsightsHours,
+                          underline: const SizedBox(),
+                          dropdownColor: const Color(0xFF1A1A1A),
+                          items: [1, 2, 3, 4, 6, 8, 12, 24].map((val) {
+                            return DropdownMenuItem(
+                              value: val,
+                              child: Text(
+                                "every_x_hours".tr.replaceFirst(
+                                  '%s',
+                                  val.toString(),
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _notifInsightsHours = val);
+                              save(kNotifInsightsHours, val);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ],
       ),
@@ -1051,6 +1158,17 @@ class _ProfilpageState extends State<Profilpage> {
         "startDate",
         DateTime(DateTime.now().year, DateTime.now().month, 1),
       );
+
+      // Reset notifications settings
+      _notifEnabled = true;
+      _notifDailyEnabled = true;
+      _notifDailyHour = 9;
+      _notifDailyMinute = 0;
+      _notifSalaryEnabled = true;
+      _notifLowBudgetEnabled = true;
+      _notifLowBudgetThreshold = 500.0;
+      _notifInsightsEnabled = false;
+      _notifInsightsHours = 4;
     });
   }
 }

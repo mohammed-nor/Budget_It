@@ -42,27 +42,14 @@ class _StatspageState extends State<Statspage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
-      _initBoxes();
-    });
+    _initBoxes();
   }
 
-  Future<void> _initBoxes() async {
-    historyBox = await Hive.openBox<BudgetHistory>('budget_history');
-    if (!Hive.isBoxOpen('unexpected_earnings')) {
-      await Hive.openBox<UnexpectedEarning>('unexpected_earnings');
-    }
-    if (!Hive.isBoxOpen('upcoming_spending')) {
-      await Hive.openBox<UpcomingSpending>('upcoming_spending');
-    }
-    if (!Hive.isBoxOpen('financial_goals')) {
-      await Hive.openBox<FinancialGoal>('financial_goals');
-    }
+  void _initBoxes() {
+    historyBox = Hive.box<BudgetHistory>('budget_history');
     goalBox = Hive.box<FinancialGoal>('financial_goals');
     _loadGoals();
-    if (historyBox != null) {
-      _loadBudgetHistory();
-    }
+    _loadBudgetHistory();
   }
 
   void _loadBudgetHistory() {
