@@ -327,14 +327,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     }
 
     for (var start in periodStarts) {
-      DateTime previousday = start.subtract(const Duration(days: 1));
-
-      final num open = evaluateOpening(previousday);
-      final num close = evaluateOpening(
-        start,
-      ); // per user: close is the rounded daily spending value
-      num high = close > open ? close : open;
-      num low = close < open ? close : open;
+      final num open = evaluateOpening(start);
+      final num todayUnexpectedEarnings = dailyEarns[start] ?? 0;
+      final num todayUnexpectedSpendings = dailySpends[start] ?? 0;
+      final num close = evaluateOpening(start.add(const Duration(days: 1)));
+      final num high = open + todayUnexpectedEarnings;
+      final num low = open - dailySpending - todayUnexpectedSpendings;
 
       generated.add(_CandleData(start, open, high, low, close));
     }
@@ -2042,6 +2040,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Divider(height: 21),
+                          ),
                           TableCalendar(
                             locale: Get.locale?.toString() ?? 'en_US',
                             //focusedDay: calendarFocusedDay,
@@ -2572,6 +2576,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                           // Compute Bollinger Bands (SMA + stddev * multiplier)
                           // We do this locally in the build method using existing candleData.close values
                           // without changing any existing open/high/low/close calculations.
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Divider(height: 21),
+                          ),
                           Builder(
                             builder: (context) {
                               final int bbP = bbPeriod;
@@ -2715,6 +2725,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                                   (_CandleData data, _) =>
                                                       data.close,
                                               enableTooltip: true,
+                                              enableSolidCandles: true,
                                               animationDuration: 0,
                                               pointColorMapper:
                                                   (_CandleData data, _) {
@@ -2807,12 +2818,13 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               );
                             },
                           ),
+
                           // Collapsible controls: moved under the chart
                           ExpansionTile(
                             //backgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
                             //collapsedBackgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
                             tilePadding: const EdgeInsets.symmetric(
-                              horizontal: 1.0,
+                              horizontal: 0.0,
                             ),
                             title: Center(
                               child: Text(
@@ -2932,7 +2944,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               ),
                             ],
                           ),
-
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Divider(height: 21),
+                          ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
