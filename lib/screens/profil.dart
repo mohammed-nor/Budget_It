@@ -83,16 +83,25 @@ class _ProfilpageState extends State<Profilpage> {
     final prefsdata = Hive.box('data');
     final accentColor = Theme.of(context).colorScheme.primary;
 
+    cardcolor = prefsdata.get(
+      "cardcolor",
+      defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
+    );
+    selectedColorName = prefsdata.get(
+      "selectedColorName",
+      defaultValue: 'Dark',
+    );
+
     TextStyle titleStyle = GoogleFonts.elMessiri(
       fontWeight: FontWeight.bold,
       fontSize: fontSize1.toDouble() + 4,
-      color: Colors.white,
+      color: getTextColor(),
     );
 
     TextStyle bodyStyle = GoogleFonts.elMessiri(
       fontWeight: FontWeight.w500,
       fontSize: fontSize1,
-      color: Colors.white70,
+      color: getSecondaryTextColor(),
     );
 
     return Scaffold(
@@ -225,6 +234,8 @@ class _ProfilpageState extends State<Profilpage> {
               children: [
                 _buildLanguageSwitch(context),
                 const Divider(height: 1, color: Colors.white10),
+                //_buildThemeModeSwitch(context),
+                // const Divider(height: 1, color: Colors.white10),
                 _buildThemeSwitch(context, prefsdata),
                 const Divider(height: 1, color: Colors.white10),
                 _buildFontSizeSlider(
@@ -397,6 +408,35 @@ class _ProfilpageState extends State<Profilpage> {
     );
   }
 
+  Widget _buildThemeModeSwitch(BuildContext context) {
+    final themeController = Get.find<ThemeController>();
+    return Obx(() {
+      final isDark = themeController.isDarkMode.value;
+      return ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        title: Text(
+          "theme_mode".tr,
+          textAlign: Get.locale?.languageCode == 'ar'
+              ? TextAlign.right
+              : TextAlign.left,
+          style: GoogleFonts.elMessiri(color: getSecondaryTextColor()),
+        ),
+        leading: Icon(
+          isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+          color: isDark ? Colors.amber.shade200 : Colors.orange.shade300,
+        ),
+        trailing: Switch(
+          value: isDark,
+          activeColor: Theme.of(context).colorScheme.primary,
+          onChanged: (val) {
+            themeController.updateThemeMode(val);
+            setState(() {});
+          },
+        ),
+      );
+    });
+  }
+
   Widget _buildThemeSwitch(BuildContext context, Box prefsdata) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -405,7 +445,7 @@ class _ProfilpageState extends State<Profilpage> {
         textAlign: Get.locale?.languageCode == 'ar'
             ? TextAlign.right
             : TextAlign.left,
-        style: GoogleFonts.elMessiri(color: Colors.white70),
+        style: GoogleFonts.elMessiri(color: getSecondaryTextColor()),
       ),
       leading: Icon(Icons.palette_outlined, color: Colors.blue.shade300),
       trailing: _buildColorDropdown(prefsdata),
@@ -436,6 +476,8 @@ class _ProfilpageState extends State<Profilpage> {
             translatedName = 'color_dark'.tr;
           else if (name == 'Purple')
             translatedName = 'color_purple'.tr;
+          else if (name == 'Light')
+            translatedName = 'color_light'.tr;
 
           return DropdownMenuItem(
             value: name,
@@ -853,7 +895,9 @@ class _ProfilpageState extends State<Profilpage> {
                     Slider(
                       value: _notifLowBudgetThreshold,
                       min: 100,
-                      max: (prefsdata.get("totsaving", defaultValue: 50000) as num)
+                      max:
+                          (prefsdata.get("totsaving", defaultValue: 50000)
+                                  as num)
                               .toDouble() *
                           2,
                       divisions: 500,

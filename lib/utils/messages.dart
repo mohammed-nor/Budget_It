@@ -49,6 +49,10 @@ class Messages extends Translations {
       'color_blue': 'Blue',
       'color_dark': 'Dark',
       'color_purple': 'Purple',
+      'color_light': 'Light',
+      'theme_mode': 'Theme Mode',
+      'selected_day_events': 'Selected Day Events',
+      'event': 'Event',
       'notif_permission_msg':
           'Please enable notifications from system settings to receive alerts.',
       // Wallet
@@ -87,6 +91,8 @@ class Messages extends Translations {
       'unstable_trends': 'Unstable Trends',
       'income_stability': 'Income Stability',
       'net_income_stability': 'Net Income Stability',
+      'total_income_stability': 'Total Income Stability',
+      'stable_income_stability': 'Stable Income Stability',
       'top_expense_categories': 'Top Expense Categories',
       'expense_trend': 'Expense Trend',
       'statistical_summary': 'Statistical Summary',
@@ -422,6 +428,10 @@ class Messages extends Translations {
       'color_blue': 'أزرق',
       'color_dark': 'داكن',
       'color_purple': 'أرجواني',
+      'color_light': 'فاتح',
+      'theme_mode': 'مظهر التطبيق',
+      'selected_day_events': 'أحداث اليوم المحدد',
+      'event': 'مناسبة',
       'notif_permission_msg':
           'يرجى تفعيل الإشعارات من إعدادات النظام لتلقي التنبيهات.',
       // Wallet
@@ -442,7 +452,7 @@ class Messages extends Translations {
       'other_expenses': 'مصاريف أخرى',
       // Wallet Descriptions
       'personal_expenses_desc': 'التسوق والاحتياجات الشخصية',
-      'home_expenses_desc': 'البقالتس والمطاعم',
+      'home_expenses_desc': 'البقالة والمطاعم',
       'transport_desc': 'البنزين ووسائل النقل العام',
       'entertainment_desc': 'الأفلام والأنشطة الترفيهية',
       'emergency_desc': 'تكاليف غير متوقعة أو عاجلة',
@@ -459,6 +469,8 @@ class Messages extends Translations {
       'unstable_trends': 'منحنيات غير قارة',
       'income_stability': 'استقرار الدخل',
       'net_income_stability': 'استقرار الدخل الصافي',
+      'total_income_stability': 'استقرار الدخل الإجمالي',
+      'stable_income_stability': 'استقرار الدخل القار',
       'top_expense_categories': 'أهم فئات المصاريف',
       'expense_trend': 'منحنى المصاريف',
       'statistical_summary': 'ملخص إحصائي',
@@ -787,6 +799,10 @@ class Messages extends Translations {
       'color_blue': 'Bleu',
       'color_dark': 'Sombre',
       'color_purple': 'Violet',
+      'color_light': 'Clair',
+      'theme_mode': 'Mode Thème',
+      'selected_day_events': 'Événements du Jour Sélectionné',
+      'event': 'Événement',
       'notif_permission_msg':
           'Veuillez activer les notifications dans les paramètres système pour recevoir des alertes.',
       // Wallet
@@ -825,6 +841,8 @@ class Messages extends Translations {
       'unstable_trends': 'Tendances instables',
       'income_stability': 'Stabilité des revenus',
       'net_income_stability': 'Stabilité du revenu net',
+      'total_income_stability': 'Stabilité du Revenu Total',
+      'stable_income_stability': 'Stabilité du Revenu Stable',
       'top_expense_categories': 'Principales catégories de dépenses',
       'expense_trend': 'Tendance des dépenses',
       'statistical_summary': 'Résumé statistique',

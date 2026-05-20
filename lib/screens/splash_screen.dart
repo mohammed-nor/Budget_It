@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.black, Colors.grey[900]!],
+            colors: [cardcolor, _darker(cardcolor, 0.92)],
           ),
         ),
         child: Column(
@@ -188,5 +188,12 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       ),
     );
+  }
+
+  // Return a slightly darker variant of [color]
+  Color _darker(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    final lightness = (hsl.lightness - amount).clamp(0.0, 1.0);
+    return hsl.withLightness(lightness).toColor();
   }
 }

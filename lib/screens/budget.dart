@@ -523,7 +523,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                     ),
                   ElevatedButton.icon(
                     onPressed: _showAddSpendingDialog,
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add, color: Colors.white),
                     label: Text(
                       "",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
@@ -760,7 +760,10 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               });
                             }
                           },
-                          child: Text("choose_date".tr),
+                          child: Text(
+                            "choose_date".tr,
+                            style: themedTextStyle(color: Colors.white),
+                          ),
                         ),
                       ],
                     );
@@ -776,7 +779,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
               ),
               child: Text(
                 "cancel".tr,
-                style: themedTextStyle(color: Colors.black),
+                style: themedTextStyle(color: Colors.white),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -904,7 +907,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                     ),
                   ElevatedButton.icon(
                     onPressed: _showAddEarningDialog,
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add, color: Colors.white),
                     label: Text(
                       "",
                       style: darktextstyle.copyWith(fontSize: fontSize1),
@@ -1158,7 +1161,10 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               });
                             }
                           },
-                          child: Text("choose_date".tr),
+                          child: Text(
+                            "choose_date".tr,
+                            style: themedTextStyle(),
+                          ),
                         ),
                       ],
                     );
@@ -1280,6 +1286,15 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     return month > 0 && month < months.length ? months[month].tr : '';
   }
 
+  String _arabicDigits(String value) {
+    const arabicDigits = '0123456789';
+    const westernDigits = '٠١٢٣٤٥٦٧٨٩';
+    return value.split('').map((char) {
+      final index = westernDigits.indexOf(char);
+      return index == -1 ? char : arabicDigits[index];
+    }).join();
+  }
+
   TextStyle themedTextStyle({
     double? fontSize,
     Color? color,
@@ -1355,6 +1370,27 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
       "startDate",
       defaultValue: DateTime(2024, 9, 1),
     );
+
+    DateTime calendarFirstDay = startDate;
+    final List<DateTime> transactionDates = [];
+    if (upcomingSpendingBox != null && upcomingSpendingBox!.isNotEmpty) {
+      transactionDates.addAll(
+        upcomingSpendingBox!.values.map((entry) => entry.date),
+      );
+    }
+    if (unexpectedEarningsBox != null && unexpectedEarningsBox!.isNotEmpty) {
+      transactionDates.addAll(
+        unexpectedEarningsBox!.values.map((entry) => entry.date),
+      );
+    }
+    if (transactionDates.isNotEmpty) {
+      transactionDates.sort();
+      calendarFirstDay = transactionDates.first;
+    }
+
+    final DateTime calendarFocusedDay = today.isBefore(calendarFirstDay)
+        ? calendarFirstDay
+        : today;
 
     DateTime ramadane =
         HijriCalendar()
@@ -2006,26 +2042,120 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
-
                           TableCalendar(
-                            focusedDay: today,
+                            locale: Get.locale?.toString() ?? 'en_US',
+                            focusedDay: calendarFocusedDay,
                             rowHeight: 45,
-                            firstDay: DateTime(
-                              startDate.year,
-                              startDate.month,
-                              1,
-                            ),
+                            firstDay: calendarFirstDay,
                             lastDay: DateTime(2050, 12, 31),
                             selectedDayPredicate: (day) =>
                                 isSameDay(day, today),
                             calendarFormat: CalendarFormat.month,
+                            eventLoader: (day) {
+                              final eventsOnDay = [];
+                              if (enabledEvents['ramadan_start'] ?? false) {
+                                if (isSameDay(day, ramadane))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['eid_al_fitr'] ?? false) {
+                                if (isSameDay(day, aidfitr))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['eid_al_adha'] ?? false) {
+                                if (isSameDay(day, aidfadha))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['christmas'] ?? false) {
+                                if (isSameDay(day, christmas))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['new_year'] ?? false) {
+                                if (isSameDay(day, newYear))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['wedding_anniversary'] ??
+                                  false) {
+                                if (isSameDay(day, weddingAnniversary))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['wife_birthday'] ?? false) {
+                                if (isSameDay(day, wifeBirthday))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['custom_event'] ?? false) {
+                                if (isSameDay(day, customEvent))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['custom_event_2'] ?? false) {
+                                if (isSameDay(day, customEvent2))
+                                  eventsOnDay.add('event');
+                              }
+                              if (enabledEvents['custom_event_3'] ?? false) {
+                                if (isSameDay(day, customEvent3))
+                                  eventsOnDay.add('event');
+                              }
 
-                            headerStyle: const HeaderStyle(
+                              // Unexpected/Upcoming spending in Red (one marker per spending entry on this day)
+                              if (upcomingSpendingBox != null) {
+                                final spendingsOnDay = upcomingSpendingBox!
+                                    .values
+                                    .where(
+                                      (spending) =>
+                                          isSameDay(spending.date, day),
+                                    );
+                                for (
+                                  var i = 0;
+                                  i < spendingsOnDay.length;
+                                  i++
+                                ) {
+                                  eventsOnDay.add('unexpected_spending');
+                                }
+                              }
+
+                              // Unexpected earnings in Green (one marker per earning entry on this day)
+                              if (unexpectedEarningsBox != null) {
+                                final earningsOnDay = unexpectedEarningsBox!
+                                    .values
+                                    .where(
+                                      (earning) => isSameDay(earning.date, day),
+                                    );
+                                for (var i = 0; i < earningsOnDay.length; i++) {
+                                  eventsOnDay.add('unexpected_earning');
+                                }
+                              }
+
+                              return eventsOnDay;
+                            },
+
+                            headerStyle: HeaderStyle(
                               formatButtonVisible: false,
                               titleCentered: true,
+                              titleTextStyle: GoogleFonts.elMessiri(
+                                fontSize: fontSize1,
+                                fontWeight: FontWeight.bold,
+                                color: themedTextStyle().color,
+                              ),
+                              titleTextFormatter: (date, locale) {
+                                final localeString = locale?.toString() ?? '';
+                                if (localeString.startsWith('ar')) {
+                                  final monthName = _getArabicMonthName(
+                                    date.month,
+                                  );
+                                  final yearText = _arabicDigits(
+                                    date.year.toString(),
+                                  );
+                                  return '$monthName $yearText';
+                                }
+                                return DateFormat.yMMMM(locale).format(date);
+                              },
                             ),
                             onDaySelected: _ondayselected,
                             calendarStyle: CalendarStyle(
+                              markersMaxCount: 3,
+                              markerDecoration: const BoxDecoration(
+                                color: Color(0xFF10E300),
+                                shape: BoxShape.circle,
+                              ),
                               weekNumberTextStyle: themedTextStyle(
                                 fontSize: fontSize1,
                               ),
@@ -2062,6 +2192,305 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                 color: Color(0xFFFFFFFF),
                               ),
                             ),
+                            calendarBuilders: CalendarBuilders(
+                              markerBuilder: (context, date, events) {
+                                if (events.isEmpty) return const SizedBox();
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 2.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: events.map((event) {
+                                      Color markerColor;
+                                      if (event == 'unexpected_spending') {
+                                        markerColor = const Color(
+                                          0xFFFF5252,
+                                        ); // Red for spending
+                                      } else if (event ==
+                                          'unexpected_earning') {
+                                        markerColor = const Color(
+                                          0xFF69FD5F,
+                                        ); // Green for earning
+                                      } else {
+                                        markerColor = const Color(
+                                          0xFFFFD700,
+                                        ); // Gold for events
+                                      }
+                                      return Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 1.0,
+                                        ),
+                                        width: 5,
+                                        height: 5,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: markerColor,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          ...() {
+                            final selectedEvents = <Widget>[];
+
+                            // 1. Standard / Custom Events
+                            final eventsList = [
+                              {
+                                'key': 'ramadan_start',
+                                'date': ramadane,
+                                'title': 'ramadan_start'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.star,
+                              },
+                              {
+                                'key': 'eid_al_fitr',
+                                'date': aidfitr,
+                                'title': 'eid_al_fitr'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.celebration,
+                              },
+                              {
+                                'key': 'eid_al_adha',
+                                'date': aidfadha,
+                                'title': 'eid_al_adha'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.mosque,
+                              },
+                              {
+                                'key': 'christmas',
+                                'date': christmas,
+                                'title': 'christmas'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.card_giftcard,
+                              },
+                              {
+                                'key': 'new_year',
+                                'date': newYear,
+                                'title': 'new_year'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.celebration,
+                              },
+                              {
+                                'key': 'wedding_anniversary',
+                                'date': weddingAnniversary,
+                                'title': 'wedding_anniversary'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.favorite,
+                              },
+                              {
+                                'key': 'wife_birthday',
+                                'date': wifeBirthday,
+                                'title': 'wife_birthday'.tr,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.cake,
+                              },
+                              {
+                                'key': 'custom_event',
+                                'date': customEvent,
+                                'title': customEventName,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.bookmark,
+                              },
+                              {
+                                'key': 'custom_event_2',
+                                'date': customEvent2,
+                                'title': customEventName2,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.bookmark,
+                              },
+                              {
+                                'key': 'custom_event_3',
+                                'date': customEvent3,
+                                'title': customEventName3,
+                                'color': const Color(0xFFFFD700),
+                                'icon': Icons.bookmark,
+                              },
+                            ];
+
+                            for (final ev in eventsList) {
+                              if (enabledEvents[ev['key']] ?? false) {
+                                if (isSameDay(ev['date'] as DateTime, today)) {
+                                  selectedEvents.add(
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 4,
+                                        horizontal: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.04),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: (ev['color'] as Color)
+                                              .withOpacity(0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: (ev['color'] as Color)
+                                                .withOpacity(0.12),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            ev['icon'] as IconData,
+                                            color: ev['color'] as Color,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        title: Text(
+                                          ev['title'] as String,
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1,
+                                            fontWeight: FontWeight.bold,
+                                            color: getTextColor(),
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          'event'.tr,
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1 * 0.85,
+                                            color: getSecondaryTextColor(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+
+                            // 2. Unexpected Spending
+                            if (upcomingSpendingBox != null) {
+                              final spendings = upcomingSpendingBox!.values
+                                  .where(
+                                    (spending) =>
+                                        isSameDay(spending.date, today),
+                                  );
+                              for (final spending in spendings) {
+                                selectedEvents.add(
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                      horizontal: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.04),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFFF5252,
+                                        ).withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFFFF5252,
+                                          ).withOpacity(0.12),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.trending_down,
+                                          color: Color(0xFFFF5252),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        spending.title,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1,
+                                          fontWeight: FontWeight.bold,
+                                          color: getTextColor(),
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        "${spending.amount} ${LanguageController.to.currency.value}",
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.85,
+                                          color: getSecondaryTextColor(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
+                            // 3. Unexpected Earnings
+                            if (unexpectedEarningsBox != null) {
+                              final earnings = unexpectedEarningsBox!.values
+                                  .where(
+                                    (earning) => isSameDay(earning.date, today),
+                                  );
+                              for (final earning in earnings) {
+                                selectedEvents.add(
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                      horizontal: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.04),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFF69FD5F,
+                                        ).withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF69FD5F,
+                                          ).withOpacity(0.12),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.trending_up,
+                                          color: Color(0xFF69FD5F),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        earning.title,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1,
+                                          fontWeight: FontWeight.bold,
+                                          color: getTextColor(),
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        "${earning.amount} ${LanguageController.to.currency.value}",
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 0.85,
+                                          color: getSecondaryTextColor(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
+                            if (selectedEvents.isEmpty) return <Widget>[];
+
+                            return [...selectedEvents];
+                          }(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Divider(height: 21),
                           ),
                           //Padding(padding: const EdgeInsets.symmetric(horizontal: 12.0), child: Divider(height: 21)),
                           Container(
@@ -2383,7 +2812,6 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                             //collapsedBackgroundcolor: prefsdata.get(        "cardcolor",        defaultValue: Color.fromRGBO(20, 20, 20, 1.0),      ),
                             tilePadding: const EdgeInsets.symmetric(
                               horizontal: 1.0,
-                              vertical: 0,
                             ),
                             title: Center(
                               child: Text(
@@ -2502,13 +2930,6 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                 ),
                               ),
                             ],
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                            ),
-                            child: Divider(height: 21),
                           ),
 
                           Column(
@@ -2919,41 +3340,80 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               ),
                             ],
                           ),
-                          if (enabledEvents['ramadan_start'] ?? false)
-                            _buildEventTile('ramadan_start', ramadane),
-                          if (enabledEvents['eid_al_fitr'] ?? false)
-                            _buildEventTile('eid_al_fitr', aidfitr),
-                          if (enabledEvents['eid_al_adha'] ?? false)
-                            _buildEventTile('eid_al_adha', aidfadha),
-                          if (enabledEvents['christmas'] ?? false)
-                            _buildEventTile('christmas', christmas),
-                          if (enabledEvents['new_year'] ?? false)
-                            _buildEventTile('new_year', newYear),
-                          if (enabledEvents['wedding_anniversary'] ?? false)
-                            _buildEventTile(
-                              'wedding_anniversary',
-                              weddingAnniversary,
-                            ),
-                          if (enabledEvents['wife_birthday'] ?? false)
-                            _buildEventTile('wife_birthday', wifeBirthday),
-                          if (enabledEvents['custom_event'] ?? false)
-                            _buildEventTile(
-                              'custom_event',
-                              customEvent,
-                              customTitle: customEventName,
-                            ),
-                          if (enabledEvents['custom_event_2'] ?? false)
-                            _buildEventTile(
-                              'custom_event_2',
-                              customEvent2,
-                              customTitle: customEventName2,
-                            ),
-                          if (enabledEvents['custom_event_3'] ?? false)
-                            _buildEventTile(
-                              'custom_event_3',
-                              customEvent3,
-                              customTitle: customEventName3,
-                            ),
+                          ...() {
+                            final events = [
+                              {
+                                'key': 'ramadan_start',
+                                'date': ramadane,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'eid_al_fitr',
+                                'date': aidfitr,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'eid_al_adha',
+                                'date': aidfadha,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'christmas',
+                                'date': christmas,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'new_year',
+                                'date': newYear,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'wedding_anniversary',
+                                'date': weddingAnniversary,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'wife_birthday',
+                                'date': wifeBirthday,
+                                'customTitle': null,
+                              },
+                              {
+                                'key': 'custom_event',
+                                'date': customEvent,
+                                'customTitle': customEventName,
+                              },
+                              {
+                                'key': 'custom_event_2',
+                                'date': customEvent2,
+                                'customTitle': customEventName2,
+                              },
+                              {
+                                'key': 'custom_event_3',
+                                'date': customEvent3,
+                                'customTitle': customEventName3,
+                              },
+                            ];
+
+                            // Filter for enabled ones
+                            final activeEvents = events
+                                .where((e) => enabledEvents[e['key']] ?? false)
+                                .toList();
+
+                            // Sort by date chronologically (closest to furthest)
+                            activeEvents.sort((a, b) {
+                              final dateA = a['date'] as DateTime;
+                              final dateB = b['date'] as DateTime;
+                              return dateA.compareTo(dateB);
+                            });
+
+                            return activeEvents.map((e) {
+                              return _buildEventTile(
+                                e['key'] as String,
+                                e['date'] as DateTime,
+                                customTitle: e['customTitle'] as String?,
+                              );
+                            }).toList();
+                          }(),
                         ],
                       ),
 

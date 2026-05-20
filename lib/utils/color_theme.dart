@@ -29,7 +29,7 @@ class ColorTheme {
     'Green': const Color.fromRGBO(0, 46, 2, 1.0),
     'Blue': const Color.fromRGBO(97, 134, 255, 0.1843137254901961),
     'Dark': const Color.fromRGBO(14, 14, 14, 0.1843137254901961),
-    'Light': const Color.fromRGBO(157, 157, 157, 1.0),
+    'Light': const Color.fromRGBO(240, 240, 240, 0.85),
     'Yellow': const Color.fromRGBO(255, 255, 0, 0.1843137254901961),
     'Purple': const Color.fromRGBO(255, 0, 255, 0.1843137254901961),
   };

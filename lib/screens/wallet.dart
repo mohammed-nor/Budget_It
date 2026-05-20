@@ -8,6 +8,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:budget_it/utils/language_controller.dart';
+import 'package:budget_it/utils/theme_controller.dart';
 import 'package:syncfusion_flutter_charts/charts.dart' as chart;
 import 'package:google_fonts/google_fonts.dart';
 
@@ -91,6 +92,11 @@ class _WalletPageState extends State<WalletPage> {
 
   // Helper method to determine if theme is dark
   bool _isDarkTheme() {
+    try {
+      if (!Get.find<ThemeController>().isDarkMode.value) {
+        return false;
+      }
+    } catch (e) {}
     final cardColor = prefsdata.get(
       "cardcolor",
       defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
@@ -463,8 +469,8 @@ class _WalletPageState extends State<WalletPage> {
                               ),
                             ),
                           ),
-                           SizedBox(
-                            height: 220,
+                          SizedBox(
+                            height: 270,
                             child: chart.SfCircularChart(
                               margin: EdgeInsets.zero,
                               palette: <Color>[
@@ -488,7 +494,9 @@ class _WalletPageState extends State<WalletPage> {
                                 setState(() {
                                   final int? pointIndex = args.pointIndex;
                                   if (pointIndex != null) {
-                                    if (_hiddenPointIndices.contains(pointIndex)) {
+                                    if (_hiddenPointIndices.contains(
+                                      pointIndex,
+                                    )) {
                                       _hiddenPointIndices.remove(pointIndex);
                                     } else {
                                       _hiddenPointIndices.add(pointIndex);

@@ -15,6 +15,13 @@ double get fontSize1 {
 
 // Helper function to determine if background is dark or light
 bool _isDarkTheme() {
+  try {
+    if (!Get.find<ThemeController>().isDarkMode.value) {
+      return false;
+    }
+  } catch (e) {
+    // Controller not initialized yet
+  }
   final cardColor = prefsdata.get(
     "cardcolor",
     defaultValue: const Color.fromRGBO(20, 20, 20, 1.0),
@@ -28,32 +35,33 @@ bool _isDarkTheme() {
 }
 
 // Get text color based on current theme
-Color _getTextColor() {
+Color getTextColor() {
   return _isDarkTheme() ? Colors.white : Colors.black87;
 }
 
 // Get secondary text color based on current theme
-Color _getSecondaryTextColor() {
+Color getSecondaryTextColor() {
   return _isDarkTheme() ? Colors.white70 : Colors.black54;
 }
 
 TextStyle get darkteststyle2 => TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: fontSize1,
-      color: _getTextColor(),
-    );
+  fontWeight: FontWeight.bold,
+  fontSize: fontSize1,
+  color: getTextColor(),
+);
 
 TextStyle get darktextstyle => GoogleFonts.elMessiri(
-      fontWeight: FontWeight.w700,
-      fontSize: fontSize1,
-      color: _getTextColor(),
-    );
+  fontWeight: FontWeight.w700,
+  fontSize: fontSize1,
+  color: getTextColor(),
+);
 
 final Map<String, Color> colorMap = {
   'Red': Color.fromRGBO(255, 0, 0, 0.1843137254901961),
   'Green': Color.fromRGBO(0, 46, 2, 1.0),
   'Blue': Color.fromRGBO(97, 134, 255, 0.1843137254901961),
   'Dark': Color.fromRGBO(14, 14, 14, 0.1843137254901961),
+  //'Light': Color.fromRGBO(240, 240, 240, 0.85),
   'Purple': Color.fromRGBO(255, 0, 255, 0.1843137254901961),
 };
 

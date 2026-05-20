@@ -950,7 +950,7 @@ class _StatspageState extends State<Statspage> {
       children: [
         Expanded(
           child: _buildSingleGauge(
-            title: "income_stability".tr,
+            title: "total_income_stability".tr,
             dispersion: dispersionInc,
             cardColor: cardColor,
             textColor: textColor,
@@ -960,7 +960,7 @@ class _StatspageState extends State<Statspage> {
         const SizedBox(width: 6),
         Expanded(
           child: _buildSingleGauge(
-            title: "net_income_stability".tr,
+            title: "stable_income_stability".tr,
             dispersion: dispersionNet,
             cardColor: cardColor,
             textColor: textColor,
@@ -2027,7 +2027,9 @@ class _StatspageState extends State<Statspage> {
         double remaining = goal.targetAmount - goal.currentAmount;
         int months = (remaining / netAvg).ceil();
         if (months >= 0 && months <= 12) {
-          groupedMarkers.putIfAbsent(months, () => []).add(MapEntry(goal.title, Colors.amber));
+          groupedMarkers
+              .putIfAbsent(months, () => [])
+              .add(MapEntry(goal.title, Colors.amber));
           upcomingMilestones.add(goal);
         }
       }
@@ -2240,7 +2242,9 @@ class _StatspageState extends State<Statspage> {
       final int monthOffset =
           (eventDate.year - now.year) * 12 + (eventDate.month - now.month);
       if (monthOffset >= 0 && monthOffset <= 12) {
-        groupedMarkers.putIfAbsent(monthOffset, () => []).add(MapEntry(eventLabel, Colors.cyanAccent));
+        groupedMarkers
+            .putIfAbsent(monthOffset, () => [])
+            .add(MapEntry(eventLabel, Colors.cyanAccent));
       }
     }
 
@@ -2249,10 +2253,10 @@ class _StatspageState extends State<Statspage> {
       if (months >= 0 && months < projectionData.length) {
         final xVal = projectionData[months].x;
         final yVal = projectionData[months].y;
-        
+
         // Group all event/goal names using newline \n
         final String combinedLabel = entries.map((e) => e.key).join('\n');
-        
+
         // Determine the point color:
         // - Colors.amber if all are goals
         // - Colors.cyanAccent if all are events
@@ -2268,14 +2272,7 @@ class _StatspageState extends State<Statspage> {
           pointColor = Colors.amber;
         }
 
-        goalMarkers.add(
-          ChartData(
-            xVal,
-            yVal,
-            pointColor,
-            combinedLabel,
-          ),
-        );
+        goalMarkers.add(ChartData(xVal, yVal, pointColor, combinedLabel));
       }
     });
     // ─────────────────────────────────────────────────────────────────────────
@@ -2424,7 +2421,7 @@ class _StatspageState extends State<Statspage> {
               ),
             ),
             SizedBox(
-              height: 220,
+              height: MediaQuery.of(context).size.height * 0.65,
               child: chart.SfCartesianChart(
                 plotAreaBorderWidth: 0,
                 margin: EdgeInsets.zero,
@@ -2525,7 +2522,9 @@ class _StatspageState extends State<Statspage> {
                     ),
                     dataLabelSettings: chart.DataLabelSettings(
                       isVisible: true,
-                      labelAlignment: chart.ChartDataLabelAlignment.auto,
+                      offset: const Offset(0, 10),
+                      labelAlignment: chart.ChartDataLabelAlignment.top,
+                      angle: 90,
                       textStyle: GoogleFonts.elMessiri(
                         color: Colors.white70,
                         fontSize: 7,

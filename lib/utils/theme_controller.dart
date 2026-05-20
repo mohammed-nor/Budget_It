@@ -25,11 +25,25 @@ class ThemeController extends GetxController {
     accentColor.value = ColorTheme.getAccentColor(accentColorName.value);
     fontSize1.value =
         (_prefsBox.get('fontsize1', defaultValue: 15.0) as num).toDouble();
+    
+    // Apply theme mode on start
+    Get.changeThemeMode(isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
   }
 
   void updateThemeMode(bool darkMode) {
     isDarkMode.value = darkMode;
     _prefsBox.put('thememode', darkMode);
+    
+    // Automatically adjust the card background color to match the theme mode
+    if (darkMode) {
+      _prefsBox.put('selectedColorName', 'Dark');
+      _prefsBox.put('cardcolor', const Color.fromRGBO(14, 14, 14, 0.1843137254901961));
+    } else {
+      _prefsBox.put('selectedColorName', 'Light');
+      _prefsBox.put('cardcolor', const Color.fromRGBO(240, 240, 240, 0.85));
+    }
+    
+    Get.changeThemeMode(darkMode ? ThemeMode.dark : ThemeMode.light);
     update();
   }
 
