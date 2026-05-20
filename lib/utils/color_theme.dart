@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ColorTheme {
   // Primary colors for light and dark themes
-  static const Color darkBackground = Color.fromRGBO(20, 20, 20, 1.0);
+  static const Color darkBackground = Colors.black;
   static const Color darkCardBackground = Color.fromRGBO(30, 30, 30, 1.0);
   static const Color darkTextPrimary = Colors.white;
   static const Color darkTextSecondary = Color.fromRGBO(189, 189, 189, 1.0);

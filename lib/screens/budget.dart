@@ -1848,7 +1848,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
       builder: (context, box, child) {
         return Scaffold(
           //backgroundColor: Colors.black,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor: Colors.black,
           body: ListView(
             //padding: const EdgeInsets.all(7),
             children: <Widget>[
@@ -2044,7 +2044,8 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                           ),
                           TableCalendar(
                             locale: Get.locale?.toString() ?? 'en_US',
-                            focusedDay: calendarFocusedDay,
+                            //focusedDay: calendarFocusedDay,
+                            focusedDay: today,
                             rowHeight: 45,
                             firstDay: calendarFirstDay,
                             lastDay: DateTime(2050, 12, 31),

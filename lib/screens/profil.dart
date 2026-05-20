@@ -107,7 +107,7 @@ class _ProfilpageState extends State<Profilpage> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
         children: [
           _buildSectionCard(
             context,
@@ -293,6 +293,7 @@ class _ProfilpageState extends State<Profilpage> {
     EdgeInsetsGeometry? padding,
   }) {
     return Container(
+      //margin: EdgeInsets.symmetric(vertical: 6, horizontal: 6),
       decoration: BoxDecoration(
         color: cardcolor,
         borderRadius: BorderRadius.circular(20),
