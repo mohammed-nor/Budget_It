@@ -108,9 +108,11 @@ class _MyhomeState extends State<Myhome> {
                       offset: const Offset(0, -6),
                     ),
                   ], */
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.15),
-                    width: 1.5,
+                  border: Border(
+                    top: BorderSide(
+                      color: Colors.green.withOpacity(0.55),
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 child: BottomNavigationBar(
