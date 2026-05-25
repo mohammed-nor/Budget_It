@@ -4311,12 +4311,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                       const SizedBox(height: 20),
                       moneyinput(size, mntexp, "mntexp", "monthly_expenses".tr),
                       moneyinput(size, annexp, "annexp", "annual_expenses".tr),
-                      moneyinputslider(
-                        size,
-                        mntperexp,
-                        "mntperexp",
-                        "spending_change_percentage".tr,
-                      ),
+
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Divider(height: 21),
@@ -4703,12 +4698,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                         "mntnstblinc",
                         "variable_monthly_income".tr,
                       ),
-                      moneyinputslider(
-                        size,
-                        mntperinc,
-                        "mntperinc",
-                        "income_fluctuation_percentage".tr,
-                      ),
+
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Divider(height: 21),
@@ -4736,6 +4726,18 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                             "min_annual_saving".tr,
                           ),
                         ],
+                      ),
+                      moneyinputslider(
+                        size,
+                        mntperinc,
+                        "mntperinc",
+                        "income_fluctuation_percentage".tr,
+                      ),
+                      moneyinputslider(
+                        size,
+                        mntperexp,
+                        "mntperexp",
+                        "spending_change_percentage".tr,
                       ),
                     ],
                   ),
