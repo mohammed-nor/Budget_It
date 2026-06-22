@@ -324,7 +324,7 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
     final Map<DateTime, num> dailySpends = {};
     final Map<DateTime, num> dailyEarns = {};
     for (var s in spends) {
-      final d = DateTime(s.date.year, s.date.month, s.date.day);
+      final d = DateTime(s.date.year, s.date.month, s.date.day).toLocal();
       dailySpends[d] = (dailySpends[d] ?? 0) + s.amount;
     }
     for (var e in earns) {
@@ -337,8 +337,18 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
       final num todayUnexpectedEarnings = dailyEarns[start] ?? 0;
       final num todayUnexpectedSpendings = dailySpends[start] ?? 0;
       final num close = evaluateOpening(start.add(const Duration(days: 1)));
-      final num high = open + todayUnexpectedEarnings;
-      final num low = open - dailySpending - todayUnexpectedSpendings;
+
+      // Compute high/low based on open, close, and intra-day unexpected transactions.
+      // Use conservative extremes so highs/lows reflect the maximum/minimum balance
+      // achievable during the day regardless of transaction ordering.
+      final num high = math.max(
+        open,
+        math.max(open + todayUnexpectedEarnings, close),
+      );
+      final num low = math.min(
+        open,
+        math.min(open - dailySpending - todayUnexpectedSpendings, close),
+      );
 
       generated.add(_CandleData(start, open, high, low, close));
     }
@@ -488,57 +498,60 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                "variable_expenses".tr,
-                style: themedTextStyle(
-                  fontSize: fontSize1 * 1.2,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: Get.locale?.languageCode == 'ar'
-                    ? TextAlign.right
-                    : TextAlign.left,
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (upcomingSpendingList.length > 3)
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isUpcomingSpendingExpanded =
-                              !_isUpcomingSpendingExpanded;
-                        });
-                      },
-                      icon: Icon(
-                        _isUpcomingSpendingExpanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
-                        color: Colors.white70,
-                      ),
-                      tooltip: _isUpcomingSpendingExpanded
-                          ? "show_less".tr
-                          : "show_more".tr,
-                    ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddSpendingDialog,
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: Text(
-                      "add".tr,
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.error.withOpacity(0.7),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  "variable_expenses".tr,
+                  style: themedTextStyle(
+                    fontSize: fontSize1 * 1.2,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                  textAlign: Get.locale?.languageCode == 'ar'
+                      ? TextAlign.right
+                      : TextAlign.left,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (upcomingSpendingList.length > 3)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isUpcomingSpendingExpanded =
+                                !_isUpcomingSpendingExpanded;
+                          });
+                        },
+                        icon: Icon(
+                          _isUpcomingSpendingExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          color: Colors.white70,
+                        ),
+                        tooltip: _isUpcomingSpendingExpanded
+                            ? "show_less".tr
+                            : "show_more".tr,
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddSpendingDialog,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: Text(
+                        "add".tr,
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.error.withOpacity(0.7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -591,68 +604,82 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               width: 1,
                             ),
                           ),
-                          child: ListTile(
-                            trailing: GestureDetector(
-                              onTap: () => _deleteUpcomingSpending(item.id),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(200, 50, 50, 0.5),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              item.title,
-                              style: darktextstyle.copyWith(
-                                fontSize: fontSize1,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                  style: darktextstyle.copyWith(
-                                    fontSize: fontSize1 * 0.85,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              trailing: GestureDetector(
+                                onTap: () => _deleteUpcomingSpending(item.id),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(
+                                      200,
+                                      50,
+                                      50,
+                                      0.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ),
-                                Text(
-                                  daysUntil < 0
-                                      ? "${"days_ago".trArgs([(-daysUntil).toString()])}"
-                                      : "$daysUntil ${"days_left".tr}",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1 * 0.85,
-                                    color: daysUntil < 0
-                                        ? Colors.red[300]
-                                        : daysUntil < 7
-                                        ? Colors.orange[300]
-                                        : Colors.green[300],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            leading: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
                               ),
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(30, 30, 30, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "${item.amount} ${LanguageController.to.currency.value}",
-                                style: themedTextStyle(
+                              title: Text(
+                                item.title,
+                                style: darktextstyle.copyWith(
                                   fontSize: fontSize1,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color.fromRGBO(253, 95, 95, 1.0),
+                                ),
+                              ),
+                              subtitle: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                    style: darktextstyle.copyWith(
+                                      fontSize: fontSize1 * 0.85,
+                                    ),
+                                  ),
+                                  Text(
+                                    daysUntil < 0
+                                        ? "${"days_ago".trArgs([(-daysUntil).toString()])}"
+                                        : "$daysUntil ${"days_left".tr}",
+                                    style: themedTextStyle(
+                                      fontSize: fontSize1 * 0.85,
+                                      color: daysUntil < 0
+                                          ? Colors.red[300]
+                                          : daysUntil < 7
+                                          ? Colors.orange[300]
+                                          : Colors.green[300],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color.fromRGBO(30, 30, 30, 1.0),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  "${item.amount} ${LanguageController.to.currency.value}",
+                                  style: themedTextStyle(
+                                    fontSize: fontSize1,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color.fromRGBO(
+                                      253,
+                                      95,
+                                      95,
+                                      1.0,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -872,57 +899,60 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                "variable_earnings".tr,
-                style: themedTextStyle(
-                  fontSize: fontSize1 * 1.2,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: Get.locale?.languageCode == 'ar'
-                    ? TextAlign.right
-                    : TextAlign.left,
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (unexpectedEarningsList.length > 3)
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _isUnexpectedEarningsExpanded =
-                              !_isUnexpectedEarningsExpanded;
-                        });
-                      },
-                      icon: Icon(
-                        _isUnexpectedEarningsExpanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
-                        color: Colors.white70,
-                      ),
-                      tooltip: _isUnexpectedEarningsExpanded
-                          ? "show_less".tr
-                          : "show_more".tr,
-                    ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddEarningDialog,
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: Text(
-                      "add".tr,
-                      style: darktextstyle.copyWith(fontSize: fontSize1),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.5),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  "variable_earnings".tr,
+                  style: themedTextStyle(
+                    fontSize: fontSize1 * 1.2,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                  textAlign: Get.locale?.languageCode == 'ar'
+                      ? TextAlign.right
+                      : TextAlign.left,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (unexpectedEarningsList.length > 3)
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _isUnexpectedEarningsExpanded =
+                                !_isUnexpectedEarningsExpanded;
+                          });
+                        },
+                        icon: Icon(
+                          _isUnexpectedEarningsExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          color: Colors.white70,
+                        ),
+                        tooltip: _isUnexpectedEarningsExpanded
+                            ? "show_less".tr
+                            : "show_more".tr,
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _showAddEarningDialog,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: Text(
+                        "add".tr,
+                        style: darktextstyle.copyWith(fontSize: fontSize1),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -979,72 +1009,83 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                               width: 1,
                             ),
                           ),
-                          child: ListTile(
-                            trailing: GestureDetector(
-                              onTap: () => _deleteUnexpectedEarning(item.id),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromRGBO(200, 50, 50, 0.5),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.delete,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              item.title,
-                              style: themedTextStyle(
-                                fontSize: fontSize1,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1 * 0.85,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: ListTile(
+                              trailing: GestureDetector(
+                                onTap: () => _deleteUnexpectedEarning(item.id),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromRGBO(
+                                      200,
+                                      50,
+                                      50,
+                                      0.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ),
-                                Text(
-                                  daysAgo == 0
-                                      ? "today".tr
-                                      : daysAgo == 1
-                                      ? "yesterday".tr
-                                      : "days_ago".trArgs([daysAgo.toString()]),
-                                  style: themedTextStyle(
-                                    fontSize: fontSize1 * 0.85,
-                                    color: daysAgo < 3
-                                        ? Colors.green[300]
-                                        : Colors.grey[400],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            leading: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
                               ),
-                              decoration: BoxDecoration(
-                                color: const Color.fromRGBO(30, 50, 30, 1.0),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "${item.amount} ${LanguageController.to.currency.value}",
+                              title: Text(
+                                item.title,
                                 style: themedTextStyle(
                                   fontSize: fontSize1,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color.fromRGBO(
-                                    106,
-                                    253,
-                                    95,
-                                    1.0,
+                                ),
+                              ),
+                              subtitle: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "${item.date.year}-${item.date.month.toString().padLeft(2, '0')}-${item.date.day.toString().padLeft(2, '0')}",
+                                    style: themedTextStyle(
+                                      fontSize: fontSize1 * 0.85,
+                                    ),
+                                  ),
+                                  Text(
+                                    daysAgo == 0
+                                        ? "today".tr
+                                        : daysAgo == 1
+                                        ? "yesterday".tr
+                                        : "days_ago".trArgs([
+                                            daysAgo.toString(),
+                                          ]),
+                                    style: themedTextStyle(
+                                      fontSize: fontSize1 * 0.85,
+                                      color: daysAgo < 3
+                                          ? Colors.green[300]
+                                          : Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color.fromRGBO(30, 50, 30, 1.0),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  "${item.amount} ${LanguageController.to.currency.value}",
+                                  style: themedTextStyle(
+                                    fontSize: fontSize1,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color.fromRGBO(
+                                      106,
+                                      253,
+                                      95,
+                                      1.0,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1833,10 +1874,13 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                 textAlign: isAr ? TextAlign.left : TextAlign.right,
               ),
             );
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              trailing: inputWidget,
-              leading: labelWidget,
+            return Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                trailing: inputWidget,
+                leading: labelWidget,
+              ),
             );
           },
         ),
@@ -2338,33 +2382,36 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                           width: 1,
                                         ),
                                       ),
-                                      child: ListTile(
-                                        leading: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: (ev['color'] as Color)
-                                                .withOpacity(0.12),
-                                            shape: BoxShape.circle,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: ListTile(
+                                          leading: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: (ev['color'] as Color)
+                                                  .withOpacity(0.12),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              ev['icon'] as IconData,
+                                              color: ev['color'] as Color,
+                                              size: 20,
+                                            ),
                                           ),
-                                          child: Icon(
-                                            ev['icon'] as IconData,
-                                            color: ev['color'] as Color,
-                                            size: 20,
+                                          title: Text(
+                                            ev['title'] as String,
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1,
+                                              fontWeight: FontWeight.bold,
+                                              color: getTextColor(),
+                                            ),
                                           ),
-                                        ),
-                                        title: Text(
-                                          ev['title'] as String,
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1,
-                                            fontWeight: FontWeight.bold,
-                                            color: getTextColor(),
-                                          ),
-                                        ),
-                                        subtitle: Text(
-                                          'event'.tr,
-                                          style: darktextstyle.copyWith(
-                                            fontSize: fontSize1 * 0.85,
-                                            color: getSecondaryTextColor(),
+                                          subtitle: Text(
+                                            'event'.tr,
+                                            style: darktextstyle.copyWith(
+                                              fontSize: fontSize1 * 0.85,
+                                              color: getSecondaryTextColor(),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -2398,34 +2445,37 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                         width: 1,
                                       ),
                                     ),
-                                    child: ListTile(
-                                      leading: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFFFF5252,
-                                          ).withOpacity(0.12),
-                                          shape: BoxShape.circle,
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFFFF5252,
+                                            ).withOpacity(0.12),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.trending_down,
+                                            color: Color(0xFFFF5252),
+                                            size: 20,
+                                          ),
                                         ),
-                                        child: const Icon(
-                                          Icons.trending_down,
-                                          color: Color(0xFFFF5252),
-                                          size: 20,
+                                        title: Text(
+                                          spending.title,
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1,
+                                            fontWeight: FontWeight.bold,
+                                            color: getTextColor(),
+                                          ),
                                         ),
-                                      ),
-                                      title: Text(
-                                        spending.title,
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1,
-                                          fontWeight: FontWeight.bold,
-                                          color: getTextColor(),
-                                        ),
-                                      ),
-                                      subtitle: Text(
-                                        "${spending.amount} ${LanguageController.to.currency.value}",
-                                        style: darktextstyle.copyWith(
-                                          fontSize: fontSize1 * 0.85,
-                                          color: getSecondaryTextColor(),
+                                        subtitle: Text(
+                                          "${spending.amount} ${LanguageController.to.currency.value}",
+                                          style: darktextstyle.copyWith(
+                                            fontSize: fontSize1 * 0.85,
+                                            color: getSecondaryTextColor(),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2659,6 +2709,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                       )
                                     : ExcludeSemantics(
                                         child: SfCartesianChart(
+                                          zoomPanBehavior: ZoomPanBehavior(
+                                            enablePanning: true,
+                                            enablePinching: true,
+                                            zoomMode: ZoomMode.x,
+                                            enableMouseWheelZooming: true,
+                                          ),
                                           primaryXAxis: DateTimeAxis(
                                             dateFormat: DateFormat('d MMM'),
                                             intervalType:
@@ -2992,47 +3048,52 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: ListTile(
-                                    title: Text(
-                                      "amount_saved".tr,
-                                      style: themedTextStyle(
-                                        fontSize: fontSize1,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
-                                      style: darktextstyle.copyWith(
-                                        fontSize: fontSize1 * 1.2,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          1.0,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: ListTile(
+                                      title: Text(
+                                        "amount_saved".tr,
+                                        style: themedTextStyle(
+                                          fontSize: fontSize1,
                                         ),
                                       ),
-                                    ),
+                                      subtitle: Text(
+                                        "${(nownetcredit - calculateSpendingBetweenDates(startDate, today) + calculateEarningsBetweenDates(startDate, today) + count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}",
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 1.2,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color.fromRGBO(
+                                            106,
+                                            253,
+                                            95,
+                                            1.0,
+                                          ),
+                                        ),
+                                      ),
 
-                                    trailing: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: const Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          0.15,
+                                      trailing: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromRGBO(
+                                            106,
+                                            253,
+                                            95,
+                                            0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
                                         ),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: const Icon(
-                                        Icons.savings,
-                                        color: Color.fromRGBO(
-                                          106,
-                                          253,
-                                          95,
-                                          1.0,
+                                        child: const Icon(
+                                          Icons.savings,
+                                          color: Color.fromRGBO(
+                                            106,
+                                            253,
+                                            95,
+                                            1.0,
+                                          ),
+                                          size: 24,
                                         ),
-                                        size: 24,
                                       ),
                                     ),
                                   ),
@@ -3090,123 +3151,10 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: ListTile(
-                                    title: Text(
-                                      totsaving -
-                                                  calculateSpendingBetweenDates(
-                                                    startDate,
-                                                    today,
-                                                  ) +
-                                                  calculateEarningsBetweenDates(
-                                                    startDate,
-                                                    today,
-                                                  ) -
-                                                  nownetcredit -
-                                                  count30thsPassed(
-                                                        startDate,
-                                                        today,
-                                                      ) *
-                                                      (mntsaving) >
-                                              0
-                                          ? "remaining_target_amount".tr
-                                          : "congratulations".tr,
-                                      style: themedTextStyle(
-                                        fontSize: fontSize1,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      totsaving -
-                                                  calculateSpendingBetweenDates(
-                                                    startDate,
-                                                    today,
-                                                  ) +
-                                                  calculateEarningsBetweenDates(
-                                                    startDate,
-                                                    today,
-                                                  ) -
-                                                  nownetcredit -
-                                                  count30thsPassed(
-                                                        startDate,
-                                                        today,
-                                                      ) *
-                                                      (mntsaving) >
-                                              0
-                                          ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
-                                          : "target_achieved_msg".tr,
-                                      style: darktextstyle.copyWith(
-                                        fontSize: fontSize1 * 1.2,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            totsaving -
-                                                    calculateSpendingBetweenDates(
-                                                      startDate,
-                                                      today,
-                                                    ) +
-                                                    calculateEarningsBetweenDates(
-                                                      startDate,
-                                                      today,
-                                                    ) -
-                                                    nownetcredit -
-                                                    count30thsPassed(
-                                                          startDate,
-                                                          today,
-                                                        ) *
-                                                        (mntsaving) >
-                                                0
-                                            ? const Color.fromRGBO(
-                                                253,
-                                                95,
-                                                95,
-                                                1.0,
-                                              )
-                                            : const Color.fromRGBO(
-                                                106,
-                                                253,
-                                                95,
-                                                1.0,
-                                              ),
-                                      ),
-                                      textAlign:
-                                          Get.locale?.languageCode == 'ar'
-                                          ? TextAlign.right
-                                          : TextAlign.left,
-                                    ),
-
-                                    trailing: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            totsaving -
-                                                    calculateSpendingBetweenDates(
-                                                      startDate,
-                                                      today,
-                                                    ) +
-                                                    calculateEarningsBetweenDates(
-                                                      startDate,
-                                                      today,
-                                                    ) -
-                                                    nownetcredit -
-                                                    count30thsPassed(
-                                                          startDate,
-                                                          today,
-                                                        ) *
-                                                        (mntsaving) >
-                                                0
-                                            ? const Color.fromRGBO(
-                                                253,
-                                                95,
-                                                95,
-                                                0.15,
-                                              )
-                                            : const Color.fromRGBO(
-                                                106,
-                                                253,
-                                                95,
-                                                0.15,
-                                              ),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: Icon(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: ListTile(
+                                      title: Text(
                                         totsaving -
                                                     calculateSpendingBetweenDates(
                                                       startDate,
@@ -3223,10 +3171,14 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                                         ) *
                                                         (mntsaving) >
                                                 0
-                                            ? Icons.track_changes
-                                            : Icons.emoji_events,
-                                        color:
-                                            totsaving -
+                                            ? "remaining_target_amount".tr
+                                            : "congratulations".tr,
+                                        style: themedTextStyle(
+                                          fontSize: fontSize1,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        totsaving -
                                                     calculateSpendingBetweenDates(
                                                       startDate,
                                                       today,
@@ -3242,19 +3194,133 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                                         ) *
                                                         (mntsaving) >
                                                 0
-                                            ? const Color.fromRGBO(
-                                                253,
-                                                95,
-                                                95,
-                                                1.0,
-                                              )
-                                            : const Color.fromRGBO(
-                                                106,
-                                                253,
-                                                95,
-                                                1.0,
-                                              ),
-                                        size: 24,
+                                            ? "${(totsaving - calculateEarningsBetweenDates(startDate, today) + calculateSpendingBetweenDates(startDate, today) - nownetcredit - count30thsPassed(startDate, today) * (mntsaving)).round()} ${LanguageController.to.currency.value}"
+                                            : "target_achieved_msg".tr,
+                                        style: darktextstyle.copyWith(
+                                          fontSize: fontSize1 * 1.2,
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              totsaving -
+                                                      calculateSpendingBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) +
+                                                      calculateEarningsBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) -
+                                                      nownetcredit -
+                                                      count30thsPassed(
+                                                            startDate,
+                                                            today,
+                                                          ) *
+                                                          (mntsaving) >
+                                                  0
+                                              ? const Color.fromRGBO(
+                                                  253,
+                                                  95,
+                                                  95,
+                                                  1.0,
+                                                )
+                                              : const Color.fromRGBO(
+                                                  106,
+                                                  253,
+                                                  95,
+                                                  1.0,
+                                                ),
+                                        ),
+                                        textAlign:
+                                            Get.locale?.languageCode == 'ar'
+                                            ? TextAlign.right
+                                            : TextAlign.left,
+                                      ),
+
+                                      trailing: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              totsaving -
+                                                      calculateSpendingBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) +
+                                                      calculateEarningsBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) -
+                                                      nownetcredit -
+                                                      count30thsPassed(
+                                                            startDate,
+                                                            today,
+                                                          ) *
+                                                          (mntsaving) >
+                                                  0
+                                              ? const Color.fromRGBO(
+                                                  253,
+                                                  95,
+                                                  95,
+                                                  0.15,
+                                                )
+                                              : const Color.fromRGBO(
+                                                  106,
+                                                  253,
+                                                  95,
+                                                  0.15,
+                                                ),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          totsaving -
+                                                      calculateSpendingBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) +
+                                                      calculateEarningsBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) -
+                                                      nownetcredit -
+                                                      count30thsPassed(
+                                                            startDate,
+                                                            today,
+                                                          ) *
+                                                          (mntsaving) >
+                                                  0
+                                              ? Icons.track_changes
+                                              : Icons.emoji_events,
+                                          color:
+                                              totsaving -
+                                                      calculateSpendingBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) +
+                                                      calculateEarningsBetweenDates(
+                                                        startDate,
+                                                        today,
+                                                      ) -
+                                                      nownetcredit -
+                                                      count30thsPassed(
+                                                            startDate,
+                                                            today,
+                                                          ) *
+                                                          (mntsaving) >
+                                                  0
+                                              ? const Color.fromRGBO(
+                                                  253,
+                                                  95,
+                                                  95,
+                                                  1.0,
+                                                )
+                                              : const Color.fromRGBO(
+                                                  106,
+                                                  253,
+                                                  95,
+                                                  1.0,
+                                                ),
+                                          size: 24,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -4246,15 +4312,18 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                                 ],
                               ),
                             );
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: Align(
-                                alignment: isAr
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: labelWidget,
+                            return Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Align(
+                                  alignment: isAr
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: labelWidget,
+                                ),
+                                trailing: inputWidget,
                               ),
-                              trailing: inputWidget,
                             );
                           },
                         ),
@@ -4311,7 +4380,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                       const SizedBox(height: 20),
                       moneyinput(size, mntexp, "mntexp", "monthly_expenses".tr),
                       moneyinput(size, annexp, "annexp", "annual_expenses".tr),
-
+                      moneyinputslider(
+                        size,
+                        mntperexp,
+                        "mntperexp",
+                        "spending_change_percentage".tr,
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Divider(height: 21),
@@ -4698,7 +4772,12 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                         "mntnstblinc",
                         "variable_monthly_income".tr,
                       ),
-
+                      moneyinputslider(
+                        size,
+                        mntperinc,
+                        "mntperinc",
+                        "income_fluctuation_percentage".tr,
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Divider(height: 21),
@@ -4726,18 +4805,6 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
                             "min_annual_saving".tr,
                           ),
                         ],
-                      ),
-                      moneyinputslider(
-                        size,
-                        mntperinc,
-                        "mntperinc",
-                        "income_fluctuation_percentage".tr,
-                      ),
-                      moneyinputslider(
-                        size,
-                        mntperexp,
-                        "mntperexp",
-                        "spending_change_percentage".tr,
                       ),
                     ],
                   ),
@@ -4788,10 +4855,13 @@ class _BudgetpageState extends State<Budgetpage> with WidgetsBindingObserver {
       style: darktextstyle.copyWith(fontSize: fontSize1),
       textAlign: isAr ? TextAlign.left : TextAlign.right,
     );
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-      leading: labelWidget,
-      trailing: inputWidget,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+        leading: labelWidget,
+        trailing: inputWidget,
+      ),
     );
   }
 

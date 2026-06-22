@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en-us"><head><script src="https://www.googletagmanager.com/gtm.js?id=GTM-MX6DBN9" async="async"></script><script src="/static/hash-u1hvgj6f/js/gtm.js" async="async"></script><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="twitter:card" content="summary"/><meta name="twitter:site" content="@dart_lang"/><meta name="twitter:description" content="Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS."/><meta name="twitter:image" content="https://pub.dev/static/hash-u1hvgj6f/img/pub-dev-icon-cover-image.png"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Dart packages"/><meta property="og:title" content="share_plus | Flutter package"/><meta property="og:description" content="Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS."/><meta property="og:image" content="https://pub.dev/static/hash-u1hvgj6f/img/pub-dev-icon-cover-image.png"/><meta property="og:url" content="https://pub.dev/packages/share_plus"/><title>share_plus | Flutter package</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&amp;family=Google+Sans+Display:wght@400&amp;family=Google+Sans+Text:wght@400;500;700&amp;family=Google+Sans+Mono:wght@400;700&amp;display=swap"/><link rel="shortcut icon" href="/static/hash-u1hvgj6f/img/flutter-logo-32x32.png"/><meta rel="apple-touch-icon" href="/static/hash-u1hvgj6f/img/flutter-logo-32x32.png"/><meta rel="apple-touch-icon-precomposed" href="/static/hash-u1hvgj6f/img/flutter-logo-32x32.png"/><link rel="stylesheet" href="https://www.gstatic.com/glue/v25_0/ccb.min.css"/><link rel="search" type="application/opensearchdescription+xml" title="Dart packages" href="/osd.xml"/><link rel="canonical" href="https://pub.dev/packages/share_plus"/><meta name="description" content="Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS."/><link rel="alternate" type="application/atom+xml" title="Recently published packages on pub.dev" href="/feed.atom"/><link rel="alternate" type="application/atom+xml" title="Recently published versions of package share_plus on pub.dev" href="/api/packages/share_plus/feed.atom"/><link rel="stylesheet" type="text/css" href="/static/hash-u1hvgj6f/material/bundle/styles.css"/><link rel="stylesheet" type="text/css" href="/static/hash-u1hvgj6f/css/style.css"/><script src="/static/hash-u1hvgj6f/material/bundle/script.min.js" defer="defer"></script><script src="/static/hash-u1hvgj6f/js/script.dart.js" defer="defer"></script><script src="https://www.gstatic.com/brandstudio/kato/cookie_choice_component/cookie_consent_bar.v3.js" defer="defer" data-autoload-cookie-consent-bar="true"></script><meta name="pub-page-data" content="eyJwa2dEYXRhIjp7InBhY2thZ2UiOiJzaGFyZV9wbHVzIiwidmVyc2lvbiI6IjEzLjEuMCIsInB1Ymxpc2hlcklkIjoiZmx1dHRlcmNvbW11bml0eS5kZXYiLCJpc0Rpc2NvbnRpbnVlZCI6ZmFsc2UsImlzTGF0ZXN0Ijp0cnVlfSwic2Vzc2lvbkF3YXJlIjpmYWxzZX0="/><link rel="preload" href="/static/hash-u1hvgj6f/highlight/highlight-with-init.js" as="script"/></head><body class="light-theme"><script src="/static/hash-u1hvgj6f/js/dark-init.js"></script><noscript><iframe class="-gtm-iframe" src="https://www.googletagmanager.com/ns.html?id=GTM-MX6DBN9" height="0" width="0"></iframe></noscript><div class="site-header"><button class="hamburger" aria-label="menu toggle"></button><a class="logo" href="/" aria-label="Go to the landing page of pub.dev"><img class="site-logo" src="/static/hash-u1hvgj6f/img/pub-dev-logo.svg" alt="" width="140" height="30" role="presentation"/></a><div class="site-header-space"></div><div class="site-header-mask"></div><div class="site-header-search"><form action="/packages" method="GET"><input class="site-header-search-input" name="q" placeholder="New search..." autocomplete="on" title="Search"/></form></div><nav class="site-header-nav scroll-container"><div class="nav-login-container"><button id="-account-login" class="nav-main-button link">Sign in</button></div><div class="nav-container nav-help-container hoverable"><button class="nav-main-button">Help</button><div class="nav-hover-popup"><div class="nav-table-columns"><div class="nav-table-column"><h3>pub.dev</h3><a class="nav-link" href="/help/search" rel="noopener" target="_blank">Searching for packages</a><a class="nav-link" href="/help/scoring" rel="noopener" target="_blank">Package scoring and pub points</a></div><div class="nav-table-column"><h3>Flutter</h3><a class="nav-link" href="https://flutter.dev/using-packages/" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://flutter.dev/developing-packages/" rel="noopener" target="_blank">Developing packages and plugins</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div><div class="nav-table-column"><h3>Dart</h3><a class="nav-link" href="https://dart.dev/guides/packages" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">pub.dev <img class="foldable-icon" src="/static/hash-u1hvgj6f/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="/help/search" rel="noopener" target="_blank">Searching for packages</a><a class="nav-link" href="/help/scoring" rel="noopener" target="_blank">Package scoring and pub points</a></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">Flutter <img class="foldable-icon" src="/static/hash-u1hvgj6f/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="https://flutter.dev/using-packages/" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://flutter.dev/developing-packages/" rel="noopener" target="_blank">Developing packages and plugins</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">Dart <img class="foldable-icon" src="/static/hash-u1hvgj6f/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="https://dart.dev/guides/packages" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div></nav><button class="-pub-theme-toggle" aria-label="light/dark theme toggle"></button></div><div id="banner-container"></div><main class="container"><div class="detail-wrapper -active -has-info-box"><div class="detail-banners"><a href="https://flutter.dev/docs/development/packages-and-plugins/favorites" rel="noopener" target="_blank" title="Package is a Flutter Favorite"><img class="ff-banner ff-banner-desktop displayed-in-light-theme" src="/static/hash-u1hvgj6f/img/ff-banner-desktop-2x.png" alt="" width="150" height="218" role="presentation"/><img class="ff-banner ff-banner-desktop displayed-in-dark-theme" src="/static/hash-u1hvgj6f/img/ff-banner-desktop-dark-2x.png" alt="" width="150" height="218" role="presentation"/><img class="ff-banner ff-banner-mobile displayed-in-light-theme" src="/static/hash-u1hvgj6f/img/ff-banner-mobile-2x.png" alt="" width="94" height="116" role="presentation"/><img class="ff-banner ff-banner-mobile displayed-in-dark-theme" src="/static/hash-u1hvgj6f/img/ff-banner-mobile-dark-2x.png" alt="" width="94" height="116" role="presentation"/></a></div><div class="detail-header -is-loose"><div class="detail-container"><div class="detail-header-outer-block"><div class="detail-header-content-block"><h1 class="title pub-monochrome-icon-hoverable">share_plus 13.1.0 <span class="pkg-page-title-copy"><img class="pub-monochrome-icon pkg-page-title-copy-icon filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/content-copy-icon.svg" alt="copy &quot;share_plus: ^13.1.0&quot; to clipboard" width="18" height="18" title="Copy &quot;share_plus: ^13.1.0&quot; to clipboard" data-copy-content="share_plus: ^13.1.0" data-ga-click-event="copy-package-version"/><div class="pkg-page-title-copy-feedback"><span class="code">share_plus: ^13.1.0</span> copied to clipboard</div></span></h1><div class="metadata">Published <span><a class="-x-ago" href="" title="Apr 21, 2026" role="button" data-timestamp="1776781762782">2 months ago</a></span> • <a class="-pub-publisher" href="/publishers/fluttercommunity.dev"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>fluttercommunity.dev</a></div><div class="detail-tags-and-like"><div class="detail-tags"><div class="-pub-tag-badge"><span class="tag-badge-main">SDK</span><a class="tag-badge-sub" href="/packages?q=sdk%3Aflutter" rel="nofollow" title="Packages compatible with Flutter SDK">Flutter</a></div><div class="-pub-tag-badge"><span class="tag-badge-main">Platform</span><a class="tag-badge-sub" href="/packages?q=platform%3Aandroid" rel="nofollow" title="Packages compatible with Android platform">Android</a><a class="tag-badge-sub" href="/packages?q=platform%3Aios" rel="nofollow" title="Packages compatible with iOS platform">iOS</a><a class="tag-badge-sub" href="/packages?q=platform%3Alinux" rel="nofollow" title="Packages compatible with Linux platform">Linux</a><a class="tag-badge-sub" href="/packages?q=platform%3Amacos" rel="nofollow" title="Packages compatible with macOS platform">macOS</a><a class="tag-badge-sub" href="/packages?q=platform%3Aweb" rel="nofollow" title="Packages compatible with Web platform">web</a><a class="tag-badge-sub" href="/packages?q=platform%3Awindows" rel="nofollow" title="Packages compatible with Windows platform">Windows</a></div></div><div class="like-button-and-label"><button class="like-button-and-label--button -pub-icon-button" data-ga-click-event="toggle-like" aria-pressed="false" data-package="share_plus" data-value="4004" title="Like this package"><img class="-pub-icon-button-icon--on" src="/static/hash-u1hvgj6f/img/like-active.svg" alt="liked status: active" width="18" height="18"/><img class="-pub-icon-button-icon--off" src="/static/hash-u1hvgj6f/img/like-inactive.svg" alt="liked status: inactive" width="18" height="18"/></button><span class="like-button-and-label--count-wrapper"><span class="like-button-and-label--count">4.0k</span></span></div></div></div></div></div></div><div class="detail-container"><div class="detail-lead"><div class="detail-metadata-toggle"><div class="detail-metadata-toggle-icon">→</div><h3 class="detail-lead-title">Metadata</h3></div><p class="detail-lead-text">Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.</p><p class="detail-lead-more"><a class="detail-metadata-toggle">More...</a></p></div></div><div class="detail-body"><div class="detail-tabs"><div class="detail-tabs-wide-header"><div class="detail-container"><ul class="detail-tabs-header"><li class="detail-tab tab-button detail-tab-readme-title -active">Readme</li><li class="detail-tab tab-link detail-tab-changelog-title"><a href="/packages/share_plus/changelog" role="button">Changelog</a></li><li class="detail-tab tab-link detail-tab-example-title"><a href="/packages/share_plus/example" role="button">Example</a></li><li class="detail-tab tab-link detail-tab-installing-title"><a href="/packages/share_plus/install" role="button">Installing</a></li><li class="detail-tab tab-link detail-tab-versions-title"><a href="/packages/share_plus/versions" role="button">Versions</a></li><li class="detail-tab tab-link detail-tab-analysis-title"><a href="/packages/share_plus/score" role="button">Scores</a></li></ul></div></div><div class="detail-container detail-body-main"><div class="detail-tabs-content"><section class="tab-content detail-tab-readme-content -active markdown-body"><h1 id="share_plus" class="hash-header">share_plus <a href="#share_plus" class="hash-link">#</a></h1>
+<p><a href="https://github.com/fluttercommunity/plus_plugins/actions/workflows/share_plus.yaml" rel="ugc"><img src="https://external-images.pub.dev/p0OYvtB0JKgh6SFIAnqM%2FpEVztBpRihOhZ0BZx7lKjc%3D/1782086400000/https%3A%2F%2Fgithub.com%2Ffluttercommunity%2Fplus_plugins%2Factions%2Fworkflows%2Fshare_plus.yaml%2Fbadge.svg" alt="share_plus"></a>
+<a href="https://pub.dev/packages/share_plus/score"><img src="https://external-images.pub.dev/kWwcDNHNjoBikGL02FTCcgR0kiXoi2cpvJweYstQY5g%3D/1782086400000/https%3A%2F%2Fimg.shields.io%2Fpub%2Fpoints%2Fshare_plus%3Fcolor%3D2E8B57%26label%3Dpub%2520points" alt="pub points"></a>
+<a href="https://pub.dev/packages/share_plus"><img src="https://external-images.pub.dev/JIde0KwWRx7Kj5qsUfsjXQnYGddy6b1Lq%2Bx2Ub8lsLc%3D/1782086400000/https%3A%2F%2Fimg.shields.io%2Fpub%2Fv%2Fshare_plus.svg" alt="pub package"></a></p>
+<p><a href="https://flutter.dev/docs/development/packages-and-plugins/favorites"><img src="https://external-images.pub.dev/w0w6GwXEQVkBCaNWnJhij5jEy4wY8EnAnLaPE620H10%3D/1782086400000/https%3A%2F%2Fgithub.com%2Ffluttercommunity%2Fplus_plugins%2Fraw%2Fmain%2Fassets%2Fflutter-favorite-badge.png" width="100"></a></p>
+<p>A Flutter plugin to share content from your Flutter app via the platform's
+share dialog.</p>
+<p>Wraps the <code>ACTION_SEND</code> Intent on Android, <code>UIActivityViewController</code>
+on iOS, or equivalent platform content sharing methods.</p>
+<h2 id="platform-support" class="hash-header">Platform Support <a href="#platform-support" class="hash-link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Shared content</th>
+<th align="center">Android</th>
+<th align="center">iOS</th>
+<th align="center">macOS</th>
+<th align="center">Web</th>
+<th align="center">Linux</th>
+<th align="center">Windows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Text</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="center">URI</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">As text</td>
+<td align="center">As text</td>
+<td align="center">As text</td>
+</tr>
+<tr>
+<td align="center">Files</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+</tbody>
+</table>
+<p>Also compatible with Windows and Linux by using "mailto" to share text via Email.</p>
+<p>Sharing files is not supported on Linux.</p>
+<h2 id="requirements" class="hash-header">Requirements <a href="#requirements" class="hash-link">#</a></h2>
+<ul>
+<li>Flutter &gt;=3.38.1</li>
+<li>Dart &gt;=3.10.0 &lt;4.0.0</li>
+<li>iOS &gt;=13.0</li>
+<li>macOS &gt;=10.15</li>
+<li>Java 17</li>
+<li>Kotlin 2.2.0</li>
+<li>Android Gradle Plugin &gt;=8.12.1</li>
+<li>Gradle wrapper &gt;=8.13</li>
+</ul>
+<h2 id="usage" class="hash-header">Usage <a href="#usage" class="hash-link">#</a></h2>
+<p>To use this plugin, add <code>share_plus</code> as a <a href="https://plus.fluttercommunity.dev/docs/overview" rel="ugc">dependency in your pubspec.yaml file</a>.</p>
+<p>Import the library.</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+</code></pre>
+<h3 id="share-text" class="hash-header">Share Text <a href="#share-text" class="hash-link">#</a></h3>
+<p>Access the <code>SharePlus</code> instance via <code>SharePlus.instance</code>.
+Then, invoke the <code>share()</code> method anywhere in your Dart code.</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+
+SharePlus.instance.share(
+  ShareParams(text: 'check out my website https://example.com')
+);
+</code></pre>
+<p>The <code>share()</code> method requires the <code>ShareParams</code> object,
+which contains the content to share.</p>
+<p>These are some of the accepted parameters of the <code>ShareParams</code> class:</p>
+<ul>
+<li><code>text</code>: text to share.</li>
+<li><code>title</code>: content or share-sheet title (if supported).</li>
+<li><code>subject</code>: email subject (if supported).</li>
+</ul>
+<p>Check the class documentation for more details.</p>
+<p><code>share()</code> returns <code>status</code> object that allows to check the result of user action in the share sheet.</p>
+<pre><code class="language-dart">final result = await SharePlus.instance.share(params);
+
+if (result.status == ShareResultStatus.success) {
+    print('Thank you for sharing my website!');
+}
+</code></pre>
+<h3 id="share-files" class="hash-header">Share Files <a href="#share-files" class="hash-link">#</a></h3>
+<p>To share one or multiple files, provide the <code>files</code> list in <code>ShareParams</code>.
+Optionally, you can pass <code>title</code>, <code>text</code> and <code>sharePositionOrigin</code>.</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
+
+final params = ShareParams(
+  text: 'Great picture',
+  files: [XFile('${directory.path}/image.jpg')],
+);
+
+final result = await SharePlus.instance.share(params);
+
+if (result.status == ShareResultStatus.success) {
+    print('Thank you for sharing the picture!');
+}
+</code></pre>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
+
+final params = ShareParams(
+  files: [
+    XFile('${directory.path}/image1.jpg'),
+    XFile('${directory.path}/image2.jpg'),
+  ],
+);
+
+final result = await SharePlus.instance.share(params);
+
+if (result.status == ShareResultStatus.dismissed) {
+    print('Did you not like the pictures?');
+}
+</code></pre>
+<p>On web, this uses the <a href="https://web.dev/web-share/" rel="ugc">Web Share API</a>
+if it's available. Otherwise it falls back to downloading the shared files.
+See <a href="https://caniuse.com/web-share" rel="ugc">Can I Use - Web Share API</a> to understand
+which browsers are supported. This builds on the <a href="https://pub.dev/packages/cross_file"><code>cross_file</code></a>
+package.</p>
+<p>File downloading fallback mechanism for web can be disabled by setting:</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+
+ShareParams(
+  // rest of params
+  downloadFallbackEnabled: false,
+)
+</code></pre>
+<h4 id="share-data">Share Data</h4>
+<p>You can also share files that you dynamically generate from its data using <a href="https://pub.dev/documentation/share_plus/latest/share_plus/XFile/XFile.fromData.html"><code>XFile.fromData</code></a>.</p>
+<p>To set the name of such files, use the <code>fileNameOverrides</code> parameter, otherwise the file name will be a random UUID string.</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
+import 'dart:convert';
+
+final params = ShareParams(
+  files: [XFile.fromData(utf8.encode(text), mimeType: 'text/plain')],
+  fileNameOverrides: ['myfile.txt']
+);
+
+SharePlus.instance.share(params);
+</code></pre>
+<div class="markdown-alert markdown-alert-caution">
+<p class="markdown-alert-title">Caution</p>
+<p>The <code>name</code> parameter in the <code>XFile.fromData</code> method is ignored in most platforms. Use <code>fileNameOverrides</code> instead.</p>
+</div>
+<h3 id="share-uri" class="hash-header">Share URI <a href="#share-uri" class="hash-link">#</a></h3>
+<p>iOS supports fetching metadata from a URI when shared using <code>UIActivityViewController</code>.
+This special functionality is only properly supported on iOS.
+On other platforms, the URI will be shared as plain text.</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+
+final params = ShareParams(uri: uri);
+
+SharePlus.instance.share(params);
+</code></pre>
+<h3 id="share-results" class="hash-header">Share Results <a href="#share-results" class="hash-link">#</a></h3>
+<p>All three methods return a <code>ShareResult</code> object which contains the following information:</p>
+<ul>
+<li><code>status</code>: a <code>ShareResultStatus</code></li>
+<li><code>raw</code>: a <code>String</code> describing the share result, e.g. the opening app ID.</li>
+</ul>
+<p>Note: <code>status</code> will be <code>ShareResultStatus.unavailable</code> if the platform does not support identifying the user action.</p>
+<h3 id="other-parameters" class="hash-header">Other Parameters <a href="#other-parameters" class="hash-link">#</a></h3>
+<h4 id="title">Title</h4>
+<p>Used as share sheet title where supported.</p>
+<ul>
+<li>Provided to Android's <code>Intent.createChooser</code> as the title, as well as, <code>EXTRA_TITLE</code> Intent extra.</li>
+<li>Provided to web Navigator Share API as title.</li>
+</ul>
+<pre><code class="language-dart">ShareParams(
+  // rest of params
+  title: 'Title',
+)
+</code></pre>
+<h4 id="subject">Subject</h4>
+<p>Used as email subject where supported (e.g. <code>EXTRA_SUBJECT</code> on Android)</p>
+<p>When using the email fallback, this will be the subject of the email.</p>
+<pre><code class="language-dart">ShareParams(
+  // rest of params
+  subject: 'Subject',
+)
+</code></pre>
+<h4 id="excluded-cupertino-activities">Excluded Cupertino Activities</h4>
+<p>On iOS or macOS, if you want to exclude certain options from appearing in your share sheet, you can set the <code>excludedCupertinoActivities</code> array.</p>
+<p>For the list of supported <code>excludedCupertinoActivities</code>, refer to <a href="https://pub.dev/documentation/share_plus/latest/share_plus/ShareParams-class.html">CupertinoActivityType</a>.</p>
+<pre><code class="language-dart">ShareParams(
+  // rest of params
+  excludedCupertinoActivities: [CupertinoActivityType.postToFacebook],
+)
+</code></pre>
+<h2 id="known-issues" class="hash-header">Known Issues <a href="#known-issues" class="hash-link">#</a></h2>
+<h3 id="sharing-data-created-with-xfilefromdata" class="hash-header">Sharing data created with XFile.fromData <a href="#sharing-data-created-with-xfilefromdata" class="hash-link">#</a></h3>
+<p>When sharing data created with <code>XFile.fromData</code>, the plugin will write a temporal file inside the cache directory of the app, so it can be shared.</p>
+<p>Although the OS should take care of deleting those files, it is advised, that you clean up this data once in a while (e.g. on app start).</p>
+<p>You can access this directory using <a href="https://pub.dev/packages/path_provider">path_provider</a> <a href="https://pub.dev/documentation/path_provider/latest/path_provider/getTemporaryDirectory.html">getTemporaryDirectory</a>.</p>
+<p>Alternatively, don't use <code>XFile.fromData</code> and instead write the data down to a <code>File</code> with a path before sharing it, so you control when to delete it.</p>
+<h3 id="mobile-platforms-android-and-ios" class="hash-header">Mobile platforms (Android and iOS) <a href="#mobile-platforms-android-and-ios" class="hash-link">#</a></h3>
+<h4 id="sharing-images--text">Sharing images + text</h4>
+<p>When attempting to share images with text, some apps may fail to properly accept the share action with them.</p>
+<p>For example, due to restrictions set up by Meta/Facebook this plugin isn't capable of sharing data reliably
+to Facebook related apps on Android and iOS. This includes eg. sharing text to the Facebook Messenger.</p>
+<p>If you require this functionality please check the native Facebook Sharing SDK (<a href="https://developers.facebook.com/docs/sharing" rel="ugc">https://developers.facebook.com/docs/sharing</a>)
+or search for other Flutter plugins implementing this SDK. More information can be found in <a href="https://github.com/fluttercommunity/plus_plugins/issues/413" rel="ugc">this issue</a>.</p>
+<p>Other apps may also give problems when attempting to share content to them.
+This is because 3rd party app developers do not properly implement the logic to receive share actions.</p>
+<p>We cannot guarantee that a 3rd party app will properly implement the share functionality.
+Therefore, <strong>all bugs reported regarding compatibility with a specific app will be closed.</strong></p>
+<h4 id="localization-in-apple-platforms">Localization in Apple platforms</h4>
+<p>It could happen that the Share sheet appears with a different language, <a href="https://github.com/fluttercommunity/plus_plugins/issues/2696" rel="ugc">as reported here</a>.</p>
+<p>To fix this issue, you will have to setup the keys <code>CFBundleAllowMixedLocalizations</code> and <code>CFBundleDevelopmentRegion</code> in your project's <code>info.plist</code>.</p>
+<p>For more information check the <a href="https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html" rel="ugc">CoreFoundationKeys</a> documentation.</p>
+<h4 id="ipad">iPad</h4>
+<p><code>share_plus</code> requires iPad users to provide the <code>sharePositionOrigin</code> parameter.</p>
+<p>Without it, <code>share_plus</code> will not work on iPads and may cause a crash or
+leave the UI unresponsive.</p>
+<p>To avoid that problem, provide the <code>sharePositionOrigin</code>.</p>
+<p>For example:</p>
+<pre><code class="language-dart">// Use Builder to get the widget context
+Builder(
+  builder: (BuildContext context) {
+    return ElevatedButton(
+      onPressed: () =&gt; _onShare(context),
+          child: const Text('Share'),
+     );
+  },
+),
+
+// _onShare method:
+final box = context.findRenderObject() as RenderBox?;
+
+await SharePlus.instance.share(
+  ShareParams(
+    text: text,
+    sharePositionOrigin: box!.localToGlobal(Offset.zero) &amp; box.size,
+  )
+);
+</code></pre>
+<p>See the <code>main.dart</code> in the <code>example</code> for a complete example.</p>
+<h2 id="migrating-from-shareshare-to-shareplusinstanceshare" class="hash-header">Migrating from <code>Share.share()</code> to <code>SharePlus.instance.share()</code> <a href="#migrating-from-shareshare-to-shareplusinstanceshare" class="hash-link">#</a></h2>
+<p>The static methods <code>Share.share()</code>, <code>Share.shareUri()</code> and <code>Share.shareXFiles()</code>
+have been deprecated in favor of the <code>SharePlus.instance.share(params)</code>.</p>
+<p>To convert code using <code>Share.share()</code> to the new <code>SharePlus</code> class:</p>
+<ol>
+<li>Wrap the current parameters in a <code>ShareParams</code> object.</li>
+<li>Change the call to <code>SharePlus.instance.share()</code>.</li>
+</ol>
+<p>e.g.</p>
+<pre><code class="language-dart">import 'package:share/share.dart';
+
+Share.share("Shared text");
+
+Share.shareUri("http://example.com");
+
+Share.shareXFiles(files);
+</code></pre>
+<p>Becomes:</p>
+<pre><code class="language-dart">import 'package:share_plus/share_plus.dart';
+
+SharePlus.instance.share(
+  ShareParams(text: "Shared text"),
+);
+
+SharePlus.instance.share(
+  ShareParams(uri: "http://example.com"),
+);
+
+SharePlus.instance.share(
+  ShareParams(files: files),
+);
+</code></pre>
+<h2 id="learn-more" class="hash-header">Learn more <a href="#learn-more" class="hash-link">#</a></h2>
+<ul>
+<li><a href="https://pub.dev/documentation/share_plus/latest/share_plus/share_plus-library.html">API Documentation</a></li>
+</ul>
+</section></div></div></div><aside class="detail-info-box"><a class="packages-scores" href="/packages/share_plus/score"><div class="packages-score packages-score-like" data-package="share_plus"><div class="packages-score-value -has-value"><span class="packages-score-value-number">4k</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">likes</div></div><div class="packages-score packages-score-health"><div class="packages-score-value -has-value"><span class="packages-score-value-number">150</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">points</div></div><div class="packages-score packages-score-downloads" title="Number of downloads of this package during the past 30 days"><div class="packages-score-value -has-value"><span class="packages-score-value-number">2.83M</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">downloads</div></div></a><h3 class="title">Documentation</h3><p><a class="link" href="/documentation/share_plus/latest/">API reference</a><br/></p><h3 class="title">Publisher</h3><p><a href="/publishers/fluttercommunity.dev"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>fluttercommunity.dev</a></p><h3 class="title">Weekly Downloads</h3><div id="-weekly-downloads-sparkline" class="weekly-downloads-sparkline" data-widget="weekly-sparkline" data-weekly-sparkline-points="gIY0arBpCgBgdwoALEIKAH/ZCABy8gkAKUsJAKy7CACm+gcAD3YIAOVoCACA/wcA7LYHAIlfBwCsgQcAYuAHAOzGBwAMiwcAe3YGAFYNBwC8HwcAnMUGAECHBgDDuwYAS0cGACWcAwDAmgQAz6UGACwaBwA7JQcA5NwHAMl/CADlJggAChAIAGMaCAD8+gcAaLAHAPLPBwBIVgcAXU4HABW4BwC5OggAvr4HADU+CABxRggAwcgHAE30BwDBUQcAQ+8GAA7ABgDrugYAG5IGAD0MBwA="></div><h3 class="title pkg-infobox-metadata">Metadata</h3><p>Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.</p><p><a class="link" href="https://github.com/fluttercommunity/plus_plugins" rel="ugc">Homepage</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/tree/main/packages/share_plus/share_plus" rel="ugc">Repository (GitHub)</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/labels/share_plus" rel="ugc">View&#47;report issues</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/blob/main/CONTRIBUTING.md" rel="ugc">Contributing</a><br/></p><h3 class="title">Topics</h3><p><a class="topics-tag" href="/packages?q=topic%3Ashare" rel="nofollow">#share</a> <a class="topics-tag" href="/packages?q=topic%3Autils" rel="nofollow">#utils</a></p><h3 class="title">License</h3><p><img class="inline-icon-img filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/material-icon-balance.svg" alt="" width="14" height="14" role="presentation"/>BSD-3-Clause (<a href="/packages/share_plus/license">license</a>)</p><h3 class="title">Dependencies</h3><p><a href="/packages/cross_file" title="^0.3.5+2">cross_file</a>, <a href="/packages/ffi" title="^2.2.0">ffi</a>, <a href="/packages/file" title="^7.0.1">file</a>, <a href="https://api.flutter.dev/">flutter</a>, <a href="https://api.flutter.dev/flutter/flutter_web_plugins/flutter_web_plugins-library.html">flutter_web_plugins</a>, <a href="/packages/meta" title="^1.17.0">meta</a>, <a href="/packages/mime" title="^2.0.0">mime</a>, <a href="/packages/share_plus_platform_interface" title="^7.1.0">share_plus_platform_interface</a>, <a href="/packages/url_launcher_linux" title="^3.2.2">url_launcher_linux</a>, <a href="/packages/url_launcher_platform_interface" title="^2.3.2">url_launcher_platform_interface</a>, <a href="/packages/url_launcher_web" title="^2.4.2">url_launcher_web</a>, <a href="/packages/url_launcher_windows" title="^3.1.5">url_launcher_windows</a>, <a href="/packages/web" title="^1.1.1">web</a>, <a href="/packages/win32" title="^6.0.1">win32</a></p><h3 class="title">More</h3><p><a href="/packages?q=dependency%3Ashare_plus" rel="nofollow">Packages that depend on share_plus</a><br/><br/><a href="/packages?q=implements-federated-plugin%3Ashare_plus" rel="nofollow">Packages that implement share_plus</a></p></aside></div><script type="application/ld+json">{"@context":"http\u003a\u002f\u002fschema.org","@type":"SoftwareSourceCode","name":"share\u005fplus","version":"13.1.0","description":"share\u005fplus - Flutter plugin for sharing content via the platform share UI, using the ACTION\u005fSEND intent on Android and UIActivityViewController on iOS.","url":"https\u003a\u002f\u002fpub.dev\u002fpackages\u002fshare\u005fplus","dateCreated":"2020-04-20T18\u003a02\u003a15.748611Z","dateModified":"2026-04-21T14\u003a29\u003a22.782499Z","programmingLanguage":"Dart","image":"https\u003a\u002f\u002fpub.dev\u002fstatic\u002fimg\u002fpub-dev-icon-cover-image.png","license":"https\u003a\u002f\u002fpub.dev\u002fpackages\u002fshare\u005fplus\u002flicense"}</script></div><div class="detail-metadata"><h3 class="detail-metadata-title"><span class="detail-metadata-toggle">←</span> Metadata</h3><div class="detail-info-box"><a class="packages-scores" href="/packages/share_plus/score"><div class="packages-score packages-score-like" data-package="share_plus"><div class="packages-score-value -has-value"><span class="packages-score-value-number">4k</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">likes</div></div><div class="packages-score packages-score-health"><div class="packages-score-value -has-value"><span class="packages-score-value-number">150</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">points</div></div><div class="packages-score packages-score-downloads" title="Number of downloads of this package during the past 30 days"><div class="packages-score-value -has-value"><span class="packages-score-value-number">2.83M</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">downloads</div></div></a><h3 class="title">Documentation</h3><p><a class="link" href="/documentation/share_plus/latest/">API reference</a><br/></p><h3 class="title">Publisher</h3><p><a href="/publishers/fluttercommunity.dev"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>fluttercommunity.dev</a></p><h3 class="title">Weekly Downloads</h3><div id="-weekly-downloads-sparkline" class="weekly-downloads-sparkline" data-widget="weekly-sparkline" data-weekly-sparkline-points="gIY0arBpCgBgdwoALEIKAH/ZCABy8gkAKUsJAKy7CACm+gcAD3YIAOVoCACA/wcA7LYHAIlfBwCsgQcAYuAHAOzGBwAMiwcAe3YGAFYNBwC8HwcAnMUGAECHBgDDuwYAS0cGACWcAwDAmgQAz6UGACwaBwA7JQcA5NwHAMl/CADlJggAChAIAGMaCAD8+gcAaLAHAPLPBwBIVgcAXU4HABW4BwC5OggAvr4HADU+CABxRggAwcgHAE30BwDBUQcAQ+8GAA7ABgDrugYAG5IGAD0MBwA="></div><h3 class="title pkg-infobox-metadata">Metadata</h3><p>Flutter plugin for sharing content via the platform share UI, using the ACTION_SEND intent on Android and UIActivityViewController on iOS.</p><p><a class="link" href="https://github.com/fluttercommunity/plus_plugins" rel="ugc">Homepage</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/tree/main/packages/share_plus/share_plus" rel="ugc">Repository (GitHub)</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/labels/share_plus" rel="ugc">View&#47;report issues</a><br/><a class="link" href="https://github.com/fluttercommunity/plus_plugins/blob/main/CONTRIBUTING.md" rel="ugc">Contributing</a><br/></p><h3 class="title">Topics</h3><p><a class="topics-tag" href="/packages?q=topic%3Ashare" rel="nofollow">#share</a> <a class="topics-tag" href="/packages?q=topic%3Autils" rel="nofollow">#utils</a></p><h3 class="title">License</h3><p><img class="inline-icon-img filter-invert-on-dark" src="/static/hash-u1hvgj6f/img/material-icon-balance.svg" alt="" width="14" height="14" role="presentation"/>BSD-3-Clause (<a href="/packages/share_plus/license">license</a>)</p><h3 class="title">Dependencies</h3><p><a href="/packages/cross_file" title="^0.3.5+2">cross_file</a>, <a href="/packages/ffi" title="^2.2.0">ffi</a>, <a href="/packages/file" title="^7.0.1">file</a>, <a href="https://api.flutter.dev/">flutter</a>, <a href="https://api.flutter.dev/flutter/flutter_web_plugins/flutter_web_plugins-library.html">flutter_web_plugins</a>, <a href="/packages/meta" title="^1.17.0">meta</a>, <a href="/packages/mime" title="^2.0.0">mime</a>, <a href="/packages/share_plus_platform_interface" title="^7.1.0">share_plus_platform_interface</a>, <a href="/packages/url_launcher_linux" title="^3.2.2">url_launcher_linux</a>, <a href="/packages/url_launcher_platform_interface" title="^2.3.2">url_launcher_platform_interface</a>, <a href="/packages/url_launcher_web" title="^2.4.2">url_launcher_web</a>, <a href="/packages/url_launcher_windows" title="^3.1.5">url_launcher_windows</a>, <a href="/packages/web" title="^1.1.1">web</a>, <a href="/packages/win32" title="^6.0.1">win32</a></p><h3 class="title">More</h3><p><a href="/packages?q=dependency%3Ashare_plus" rel="nofollow">Packages that depend on share_plus</a><br/><br/><a href="/packages?q=implements-federated-plugin%3Ashare_plus" rel="nofollow">Packages that implement share_plus</a></p></div><p class="detail-lead-back"><a class="detail-metadata-toggle">Back</a></p></div><div id="-screenshot-carousel" class="carousel"><fab id="-carousel-prev" class="mdc-fab carousel-prev carousel-nav" data-mdc-auto-init="MDCRipple" title="Previous" data-ga-click-event="screenshot-carousel-prev-click" tabindex="0"><div class="mdc-fab__ripple"></div><img class="mdc-fab__icon" src="/static/hash-u1hvgj6f/img/keyboard_arrow_left.svg" alt="previous" width="24" height="24" aria-hidden="true"/></fab><div id="-image-container" class="image-container"></div><fab id="-carousel-next" class="mdc-fab carousel-next carousel-nav" data-mdc-auto-init="MDCRipple" title="Next" data-ga-click-event="screenshot-carousel-next-click" tabindex="0"><div class="mdc-fab__ripple"></div><img class="mdc-fab__icon" src="/static/hash-u1hvgj6f/img/keyboard_arrow_right.svg" alt="next" width="24" height="24" aria-hidden="true"/></fab><p id="-screenshot-description" class="screenshot-description"></p></div></main><footer class="site-footer"><a class="link" href="https://dart.dev/">Dart language</a><a class="link sep" href="/report?subject=package%3Ashare_plus&amp;url=https%3A%2F%2Fpub.dev%2Fpackages%2Fshare_plus">Report package</a><a class="link sep" href="/policy">Policy</a><a class="link sep" href="https://www.google.com/intl/en/policies/terms/">Terms</a><a class="link sep" href="https://developers.google.com/terms/">API Terms</a><a class="link sep" href="/security">Security</a><a class="link sep" href="https://www.google.com/intl/en/policies/privacy/">Privacy</a><a class="link sep" href="/help">Help</a><a class="link icon sep" href="/feed.atom"><img class="inline-icon" src="/static/hash-u1hvgj6f/img/rss-feed-icon.svg" alt="RSS" width="20" height="20" title="RSS/atom feed"/></a><a class="link icon github_issue" href="https://github.com/dart-lang/pub-dev/issues/new"><img class="inline-icon" src="/static/hash-u1hvgj6f/img/bug-report-white-96px.png" alt="bug report" width="20" height="20" title="Report an issue with this site"/></a></footer><script src="/static/hash-u1hvgj6f/highlight/highlight-with-init.js" defer="defer"></script></body></html>

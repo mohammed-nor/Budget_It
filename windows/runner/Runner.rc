@@ -93,7 +93,7 @@ BEGIN
             VALUE "FileDescription", "budget_it" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "budget_it" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.norit. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.norit. All rights reserved." "\0"
             VALUE "OriginalFilename", "budget_it.exe" "\0"
             VALUE "ProductName", "budget_it" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

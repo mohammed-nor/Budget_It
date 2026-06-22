@@ -49,7 +49,7 @@ class NotificationService {
     );
 
     await _plugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (details) {
         debugPrint('Notification tapped: ${details.payload}');
       },
@@ -131,7 +131,13 @@ class NotificationService {
     String? payload,
   }) async {
     if (!_isSupported() || !_notificationsEnabled()) return;
-    await _plugin.show(id, title, body, _buildDetails(), payload: payload);
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: _buildDetails(),
+      payload: payload,
+    );
   }
 
   // ─────────────────────────────── schedule daily reminder at set time ──────
@@ -144,16 +150,16 @@ class NotificationService {
     final hour = box.get(kNotifDailyHour, defaultValue: 9) as int;
     final minute = box.get(kNotifDailyMinute, defaultValue: 0) as int;
 
-    await _plugin.cancel(1);
+    await _plugin.cancel(id: 1);
     // Safety delay to ensure the OS has cleared the previous notification
     await Future.delayed(const Duration(milliseconds: 100));
 
     await _plugin.zonedSchedule(
-      1,
-      _tr('daily_reminder_title'),
-      _tr('daily_reminder_body'),
-      _nextInstanceOfTime(hour, minute),
-      _buildDetails(),
+      id: 1,
+      title: _tr('daily_reminder_title'),
+      body: _tr('daily_reminder_body'),
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: _buildDetails(),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'daily_reminder',
@@ -183,15 +189,15 @@ class NotificationService {
       );
     }
 
-    await _plugin.cancel(2);
+    await _plugin.cancel(id: 2);
     await Future.delayed(const Duration(milliseconds: 100));
 
     await _plugin.zonedSchedule(
-      2,
-      _tr('salary_day_title'),
-      _tr('salary_day_body'),
-      scheduled,
-      _buildDetails(),
+      id: 2,
+      title: _tr('salary_day_title'),
+      body: _tr('salary_day_body'),
+      scheduledDate: scheduled,
+      notificationDetails: _buildDetails(),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: 'salary_day',
     );
@@ -223,12 +229,12 @@ class NotificationService {
 
   // ─────────────────────────────────────────────────── cancel helpers ───────
   Future<void> cancelAll() async => _plugin.cancelAll();
-  Future<void> cancelDailyReminder() async => _plugin.cancel(1);
-  Future<void> cancelSalaryNotification() async => _plugin.cancel(2);
+  Future<void> cancelDailyReminder() async => _plugin.cancel(id: 1);
+  Future<void> cancelSalaryNotification() async => _plugin.cancel(id: 2);
 
   Future<void> cancelBudgetInsights() async {
     for (int h = 0; h < 24; h++) {
-      await _plugin.cancel(100 + h);
+      await _plugin.cancel(id: 100 + h);
     }
   }
 
@@ -239,7 +245,7 @@ class NotificationService {
 
     // Clear all previous periodic insight notifications (IDs 100 to 124)
     for (int h = 0; h < 24; h++) {
-      await _plugin.cancel(100 + h);
+      await _plugin.cancel(id: 100 + h);
     }
     // Safety delay to ensure the OS has cleared the previous notifications
     await Future.delayed(const Duration(milliseconds: 100));
@@ -248,9 +254,12 @@ class NotificationService {
     if (!(box.get(kNotifInsightsEnabled, defaultValue: false) as bool)) return;
 
     final intervalHours = box.get(kNotifInsightsHours, defaultValue: 4) as int;
-    final totsaving = (box.get("totsaving", defaultValue: 50000.0) as num).toDouble();
-    final nownetcredit = (box.get("nownetcredit", defaultValue: 2000.0) as num).toDouble();
-    final mntsaving = (box.get("mntsaving", defaultValue: 1000.0) as num).toDouble();
+    final totsaving = (box.get("totsaving", defaultValue: 50000.0) as num)
+        .toDouble();
+    final nownetcredit = (box.get("nownetcredit", defaultValue: 2000.0) as num)
+        .toDouble();
+    final mntsaving = (box.get("mntsaving", defaultValue: 1000.0) as num)
+        .toDouble();
     final currency = box.get("currency", defaultValue: "DH") as String;
 
     final progress = totsaving > 0 ? (nownetcredit / totsaving) * 100 : 0.0;
@@ -292,9 +301,12 @@ class NotificationService {
         case 4:
         default:
           title = _tr('insight_title_fixed');
-          final mntinc = (box.get("mntinc", defaultValue: 4300.0) as num).toDouble();
-          final mntexp = (box.get("mntexp", defaultValue: 2000.0) as num).toDouble();
-          final annexp = (box.get("annexp", defaultValue: 7000.0) as num).toDouble();
+          final mntinc = (box.get("mntinc", defaultValue: 4300.0) as num)
+              .toDouble();
+          final mntexp = (box.get("mntexp", defaultValue: 2000.0) as num)
+              .toDouble();
+          final annexp = (box.get("annexp", defaultValue: 7000.0) as num)
+              .toDouble();
           final totalFixedExp = mntexp + (annexp / 12);
           body = _tr('insight_body_fixed')
               .replaceFirst('%f', totalFixedExp.toStringAsFixed(0))
@@ -304,11 +316,11 @@ class NotificationService {
       }
 
       await _plugin.zonedSchedule(
-        100 + hour,
-        title,
-        body,
-        _nextInstanceOfTime(hour, 0),
-        _buildDetails(),
+        id: 100 + hour,
+        title: title,
+        body: body,
+        scheduledDate: _nextInstanceOfTime(hour, 0),
+        notificationDetails: _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'budget_insights_$hour',

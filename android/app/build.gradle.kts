@@ -3,7 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -20,14 +19,9 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true
-    }
-
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -36,13 +30,11 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        //minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-
-        signingConfigs {
+    signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String
             keyPassword = keystoreProperties["keyPassword"] as String
@@ -51,7 +43,6 @@ android {
         }
     }
 
-
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -59,19 +50,11 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+}
 
-    packaging {
-        jniLibs {
-            keepDebugSymbols.add("**/libapp.so")
-        }
-    }
-    
-    applicationVariants.all {
-        val variant = this
-        variant.outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "budget_it-${variant.buildType.name}.apk"
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

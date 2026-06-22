@@ -82,8 +82,24 @@ class _StatspageState extends State<Statspage> {
     final Box<UpcomingSpending> spendingBox = Hive.box<UpcomingSpending>(
       'upcoming_spending',
     );
-    final List<UnexpectedEarning> allEarnings = earningsBox.values.toList();
-    final List<UpcomingSpending> allSpending = spendingBox.values.toList();
+    final List<UnexpectedEarning> allEarnings = earningsBox.values.map((e) {
+      final localDate = e.date.toLocal();
+      return UnexpectedEarning(
+        id: e.id,
+        title: e.title,
+        amount: e.amount,
+        date: DateTime(localDate.year, localDate.month, localDate.day),
+      );
+    }).toList();
+    final List<UpcomingSpending> allSpending = spendingBox.values.map((s) {
+      final localDate = s.date.toLocal();
+      return UpcomingSpending(
+        id: s.id,
+        title: s.title,
+        amount: s.amount,
+        date: DateTime(localDate.year, localDate.month, localDate.day),
+      );
+    }).toList();
 
     DateTime now = DateTime.now();
     DateTime oldestDate = now;
@@ -352,11 +368,14 @@ class _StatspageState extends State<Statspage> {
 
     final spendingEntries = spendingBox.values
         .where(
-          (entry) =>
-              (entry.date.isAfter(startDate) ||
-                  entry.date.isAtSameMomentAs(startDate)) &&
-              (entry.date.isBefore(endDate) ||
-                  entry.date.isAtSameMomentAs(endDate)),
+          (entry) {
+            final localDate = entry.date.toLocal();
+            final normalizedDate = DateTime(localDate.year, localDate.month, localDate.day);
+            return (normalizedDate.isAfter(startDate) ||
+                    normalizedDate.isAtSameMomentAs(startDate)) &&
+                (normalizedDate.isBefore(endDate) ||
+                    normalizedDate.isAtSameMomentAs(endDate));
+          },
         )
         .toList();
 
@@ -382,11 +401,14 @@ class _StatspageState extends State<Statspage> {
 
     final earningEntries = earningsBox.values
         .where(
-          (entry) =>
-              (entry.date.isAfter(startDate) ||
-                  entry.date.isAtSameMomentAs(startDate)) &&
-              (entry.date.isBefore(endDate) ||
-                  entry.date.isAtSameMomentAs(endDate)),
+          (entry) {
+            final localDate = entry.date.toLocal();
+            final normalizedDate = DateTime(localDate.year, localDate.month, localDate.day);
+            return (normalizedDate.isAfter(startDate) ||
+                    normalizedDate.isAtSameMomentAs(startDate)) &&
+                (normalizedDate.isBefore(endDate) ||
+                    normalizedDate.isAtSameMomentAs(endDate));
+          },
         )
         .toList();
 
